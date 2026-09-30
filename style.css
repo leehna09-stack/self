@@ -513,6 +513,30 @@ fieldset.people-check {
   font-size: 14px;
 }
 
+/* 사진 */
+.day-photo {
+  font-size: 11px;
+  line-height: 1;
+}
+
+#detailPhoto {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+#detailPhoto img {
+  width: 100%;
+  border-radius: 14px;
+  display: block;
+}
+
+#detailPhoto button {
+  min-height: 40px;
+  padding: 0 18px;
+  font-size: 14px;
+}
+
 /* 가족 코드 입력 */
 .form-box input[type="text"] {
   font: inherit;

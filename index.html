@@ -102,6 +102,9 @@
       <div id="detailPlaces"></div>
       <h3>이 날짜의 일정</h3>
       <ul id="detailSchedules"></ul>
+      <h3>이 날의 사진</h3>
+      <div id="detailPhoto"></div>
+      <input type="file" id="photoInput" accept="image/*" hidden>
     </div>
   </div>
 
@@ -126,7 +129,8 @@
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
     import {
-      getFirestore, collection, doc, onSnapshot, writeBatch, deleteDoc
+      getFirestore, collection, doc, onSnapshot, writeBatch, deleteDoc,
+      setDoc, query, where, documentId
     } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
 
     const firebaseConfig = {
@@ -142,6 +146,7 @@
     const db = getFirestore(app);
 
     let unsubscribe = null;
+    let unsubscribePhotos = null;
     let currentCode = "";
 
     function scheduleCollection() {
@@ -188,6 +193,40 @@
       // 일정 하나 삭제
       remove: function (id) {
         return deleteDoc(doc(db, "families", currentCode, "schedules", id));
+      },
+
+      // 보고 있는 달(시작일~끝일)의 사진만 받아오고, 바뀔 때마다 onData를 불러줌
+      watchPhotos: function (startDate, endDate, onData) {
+        if (unsubscribePhotos) {
+          unsubscribePhotos();
+        }
+        const q = query(
+          collection(db, "families", currentCode, "photos"),
+          where(documentId(), ">=", startDate),
+          where(documentId(), "<=", endDate)
+        );
+        unsubscribePhotos = onSnapshot(q, function (snap) {
+          const map = {};
+          snap.forEach(function (d) {
+            map[d.id] = d.data().image;
+          });
+          onData(map);
+        }, function (error) {
+          console.log("사진 읽기 실패", error);
+        });
+      },
+
+      // 그 날짜의 사진 저장 (이미 있으면 바꿈, 하루 한 장)
+      savePhoto: function (date, image) {
+        return setDoc(doc(db, "families", currentCode, "photos", date), {
+          image: image,
+          savedAt: Date.now()
+        });
+      },
+
+      // 그 날짜의 사진 삭제
+      removePhoto: function (date) {
+        return deleteDoc(doc(db, "families", currentCode, "photos", date));
       }
     };
 

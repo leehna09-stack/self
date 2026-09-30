@@ -30,6 +30,12 @@ const defaultPlaces = {
 // 일정을 담아둘 배열 (인터넷 저장소에서 받아와서 채워져요)
 const schedules = [];
 
+// 보고 있는 달의 사진들 ("2026-10-05" → 사진 데이터)
+let photos = {};
+
+// 인터넷 저장소에 연결됐는지
+let cloudConnected = false;
+
 // 가족 코드를 이 폰에 저장해 두는 이름표
 const CODE_KEY = "catHouseFamilyCode";
 
@@ -143,6 +149,30 @@ function saveCode() {
 function connectCloud(code) {
   document.getElementById("codeInfo").textContent = "🔑 " + code.slice(0, 4) + "…";
   window.cloud.start(code, onCloudData, onCloudStatus);
+  cloudConnected = true;
+  watchMonthPhotos();
+}
+
+// 지금 보고 있는 달의 사진을 받아오기 시작
+function watchMonthPhotos() {
+  if (!cloudConnected) {
+    return;
+  }
+  photos = {};
+  window.cloud.watchPhotos(
+    makeDateString(viewYear, viewMonth, 1),
+    makeDateString(viewYear, viewMonth, 31),
+    onPhotoData
+  );
+}
+
+// 사진이 도착하거나 바뀌면 실행
+function onPhotoData(map) {
+  photos = map;
+  drawCalendar();
+  if (!document.getElementById("detailModal").classList.contains("hidden")) {
+    drawDetailPhoto();
+  }
 }
 
 // 저장소에서 일정이 도착하면 실행 (처음 + 누군가 바꿀 때마다)
@@ -273,6 +303,14 @@ function drawCalendar() {
       }
     }
 
+    // 사진이 있는 날은 표시
+    if (photos[dateString]) {
+      const mark = document.createElement("div");
+      mark.className = "day-photo";
+      mark.textContent = "📷";
+      cell.appendChild(mark);
+    }
+
     // 날짜 칸을 누르면 상세창 열기
     cell.onclick = function () {
       openDetail(dateString);
@@ -294,6 +332,7 @@ function changeMonth(step) {
     viewYear = viewYear + 1;
   }
   drawCalendar();
+  watchMonthPhotos();
 }
 
 // 산본집 ↔ 제주도 전환
@@ -471,10 +510,100 @@ function openDetail(dateString, keepFocus) {
     list.appendChild(li);
   }
 
+  drawDetailPhoto();
+
   document.getElementById("detailModal").classList.remove("hidden");
   if (!keepFocus) {
     document.querySelector("#detailModal .modal-title button").focus();
   }
+}
+
+// 상세창의 사진 칸 그리기
+function drawDetailPhoto() {
+  const box = document.getElementById("detailPhoto");
+  box.innerHTML = "";
+
+  const image = photos[currentDetailDate];
+  if (image) {
+    const img = document.createElement("img");
+    img.src = image;
+    img.alt = currentDetailDate + " 사진";
+    box.appendChild(img);
+  }
+
+  const addBtn = document.createElement("button");
+  addBtn.textContent = image ? "📷 사진 바꾸기" : "📷 사진 올리기";
+  addBtn.onclick = function () {
+    document.getElementById("photoInput").click();
+  };
+  box.appendChild(addBtn);
+
+  if (image) {
+    const delBtn = document.createElement("button");
+    delBtn.textContent = "사진 삭제";
+    delBtn.onclick = deletePhoto;
+    box.appendChild(delBtn);
+  }
+}
+
+// 사진을 줄여서 글자(JPEG data URL)로 바꾸기 (긴 변 900px)
+function shrinkPhoto(file) {
+  return new Promise(function (resolve, reject) {
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = function () {
+      const scale = Math.min(1, 900 / Math.max(img.width, img.height));
+      const canvas = document.createElement("canvas");
+      canvas.width = Math.round(img.width * scale);
+      canvas.height = Math.round(img.height * scale);
+      canvas.getContext("2d").drawImage(img, 0, 0, canvas.width, canvas.height);
+      URL.revokeObjectURL(url);
+      // 너무 크면 화질을 더 낮춰서 다시 만듦 (저장소 한도 약 1MB)
+      let quality = 0.7;
+      let result = canvas.toDataURL("image/jpeg", quality);
+      while (result.length > 700000 && quality > 0.3) {
+        quality = quality - 0.1;
+        result = canvas.toDataURL("image/jpeg", quality);
+      }
+      resolve(result);
+    };
+    img.onerror = function () {
+      URL.revokeObjectURL(url);
+      reject(new Error("이미지를 읽지 못했어요"));
+    };
+    img.src = url;
+  });
+}
+
+// 사진을 고르면 줄여서 저장
+function onPhotoChosen(e) {
+  const file = e.target.files[0];
+  e.target.value = "";
+  if (!file) {
+    return;
+  }
+  if (!cloudConnected) {
+    alert("아직 가족 코드로 연결되지 않았어요. 잠시 후 다시 시도해 주세요.");
+    return;
+  }
+  const date = currentDetailDate;
+  shrinkPhoto(file).then(function (image) {
+    return window.cloud.savePhoto(date, image);
+  }).catch(function (err) {
+    console.log("사진 저장 실패", err);
+    alert("사진을 저장하지 못했어요. 인터넷 연결과 사진 파일을 확인해 주세요.");
+  });
+}
+
+// 사진 삭제
+function deletePhoto() {
+  if (!confirm("이 날의 사진을 삭제할까요?")) {
+    return;
+  }
+  window.cloud.removePhoto(currentDetailDate).catch(function (err) {
+    console.log("사진 삭제 실패", err);
+    alert("삭제하지 못했어요. 인터넷 연결을 확인해 주세요.");
+  });
 }
 
 // 상세창 닫기
@@ -524,6 +653,8 @@ document.addEventListener("keydown", function (e) {
     closeCodeModal();
   }
 });
+
+document.getElementById("photoInput").addEventListener("change", onPhotoChosen);
 
 // 옛날에 이 브라우저에 저장했던 일정은 더 이상 쓰지 않아서 정리
 try {
