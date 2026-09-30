@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>고양이 집 지킴이</title>
+  <meta name="color-scheme" content="light">
+  <meta name="theme-color" content="#f6f5f3">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Jua&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="app">
+    <header class="hero">
+      <h1><span class="hero-cat" aria-hidden="true">🐱</span> 고양이 집 지킴이</h1>
+      <p>산본집 아가들을 위한 가족 일정 관리</p>
+    </header>
+
+    <section class="card add-card">
+      <div class="add-card-text">
+        <h2>가족 일정 넣기</h2>
+        <p>누가 언제 어디에 있는지 넣으면 산본집이 비는 날을 달력에 알려줘요. 빈집 2일차는 노랑, 3일차는 주황, 4일차부터는 빨강이에요.</p>
+      </div>
+      <button class="add-btn" onclick="openForm()">📅 일정 입력</button>
+    </section>
+
+    <section class="card">
+      <div class="toolbar">
+        <div class="place-switch">
+          <button class="round-btn" onclick="switchPlace()" aria-label="이전 장소">◀</button>
+          <h2 id="placeTitle" aria-live="polite">🏠 산본집</h2>
+          <button class="round-btn" onclick="switchPlace()" aria-label="다음 장소">▶</button>
+        </div>
+
+        <div class="calendar-header">
+          <button class="round-btn" onclick="changeMonth(-1)" aria-label="이전 달">◀</button>
+          <span id="monthTitle" aria-live="polite"></span>
+          <button class="round-btn" onclick="changeMonth(1)" aria-label="다음 달">▶</button>
+        </div>
+      </div>
+
+      <div id="calendar" class="calendar"></div>
+    </section>
+
+    <div class="sync-bar">
+      <span id="syncStatus" aria-live="polite">연결 준비 중…</span>
+      <span id="codeInfo"></span>
+      <button class="link-btn" onclick="openCodeModal()">가족 코드 바꾸기</button>
+    </div>
+  </main>
+
+  <div id="formModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="formTitle">
+    <div class="modal-box">
+      <div class="modal-title">
+        <h2 id="formTitle">일정 입력</h2>
+        <button class="round-btn" onclick="closeForm()" aria-label="닫기">✕</button>
+      </div>
+
+      <div class="form-box">
+        <fieldset class="people-check">
+          <legend>누가</legend>
+          <label><input type="checkbox" name="person" value="엄마"> 엄마</label>
+          <label><input type="checkbox" name="person" value="아빠"> 아빠</label>
+          <label><input type="checkbox" name="person" value="한나"> 한나</label>
+          <label><input type="checkbox" name="person" value="한비"> 한비</label>
+        </fieldset>
+
+        <label>어디로
+          <select id="place" name="place" autocomplete="off">
+            <option>산본집</option>
+            <option>제주도</option>
+            <option>송정지구</option>
+          </select>
+        </label>
+
+        <div class="quick-buttons">
+          <button type="button" onclick="setPeriod(7)">오늘부터 1주일</button>
+          <button type="button" onclick="setPeriod(30)">오늘부터 한 달</button>
+        </div>
+
+        <label>시작일
+          <input type="date" id="startDate" name="startDate" autocomplete="off">
+        </label>
+
+        <label>종료일
+          <input type="date" id="endDate" name="endDate" autocomplete="off">
+        </label>
+
+        <button id="saveBtn" onclick="addSchedule()">일정 추가</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="detailModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="detailTitle">
+    <div class="modal-box">
+      <div class="modal-title">
+        <h2 id="detailTitle"></h2>
+        <button class="round-btn" onclick="closeDetail()" aria-label="닫기">✕</button>
+      </div>
+      <div id="detailPlaces"></div>
+      <h3>이 날짜의 일정</h3>
+      <ul id="detailSchedules"></ul>
+    </div>
+  </div>
+
+  <div id="codeModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="codeTitle">
+    <div class="modal-box">
+      <div class="modal-title">
+        <h2 id="codeTitle">가족 코드 입력</h2>
+        <button class="round-btn" id="codeCloseBtn" onclick="closeCodeModal()" aria-label="닫기">✕</button>
+      </div>
+
+      <div class="form-box">
+        <p class="hint">가족끼리 정한 코드를 넣으면 같은 일정을 함께 봐요. 이 폰에 저장돼서 다음부터는 묻지 않아요.</p>
+        <label>가족 코드
+          <input type="text" id="familyCodeInput" name="familyCode" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="영문·숫자 20자 이상">
+        </label>
+        <button id="codeSaveBtn" onclick="saveCode()">입장하기</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Firebase 연결 (일정을 인터넷 저장소와 주고받는 부분) -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
+    import {
+      getFirestore, collection, doc, onSnapshot, writeBatch, deleteDoc
+    } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyAw1IcCDb52Oqn9vyrI8OkhZV8odUimDGc",
+      authDomain: "cat-house-109b6.firebaseapp.com",
+      projectId: "cat-house-109b6",
+      storageBucket: "cat-house-109b6.firebasestorage.app",
+      messagingSenderId: "41398570353",
+      appId: "1:41398570353:web:034088c8c2d9a494497ad0"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    let unsubscribe = null;
+    let currentCode = "";
+
+    function scheduleCollection() {
+      return collection(db, "families", currentCode, "schedules");
+    }
+
+    // script.js가 사용하는 저장소 기능 모음
+    window.cloud = {
+      // 가족 코드로 연결하고, 일정이 바뀔 때마다 onData를 불러줌
+      start: function (code, onData, onStatus) {
+        if (unsubscribe) {
+          unsubscribe();
+        }
+        currentCode = code;
+        onStatus("connecting");
+        unsubscribe = onSnapshot(
+          scheduleCollection(),
+          function (snap) {
+            const list = [];
+            snap.forEach(function (d) {
+              list.push({ id: d.id, ...d.data() });
+            });
+            onData(list);
+            onStatus(snap.metadata.fromCache ? "syncing" : "online");
+          },
+          function (error) {
+            onStatus("error", error.code);
+          }
+        );
+      },
+
+      // 지울 일정(removeIds)과 새로 넣을 일정(newItems)을 한 번에 저장
+      save: function (removeIds, newItems) {
+        const batch = writeBatch(db);
+        removeIds.forEach(function (id) {
+          batch.delete(doc(db, "families", currentCode, "schedules", id));
+        });
+        newItems.forEach(function (item) {
+          batch.set(doc(scheduleCollection()), item);
+        });
+        return batch.commit();
+      },
+
+      // 일정 하나 삭제
+      remove: function (id) {
+        return deleteDoc(doc(db, "families", currentCode, "schedules", id));
+      }
+    };
+
+    window.dispatchEvent(new Event("cloud-ready"));
+  </script>
+
+  <script src="script.js"></script>
+</body>
+</html>
