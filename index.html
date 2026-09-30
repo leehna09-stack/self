@@ -282,20 +282,23 @@
       // (종 알림용 activity 기록도 같이 저장)
       savePhoto: function (name, date, image, by) {
         const now = Date.now();
-        const batch = writeBatch(db);
-        batch.set(doc(db, "families", currentCode, name, date), {
+        const code = currentCode;
+        // 사진 저장이 먼저, 종 알림 기록은 그 다음에 따로 (알림 저장이 실패해도 사진은 남게)
+        return setDoc(doc(db, "families", code, name, date), {
           image: image,
           by: by,
           savedAt: now
+        }).then(function () {
+          return setDoc(doc(collection(db, "families", code, "activity")), {
+            type: "photo",
+            by: by,
+            date: date,
+            place: name === "jejuPhotos" ? "제주도" : "산본집",
+            at: now
+          }).catch(function (error) {
+            console.log("새 소식 기록 실패", error);
+          });
         });
-        batch.set(doc(collection(db, "families", currentCode, "activity")), {
-          type: "photo",
-          by: by,
-          date: date,
-          place: name === "jejuPhotos" ? "제주도" : "산본집",
-          at: now
-        });
-        return batch.commit();
       },
 
       // since 이후에 올라온 새 활동(사진·한줄평)을 받아오고, 바뀔 때마다 onData를 불러줌

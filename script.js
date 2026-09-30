@@ -897,7 +897,8 @@ function onPhotoChosen(e) {
     return window.cloud.savePhoto(collectionName, date, image, user);
   }).catch(function (err) {
     console.log("사진 저장 실패", err);
-    alert("사진을 저장하지 못했어요. 인터넷 연결과 사진 파일을 확인해 주세요.");
+    alert("사진을 저장하지 못했어요. 인터넷 연결과 사진 파일을 확인해 주세요.\n(오류: " +
+      (err.code || err.message || "알 수 없음") + ")");
   });
 }
 
@@ -1152,7 +1153,8 @@ function saveNote() {
 
   job.catch(function (err) {
     console.log("한줄평 저장 실패", err);
-    alert("저장하지 못했어요. 인터넷 연결을 확인해 주세요.");
+    alert("저장하지 못했어요. 인터넷 연결을 확인해 주세요.\n(오류: " +
+      (err.code || err.message || "알 수 없음") + ")");
   });
   resetNoteForm();
 }
