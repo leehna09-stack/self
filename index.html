@@ -85,13 +85,17 @@
           <button type="button" onclick="setPeriod(30)">오늘부터 한 달</button>
         </div>
 
-        <label>시작일
-          <input type="date" id="startDate" name="startDate" autocomplete="off">
-        </label>
-
-        <label>종료일
-          <input type="date" id="endDate" name="endDate" autocomplete="off">
-        </label>
+        <div class="range-picker">
+          <div class="range-summary" id="rangeSummary" aria-live="polite"></div>
+          <div class="range-nav">
+            <button type="button" class="round-btn" onclick="rangeMove(-1)" aria-label="이전 달">◀</button>
+            <span id="rangeMonthTitle"></span>
+            <button type="button" class="round-btn" onclick="rangeMove(1)" aria-label="다음 달">▶</button>
+          </div>
+          <div id="rangeCalendar" class="range-calendar"></div>
+        </div>
+        <input type="hidden" id="startDate" name="startDate">
+        <input type="hidden" id="endDate" name="endDate">
 
         <button id="saveBtn" onclick="addSchedule()">일정 추가</button>
       </div>
@@ -106,10 +110,11 @@
       </div>
       <div id="noteSection">
         <h3>오늘의 한줄평</h3>
-        <div id="detailNote"></div>
+        <ul id="detailNote"></ul>
         <div class="note-form">
           <input type="text" id="noteInput" maxlength="50" autocomplete="off" placeholder="최대 50자">
-          <button type="button" onclick="saveNote()">저장</button>
+          <button type="button" id="noteSaveBtn" onclick="saveNote()">저장</button>
+          <button type="button" id="noteCancelBtn" onclick="resetNoteForm()" hidden>취소</button>
         </div>
       </div>
       <div id="weatherSection">
@@ -172,7 +177,7 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
     import {
       getFirestore, collection, doc, onSnapshot, writeBatch, deleteDoc,
-      setDoc, query, where, documentId
+      setDoc, updateDoc, query, where, documentId
     } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
 
     const firebaseConfig = {
@@ -190,6 +195,7 @@
     let unsubscribe = null;
     let unsubscribePhotos = null;
     let unsubscribeDays = null;
+    let unsubscribeNotes = null;
     let currentCode = "";
 
     function scheduleCollection() {
@@ -290,7 +296,60 @@
         });
       },
 
-      // 그 날짜의 날씨/한줄평 저장 (넘긴 항목만 바뀜)
+      // 그 날짜의 한줄평들을 받아오고, 바뀔 때마다 onData를 불러줌
+      watchNotes: function (date, onData) {
+        if (unsubscribeNotes) {
+          unsubscribeNotes();
+        }
+        const q = query(
+          collection(db, "families", currentCode, "notes"),
+          where("date", "==", date)
+        );
+        unsubscribeNotes = onSnapshot(q, function (snap) {
+          const list = [];
+          snap.forEach(function (d) {
+            list.push({ id: d.id, ...d.data() });
+          });
+          onData(list);
+        }, function (error) {
+          console.log("한줄평 읽기 실패", error);
+        });
+      },
+
+      // 한줄평 받아오기 멈춤
+      stopNotes: function () {
+        if (unsubscribeNotes) {
+          unsubscribeNotes();
+          unsubscribeNotes = null;
+        }
+      },
+
+      // 한줄평 추가 + 넘치는 오래된 한줄평(deleteIds) 삭제를 한 번에
+      addNote: function (date, item, deleteIds) {
+        const batch = writeBatch(db);
+        batch.set(doc(collection(db, "families", currentCode, "notes")), {
+          date: date,
+          text: item.text,
+          by: item.by,
+          createdAt: item.createdAt
+        });
+        deleteIds.forEach(function (id) {
+          batch.delete(doc(db, "families", currentCode, "notes", id));
+        });
+        return batch.commit();
+      },
+
+      // 한줄평 내용 수정
+      updateNote: function (id, text) {
+        return updateDoc(doc(db, "families", currentCode, "notes", id), { text: text });
+      },
+
+      // 한줄평 삭제
+      removeNote: function (id) {
+        return deleteDoc(doc(db, "families", currentCode, "notes", id));
+      },
+
+      // 그 날짜의 날씨 저장 (넘긴 항목만 바뀜)
       saveDay: function (date, fields) {
         return setDoc(doc(db, "families", currentCode, "days", date), fields, { merge: true });
       },

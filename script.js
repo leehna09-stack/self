@@ -45,6 +45,11 @@ const weatherList = [
   { key: "typhoon", icon: "🌀", label: "태풍" }
 ];
 
+// 상세창에 열린 날짜의 한줄평들 / 수정 중인 한줄평 번호표 / 하루 최대 개수
+let notes = [];
+let editingNoteId = "";
+const MAX_NOTES = 10;
+
 // 지금 쓰는 사람 이름 (이 폰에 저장해 둠)
 const USER_KEY = "catHouseUser";
 
@@ -253,7 +258,6 @@ function onDayData(map) {
   drawCalendar();
   if (!document.getElementById("detailModal").classList.contains("hidden")) {
     drawDetailWeather();
-    drawDetailNote(false);
   }
 }
 
@@ -444,6 +448,108 @@ function switchPlace() {
 
 // ===== 일정 입력 =====
 
+// ===== 기간 고르는 달력 (시작일 → 종료일 순서로 누르기) =====
+
+// 기간 달력이 보여주는 달
+let pickYear = new Date().getFullYear();
+let pickMonth = new Date().getMonth();
+
+// 시작일·종료일 칸의 값이 바뀐 뒤 기간 달력을 다시 맞춤 (시작일이 있는 달로 이동)
+function syncPicker() {
+  const start = document.getElementById("startDate").value;
+  const base = start === "" ? new Date() : new Date(start + "T00:00:00");
+  pickYear = base.getFullYear();
+  pickMonth = base.getMonth();
+  drawRangePicker();
+}
+
+// 기간 달력 ◀ ▶ 버튼
+function rangeMove(step) {
+  pickMonth = pickMonth + step;
+  if (pickMonth < 0) {
+    pickMonth = 11;
+    pickYear = pickYear - 1;
+  }
+  if (pickMonth > 11) {
+    pickMonth = 0;
+    pickYear = pickYear + 1;
+  }
+  drawRangePicker();
+}
+
+// 기간 달력에서 날짜를 눌렀을 때
+// 처음 누르면 시작일, 다음에 누르면 종료일 (이미 둘 다 있으면 새로 시작)
+function pickDate(dateString) {
+  const startBox = document.getElementById("startDate");
+  const endBox = document.getElementById("endDate");
+
+  if (startBox.value === "" || endBox.value !== "") {
+    startBox.value = dateString;
+    endBox.value = "";
+  } else if (dateString < startBox.value) {
+    startBox.value = dateString;
+  } else {
+    endBox.value = dateString;
+  }
+  drawRangePicker();
+}
+
+// 기간 달력 그리기
+function drawRangePicker() {
+  const start = document.getElementById("startDate").value;
+  const end = document.getElementById("endDate").value;
+
+  document.getElementById("rangeMonthTitle").textContent =
+    pickYear + "년 " + (pickMonth + 1) + "월";
+
+  let summary = "시작일을 골라 주세요";
+  if (start !== "") {
+    summary = start + " ~ " + (end === "" ? "종료일을 골라 주세요" : end);
+  }
+  document.getElementById("rangeSummary").textContent = summary;
+
+  const box = document.getElementById("rangeCalendar");
+  box.innerHTML = "";
+
+  const weekNames = ["일", "월", "화", "수", "목", "금", "토"];
+  for (let i = 0; i < 7; i++) {
+    const head = document.createElement("div");
+    head.className = "range-week";
+    head.textContent = weekNames[i];
+    box.appendChild(head);
+  }
+
+  const firstDay = new Date(pickYear, pickMonth, 1).getDay();
+  const lastDate = new Date(pickYear, pickMonth + 1, 0).getDate();
+  for (let i = 0; i < firstDay; i++) {
+    box.appendChild(document.createElement("div"));
+  }
+
+  for (let d = 1; d <= lastDate; d++) {
+    const ds = makeDateString(pickYear, pickMonth, d);
+    const cell = document.createElement("button");
+    cell.type = "button";
+    cell.className = "range-day";
+    cell.textContent = d;
+
+    const last = end === "" ? start : end;
+    if (start !== "" && ds >= start && ds <= last) {
+      cell.classList.add("in-range");
+    }
+    if (ds === start) {
+      cell.classList.add("range-edge");
+    }
+    if (ds === last && start !== "") {
+      cell.classList.add("range-edge");
+    }
+
+    cell.onclick = function () {
+      pickDate(ds);
+    };
+    box.appendChild(cell);
+  }
+}
+
 // 일정 입력창 열기 (새 일정)
 function openForm() {
   editingId = "";
@@ -455,6 +561,7 @@ function openForm() {
   document.getElementById("startDate").value =
     makeDateString(t.getFullYear(), t.getMonth(), t.getDate());
   document.getElementById("endDate").value = "";
+  syncPicker();
   document.getElementById("saveBtn").textContent = "일정 추가";
   document.getElementById("formModal").classList.remove("hidden");
   document.querySelector("#formModal .modal-title button").focus();
@@ -477,6 +584,7 @@ function setPeriod(days) {
     makeDateString(today.getFullYear(), today.getMonth(), today.getDate());
   document.getElementById("endDate").value =
     makeDateString(end.getFullYear(), end.getMonth(), end.getDate());
+  syncPicker();
 }
 
 // "일정 추가" (또는 "수정 저장") 버튼을 눌렀을 때 실행되는 함수
@@ -576,7 +684,9 @@ function openDetail(dateString, keepFocus) {
   document.getElementById("noteSection").hidden = (viewPlace !== "산본집");
   drawDetailWeather();
   drawDetailPhoto();
-  drawDetailNote(!keepFocus);
+  if (viewPlace === "산본집" && !keepFocus) {
+    startNotes();
+  }
 
   document.getElementById("detailModal").classList.remove("hidden");
   if (!keepFocus) {
@@ -734,24 +844,117 @@ function chooseWeather(key) {
   });
 }
 
-// 상세창의 한줄평 그리기 (resetInput이 true면 입력칸도 저장된 글로 채움)
-function drawDetailNote(resetInput) {
-  const day = days[currentDetailDate];
-  const note = day && day.note ? day.note : "";
+// ===== 한줄평 (하루 최대 10개, 넘치면 오래된 것부터 삭제) =====
 
-  const view = document.getElementById("detailNote");
-  view.textContent = note === ""
-    ? "아직 한줄평이 없어요"
-    : "“" + note + "” — " + (day.noteBy || "");
-
-  // 입력 중인 글이 지워지지 않게, 입력칸에 포커스가 없을 때만 채움
-  const input = document.getElementById("noteInput");
-  if (resetInput || document.activeElement !== input) {
-    input.value = note;
+// 상세창을 열 때: 그 날짜의 한줄평 받아오기 시작
+function startNotes() {
+  notes = [];
+  resetNoteForm();
+  drawDetailNotes();
+  if (cloudConnected) {
+    window.cloud.watchNotes(currentDetailDate, onNotesData);
   }
 }
 
-// 한줄평 저장 (비우고 저장하면 삭제)
+// 한줄평이 도착하거나 바뀌면 실행 (오래된 것이 위, 새 것이 아래)
+function onNotesData(list) {
+  list.sort(function (a, b) {
+    return a.createdAt - b.createdAt;
+  });
+  notes = list;
+  drawDetailNotes();
+}
+
+// 입력칸을 새 한줄평 쓰기 상태로 되돌림
+function resetNoteForm() {
+  editingNoteId = "";
+  document.getElementById("noteInput").value = "";
+  document.getElementById("noteSaveBtn").textContent = "저장";
+  document.getElementById("noteCancelBtn").hidden = true;
+}
+
+// 상세창의 한줄평 목록 그리기 (내가 쓴 글에만 ✏️ ✕ 표시)
+function drawDetailNotes() {
+  const list = document.getElementById("detailNote");
+  list.innerHTML = "";
+
+  if (notes.length === 0) {
+    const li = document.createElement("li");
+    li.className = "note-empty";
+    li.textContent = "아직 한줄평이 없어요";
+    list.appendChild(li);
+    return;
+  }
+
+  const user = getUser();
+  for (let i = 0; i < notes.length; i++) {
+    const n = notes[i];
+    const li = document.createElement("li");
+
+    const text = document.createElement("span");
+    text.className = "note-text";
+    text.textContent = "“" + n.text + "” ";
+    const by = document.createElement("small");
+    by.textContent = "— " + n.by;
+    text.appendChild(by);
+    li.appendChild(text);
+
+    if (user !== "" && n.by === user) {
+      const editBtn = document.createElement("button");
+      editBtn.type = "button";
+      editBtn.className = "icon-btn";
+      editBtn.textContent = "✏️";
+      editBtn.setAttribute("aria-label", "한줄평 수정");
+      editBtn.onclick = function () {
+        startEditNote(n.id);
+      };
+      li.appendChild(editBtn);
+
+      const delBtn = document.createElement("button");
+      delBtn.type = "button";
+      delBtn.className = "icon-btn";
+      delBtn.textContent = "✕";
+      delBtn.setAttribute("aria-label", "한줄평 삭제");
+      delBtn.onclick = function () {
+        deleteNote(n.id);
+      };
+      li.appendChild(delBtn);
+    }
+
+    list.appendChild(li);
+  }
+}
+
+// ✏️ 수정: 입력칸에 기존 글을 채움
+function startEditNote(id) {
+  for (let i = 0; i < notes.length; i++) {
+    if (notes[i].id === id) {
+      editingNoteId = id;
+      const input = document.getElementById("noteInput");
+      input.value = notes[i].text;
+      document.getElementById("noteSaveBtn").textContent = "수정 저장";
+      document.getElementById("noteCancelBtn").hidden = false;
+      input.focus();
+      return;
+    }
+  }
+}
+
+// ✕ 삭제
+function deleteNote(id) {
+  if (!confirm("이 한줄평을 삭제할까요?")) {
+    return;
+  }
+  if (editingNoteId === id) {
+    resetNoteForm();
+  }
+  window.cloud.removeNote(id).catch(function (err) {
+    console.log("한줄평 삭제 실패", err);
+    alert("삭제하지 못했어요. 인터넷 연결을 확인해 주세요.");
+  });
+}
+
+// 한줄평 저장 (새로 쓰기 또는 수정 저장)
 function saveNote() {
   const user = getUser();
   if (user === "") {
@@ -762,16 +965,41 @@ function saveNote() {
     alert("아직 가족 코드로 연결되지 않았어요. 잠시 후 다시 시도해 주세요.");
     return;
   }
-  const note = document.getElementById("noteInput").value.trim().slice(0, 50);
-  window.cloud.saveDay(currentDetailDate, { note: note, noteBy: user }).catch(function (err) {
+  const text = document.getElementById("noteInput").value.trim().slice(0, 50);
+  if (text === "") {
+    return;
+  }
+
+  let job;
+  if (editingNoteId !== "") {
+    job = window.cloud.updateNote(editingNoteId, text);
+  } else {
+    // 새 글을 넣으면 MAX_NOTES개를 넘는 만큼 오래된 것부터 지움
+    const overflow = notes.length + 1 - MAX_NOTES;
+    const deleteIds = [];
+    for (let i = 0; i < overflow; i++) {
+      deleteIds.push(notes[i].id);
+    }
+    job = window.cloud.addNote(
+      currentDetailDate,
+      { text: text, by: user, createdAt: Date.now() },
+      deleteIds
+    );
+  }
+
+  job.catch(function (err) {
     console.log("한줄평 저장 실패", err);
     alert("저장하지 못했어요. 인터넷 연결을 확인해 주세요.");
   });
+  resetNoteForm();
 }
 
 // 상세창 닫기
 function closeDetail() {
   document.getElementById("detailModal").classList.add("hidden");
+  if (window.cloud) {
+    window.cloud.stopNotes();
+  }
 }
 
 // ===== 일정 변경 (수정/삭제) =====
@@ -845,6 +1073,7 @@ function editSchedule(id) {
   document.getElementById("place").value = s.place;
   document.getElementById("startDate").value = s.startDate;
   document.getElementById("endDate").value = s.endDate;
+  syncPicker();
   document.getElementById("saveBtn").textContent = "수정 저장";
   document.getElementById("formModal").classList.remove("hidden");
   document.querySelector("#formModal .modal-title button").focus();
