@@ -525,10 +525,50 @@ fieldset.people-check {
   gap: 8px;
 }
 
-#detailPhoto img {
+/* 좌우로 밀어서 넘기는 사진 띠 */
+.photo-strip {
+  display: flex;
   width: 100%;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
   border-radius: 14px;
+}
+
+.photo-strip::-webkit-scrollbar {
+  display: none;
+}
+
+.photo-slide {
+  position: relative;
+  flex: 0 0 100%;
+  scroll-snap-align: center;
+}
+
+.photo-slide img {
+  width: 100%;
   display: block;
+  border-radius: 14px;
+}
+
+.photo-slide .photo-by {
+  margin-top: 4px;
+}
+
+.photo-del {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background-color: rgba(255, 255, 255, 0.9);
+}
+
+.photo-count {
+  width: 100%;
+  text-align: center;
+  font-size: 12px;
+  color: var(--sub);
+  font-variant-numeric: tabular-nums;
 }
 
 #detailPhoto button {

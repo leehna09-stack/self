@@ -265,12 +265,23 @@
         const q = query(
           collection(db, "families", currentCode, name),
           where(documentId(), ">=", startDate),
-          where(documentId(), "<=", endDate)
+          where(documentId(), "<=", endDate + "")
         );
         unsubscribePhotos = onSnapshot(q, function (snap) {
+          // 날짜 → 그 날의 사진들 (오래된 것이 앞)
+          // 사진 번호표는 "2026-10-05_숫자". 옛날 방식(하루 한 장)은 "2026-10-05" 그대로
           const map = {};
           snap.forEach(function (d) {
-            map[d.id] = d.data();
+            const date = d.id.slice(0, 10);
+            if (!map[date]) {
+              map[date] = [];
+            }
+            map[date].push({ id: d.id, ...d.data() });
+          });
+          Object.keys(map).forEach(function (date) {
+            map[date].sort(function (a, b) {
+              return (a.savedAt || 0) - (b.savedAt || 0);
+            });
           });
           onData(map);
         }, function (error) {
@@ -278,17 +289,22 @@
         });
       },
 
-      // 그 날짜의 사진 저장 (이미 있으면 바꿈, 하루 한 장, by = 올린 사람)
-      // (종 알림용 activity 기록도 같이 저장)
-      savePhoto: function (name, date, image, by) {
+      // 그 날짜에 사진 한 장 추가, 넘치는 오래된 사진(deleteIds)은 같이 삭제 (by = 올린 사람)
+      // (종 알림용 activity 기록도 저장)
+      addPhoto: function (name, date, image, by, deleteIds) {
         const now = Date.now();
         const code = currentCode;
-        // 사진 저장이 먼저, 종 알림 기록은 그 다음에 따로 (알림 저장이 실패해도 사진은 남게)
-        return setDoc(doc(db, "families", code, name, date), {
+        const batch = writeBatch(db);
+        batch.set(doc(db, "families", code, name, date + "_" + now), {
           image: image,
           by: by,
           savedAt: now
-        }).then(function () {
+        });
+        deleteIds.forEach(function (id) {
+          batch.delete(doc(db, "families", code, name, id));
+        });
+        // 사진 저장이 먼저, 종 알림 기록은 그 다음에 따로 (알림 저장이 실패해도 사진은 남게)
+        return batch.commit().then(function () {
           return setDoc(doc(collection(db, "families", code, "activity")), {
             type: "photo",
             by: by,
@@ -410,8 +426,8 @@
       },
 
       // 그 날짜의 사진 삭제
-      removePhoto: function (name, date) {
-        return deleteDoc(doc(db, "families", currentCode, name, date));
+      removePhoto: function (name, id) {
+        return deleteDoc(doc(db, "families", currentCode, name, id));
       }
     };
 

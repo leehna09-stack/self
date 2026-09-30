@@ -30,8 +30,12 @@ const defaultPlaces = {
 // 일정을 담아둘 배열 (인터넷 저장소에서 받아와서 채워져요)
 const schedules = [];
 
-// 보고 있는 달의 사진들 ("2026-10-05" → { image, by })
+// 보고 있는 달의 사진들 ("2026-10-05" → [{ id, image, by, savedAt }, ...] 오래된 것이 앞)
 let photos = {};
+
+// 하루(장소별)에 남길 수 있는 사진 수, 그리고 직전에 그린 사진 수 (늘었는지 확인용)
+const MAX_PHOTOS = 5;
+let lastPhotoCount = 0;
 
 // 보고 있는 달의 날씨·한줄평 ("2026-10-05" → { weather, note, noteBy ... })
 let days = {};
@@ -525,7 +529,7 @@ function drawCalendar() {
     }
 
     // 사진이 있는 날은 표시 (산본집·제주도 각각의 사진)
-    if (photos[dateString]) {
+    if (photos[dateString] && photos[dateString].length > 0) {
       const mark = document.createElement("div");
       mark.className = "day-photo";
       mark.textContent = "📷";
@@ -799,6 +803,11 @@ function openDetail(dateString, keepFocus) {
   // 날씨는 제주도 달력에서만
   document.getElementById("weatherSection").hidden = (viewPlace !== "제주도");
   drawDetailWeather();
+  if (!keepFocus) {
+    // 새로 열 때는 첫 사진부터 보여줌
+    lastPhotoCount = (photos[dateString] || []).length;
+    document.getElementById("detailPhoto").innerHTML = "";
+  }
   drawDetailPhoto();
   if (!keepFocus) {
     startNotes();
@@ -813,63 +822,138 @@ function openDetail(dateString, keepFocus) {
 // 상세창의 사진 칸 그리기
 function drawDetailPhoto() {
   const box = document.getElementById("detailPhoto");
+  // 다시 그려도 보던 사진 위치를 유지하려고 미리 기억
+  const oldStrip = box.querySelector(".photo-strip");
+  const oldScroll = oldStrip ? oldStrip.scrollLeft : 0;
   box.innerHTML = "";
 
-  const photo = photos[currentDetailDate];
-  const image = photo ? photo.image : "";
-  if (image) {
-    const img = document.createElement("img");
-    img.src = image;
-    img.alt = currentDetailDate + " 사진";
-    box.appendChild(img);
+  const list = photos[currentDetailDate] || [];
+  const user = getUser();
 
-    if (photo.by) {
+  if (list.length > 0) {
+    // 좌우로 밀어서 넘기는 사진 띠
+    const strip = document.createElement("div");
+    strip.className = "photo-strip";
+
+    const counter = document.createElement("div");
+    counter.className = "photo-count";
+    counter.textContent = "1 / " + list.length;
+
+    for (let i = 0; i < list.length; i++) {
+      const p = list[i];
+      const slide = document.createElement("div");
+      slide.className = "photo-slide";
+
+      const img = document.createElement("img");
+      img.src = p.image;
+      img.alt = currentDetailDate + " 사진 " + (i + 1);
+      slide.appendChild(img);
+
       const by = document.createElement("div");
       by.className = "photo-by";
-      by.textContent = "📷 " + photo.by + " 님이 올렸어요";
-      box.appendChild(by);
+      by.textContent = p.by ? "📷 " + p.by + " 님이 올렸어요" : "📷";
+      slide.appendChild(by);
+
+      // 내가 올린 사진(올린 사람이 기록되지 않은 옛 사진 포함)만 삭제 버튼 표시
+      if (!p.by || p.by === user) {
+        const delBtn = document.createElement("button");
+        delBtn.type = "button";
+        delBtn.className = "icon-btn photo-del";
+        delBtn.textContent = "✕";
+        delBtn.setAttribute("aria-label", "사진 삭제");
+        delBtn.onclick = function () {
+          deletePhoto(p.id);
+        };
+        slide.appendChild(delBtn);
+      }
+
+      strip.appendChild(slide);
     }
+
+    // 지금 보고 있는 사진 번호 표시
+    strip.addEventListener("scroll", function () {
+      // (창이 아직 안 열려 폭이 0일 때는 1번째로 봄)
+      const n = Math.round(strip.scrollLeft / (strip.clientWidth || 1)) + 1;
+      counter.textContent = Math.min(n, list.length) + " / " + list.length;
+    });
+
+    box.appendChild(strip);
+    box.appendChild(counter);
+
+    // 사진이 새로 늘었으면 가장 최근 사진(맨 오른쪽)으로 이동
+    strip.scrollLeft = list.length > lastPhotoCount ? strip.scrollWidth : oldScroll;
+    strip.dispatchEvent(new Event("scroll"));
   }
+  lastPhotoCount = list.length;
 
   const addBtn = document.createElement("button");
-  addBtn.textContent = image ? "📷 사진 바꾸기" : "📷 사진 올리기";
+  addBtn.type = "button";
+  addBtn.textContent = "📷 사진 추가 (" + list.length + "/" + MAX_PHOTOS + ")";
   addBtn.onclick = function () {
     document.getElementById("photoInput").click();
   };
   box.appendChild(addBtn);
 
-  if (image) {
-    const delBtn = document.createElement("button");
-    delBtn.textContent = "사진 삭제";
-    delBtn.onclick = deletePhoto;
-    box.appendChild(delBtn);
+  if (list.length >= MAX_PHOTOS) {
+    const note = document.createElement("div");
+    note.className = "photo-by";
+    note.textContent = "5장이 넘으면 가장 오래된 사진이 자동으로 지워져요";
+    box.appendChild(note);
   }
 }
 
 // 사진을 줄여서 글자(JPEG data URL)로 바꾸기 (긴 변 900px)
 function shrinkPhoto(file) {
+  return readPhoto(file).then(function (pic) {
+    const scale = Math.min(1, 900 / Math.max(pic.width, pic.height));
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.max(1, Math.round(pic.width * scale));
+    canvas.height = Math.max(1, Math.round(pic.height * scale));
+    canvas.getContext("2d").drawImage(pic.source, 0, 0, canvas.width, canvas.height);
+    if (pic.close) {
+      pic.close();
+    }
+    // 너무 크면 화질을 더 낮춰서 다시 만듦 (저장소 한도 약 1MB)
+    let quality = 0.7;
+    let result = canvas.toDataURL("image/jpeg", quality);
+    while (result.length > 700000 && quality > 0.3) {
+      quality = quality - 0.1;
+      result = canvas.toDataURL("image/jpeg", quality);
+    }
+    if (!result.startsWith("data:image/jpeg")) {
+      throw new Error("사진을 JPEG로 바꾸지 못했어요");
+    }
+    return result;
+  });
+}
+
+// 사진 파일 읽기: 먼저 <img>로, 안 되면 createImageBitmap으로 (갤러리의 큰 사진 대비)
+function readPhoto(file) {
   return new Promise(function (resolve, reject) {
     const url = URL.createObjectURL(file);
     const img = new Image();
     img.onload = function () {
-      const scale = Math.min(1, 900 / Math.max(img.width, img.height));
-      const canvas = document.createElement("canvas");
-      canvas.width = Math.round(img.width * scale);
-      canvas.height = Math.round(img.height * scale);
-      canvas.getContext("2d").drawImage(img, 0, 0, canvas.width, canvas.height);
       URL.revokeObjectURL(url);
-      // 너무 크면 화질을 더 낮춰서 다시 만듦 (저장소 한도 약 1MB)
-      let quality = 0.7;
-      let result = canvas.toDataURL("image/jpeg", quality);
-      while (result.length > 700000 && quality > 0.3) {
-        quality = quality - 0.1;
-        result = canvas.toDataURL("image/jpeg", quality);
-      }
-      resolve(result);
+      resolve({ source: img, width: img.naturalWidth || img.width, height: img.naturalHeight || img.height });
     };
     img.onerror = function () {
       URL.revokeObjectURL(url);
-      reject(new Error("이미지를 읽지 못했어요"));
+      if (!window.createImageBitmap) {
+        reject(new Error("사진 형식을 읽지 못했어요 (" + (file.type || "형식 알 수 없음") + ")"));
+        return;
+      }
+      createImageBitmap(file).then(function (bmp) {
+        resolve({
+          source: bmp,
+          width: bmp.width,
+          height: bmp.height,
+          close: function () {
+            bmp.close();
+          }
+        });
+      }, function () {
+        reject(new Error("사진 형식을 읽지 못했어요 (" + (file.type || "형식 알 수 없음") + "). JPG/PNG로 올려 주세요"));
+      });
     };
     img.src = url;
   });
@@ -894,7 +978,14 @@ function onPhotoChosen(e) {
   const date = currentDetailDate;
   const collectionName = photoCollection();
   shrinkPhoto(file).then(function (image) {
-    return window.cloud.savePhoto(collectionName, date, image, user);
+    // 넣고 나서 MAX_PHOTOS장을 넘는 만큼 오래된 사진부터 지움
+    const current = photos[date] || [];
+    const overflow = current.length + 1 - MAX_PHOTOS;
+    const deleteIds = [];
+    for (let i = 0; i < overflow; i++) {
+      deleteIds.push(current[i].id);
+    }
+    return window.cloud.addPhoto(collectionName, date, image, user, deleteIds);
   }).catch(function (err) {
     console.log("사진 저장 실패", err);
     alert("사진을 저장하지 못했어요. 인터넷 연결과 사진 파일을 확인해 주세요.\n(오류: " +
@@ -903,11 +994,11 @@ function onPhotoChosen(e) {
 }
 
 // 사진 삭제
-function deletePhoto() {
-  if (!confirm("이 날의 사진을 삭제할까요?")) {
+function deletePhoto(id) {
+  if (!confirm("이 사진을 삭제할까요?")) {
     return;
   }
-  window.cloud.removePhoto(photoCollection(), currentDetailDate).catch(function (err) {
+  window.cloud.removePhoto(photoCollection(), id).catch(function (err) {
     console.log("사진 삭제 실패", err);
     alert("삭제하지 못했어요. 인터넷 연결을 확인해 주세요.");
   });
