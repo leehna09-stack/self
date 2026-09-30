@@ -23,7 +23,10 @@
         <h2>가족 일정 넣기</h2>
         <p>누가 언제 어디에 있는지 넣으면 산본집이 비는 날을 달력에 알려줘요. 빈집 2일차는 노랑, 3일차는 주황, 4일차부터는 빨강이에요.</p>
       </div>
-      <button class="add-btn" onclick="openForm()">📅 일정 입력</button>
+      <div class="add-card-buttons">
+        <button class="add-btn" onclick="openForm()">📅 일정 입력</button>
+        <button class="sub-btn" onclick="openManage()">✏️ 일정 변경</button>
+      </div>
     </section>
 
     <section class="card">
@@ -101,14 +104,6 @@
         <h2 id="detailTitle"></h2>
         <button class="round-btn" onclick="closeDetail()" aria-label="닫기">✕</button>
       </div>
-      <div id="detailPlaces"></div>
-      <div id="weatherSection">
-        <h3>이 날의 날씨</h3>
-        <div id="detailWeather"></div>
-      </div>
-      <h3>이 날의 사진</h3>
-      <div id="detailPhoto"></div>
-      <input type="file" id="photoInput" accept="image/*" hidden>
       <div id="noteSection">
         <h3>오늘의 한줄평</h3>
         <div id="detailNote"></div>
@@ -117,8 +112,25 @@
           <button type="button" onclick="saveNote()">저장</button>
         </div>
       </div>
-      <h3>이 날짜의 일정</h3>
-      <ul id="detailSchedules"></ul>
+      <div id="weatherSection">
+        <h3>이 날의 날씨</h3>
+        <div id="detailWeather"></div>
+      </div>
+      <h3>이 날의 사진</h3>
+      <div id="detailPhoto"></div>
+      <input type="file" id="photoInput" accept="image/*" hidden>
+      <h3>위치 정보</h3>
+      <div id="detailPlaces"></div>
+    </div>
+  </div>
+
+  <div id="manageModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="manageTitle">
+    <div class="modal-box">
+      <div class="modal-title">
+        <h2 id="manageTitle">일정 변경</h2>
+        <button class="round-btn" onclick="closeManage()" aria-label="닫기">✕</button>
+      </div>
+      <ul id="manageSchedules"></ul>
     </div>
   </div>
 

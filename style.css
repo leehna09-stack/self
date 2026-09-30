@@ -487,13 +487,13 @@ fieldset.people-check {
   font-weight: bold;
 }
 
-#detailSchedules {
+#manageSchedules {
   list-style: none;
   padding: 0;
   margin: 0;
 }
 
-#detailSchedules li {
+#manageSchedules li {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -503,11 +503,11 @@ fieldset.people-check {
   font-size: 14px;
 }
 
-#detailSchedules li span {
+#manageSchedules li span {
   flex: 1 1 100%;
 }
 
-#detailSchedules li button {
+#manageSchedules li button {
   min-height: 40px;
   padding: 0 18px;
   font-size: 14px;
@@ -593,6 +593,25 @@ fieldset.people-check {
   padding: 0 12px;
   border: 1.5px solid var(--line);
   border-radius: 14px;
+}
+
+/* 일정 입력 / 일정 변경 버튼 */
+.add-card-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 0 0 auto;
+}
+
+@media (max-width: 400px) {
+  .add-card-buttons {
+    flex: 1 1 100%;
+  }
+}
+
+.sub-btn {
+  min-height: 44px;
+  font-size: 15px;
 }
 
 /* 사용자 선택 */

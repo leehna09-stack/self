@@ -273,6 +273,11 @@ function onCloudData(list) {
 
   drawCalendar();
 
+  // 일정 변경창이 열려 있으면 목록도 새로고침
+  if (!document.getElementById("manageModal").classList.contains("hidden")) {
+    drawManageList();
+  }
+
   // 날짜 상세창이 열려 있으면 내용도 새로고침
   if (!document.getElementById("detailModal").classList.contains("hidden")) {
     openDetail(currentDetailDate, true);
@@ -566,47 +571,6 @@ function openDetail(dateString, keepFocus) {
     placeBox.appendChild(warn);
   }
 
-  // 이 날짜에 걸친 일정 목록 (수정/삭제 버튼 포함)
-  const list = document.getElementById("detailSchedules");
-  list.innerHTML = "";
-  let found = false;
-
-  for (let i = 0; i < schedules.length; i++) {
-    const s = schedules[i];
-    const id = s.id;
-    if (dateString >= s.startDate && dateString <= s.endDate) {
-      found = true;
-      const li = document.createElement("li");
-
-      const text = document.createElement("span");
-      text.textContent = s.person + " → " + s.place +
-        " (" + s.startDate + " ~ " + s.endDate + ")";
-      li.appendChild(text);
-
-      const editBtn = document.createElement("button");
-      editBtn.textContent = "수정";
-      editBtn.onclick = function () {
-        editSchedule(id);
-      };
-      li.appendChild(editBtn);
-
-      const delBtn = document.createElement("button");
-      delBtn.textContent = "삭제";
-      delBtn.onclick = function () {
-        deleteSchedule(id);
-      };
-      li.appendChild(delBtn);
-
-      list.appendChild(li);
-    }
-  }
-
-  if (!found) {
-    const li = document.createElement("li");
-    li.textContent = "등록된 일정이 없어요 (기본 위치)";
-    list.appendChild(li);
-  }
-
   // 날씨는 제주도 달력, 한줄평은 산본집 달력에서만
   document.getElementById("weatherSection").hidden = (viewPlace !== "제주도");
   document.getElementById("noteSection").hidden = (viewPlace !== "산본집");
@@ -810,6 +774,61 @@ function closeDetail() {
   document.getElementById("detailModal").classList.add("hidden");
 }
 
+// ===== 일정 변경 (수정/삭제) =====
+
+// 일정 변경창 열기
+function openManage() {
+  drawManageList();
+  document.getElementById("manageModal").classList.remove("hidden");
+  document.querySelector("#manageModal .modal-title button").focus();
+}
+
+// 일정 변경창 닫기
+function closeManage() {
+  document.getElementById("manageModal").classList.add("hidden");
+}
+
+// 등록된 일정 목록 그리기 (최근 시작일이 위로)
+function drawManageList() {
+  const list = document.getElementById("manageSchedules");
+  list.innerHTML = "";
+
+  if (schedules.length === 0) {
+    const li = document.createElement("li");
+    li.textContent = "등록된 일정이 없어요 (기본 위치)";
+    list.appendChild(li);
+    return;
+  }
+
+  // onCloudData가 이미 시작일이 늦은 순으로 정렬해 둠
+  for (let i = 0; i < schedules.length; i++) {
+    const s = schedules[i];
+    const id = s.id;
+    const li = document.createElement("li");
+
+    const text = document.createElement("span");
+    text.textContent = s.person + " → " + s.place +
+      " (" + s.startDate + " ~ " + s.endDate + ")";
+    li.appendChild(text);
+
+    const editBtn = document.createElement("button");
+    editBtn.textContent = "수정";
+    editBtn.onclick = function () {
+      editSchedule(id);
+    };
+    li.appendChild(editBtn);
+
+    const delBtn = document.createElement("button");
+    delBtn.textContent = "삭제";
+    delBtn.onclick = function () {
+      deleteSchedule(id);
+    };
+    li.appendChild(delBtn);
+
+    list.appendChild(li);
+  }
+}
+
 // 일정 수정: 입력창에 기존 내용을 채워서 열기
 function editSchedule(id) {
   const s = findSchedule(id);
@@ -817,7 +836,7 @@ function editSchedule(id) {
     return;
   }
   editingId = id;
-  closeDetail();
+  closeManage();
 
   const boxes = document.querySelectorAll('input[name="person"]');
   for (let i = 0; i < boxes.length; i++) {
@@ -849,6 +868,7 @@ document.addEventListener("keydown", function (e) {
   if (e.key === "Escape") {
     closeForm();
     closeDetail();
+    closeManage();
     closeCodeModal();
     closeUserModal();
   }
