@@ -339,15 +339,15 @@
         });
       },
 
-      // 그 날짜·그 장소(산본집/제주도)의 한줄평들을 받아오고, 바뀔 때마다 onData를 불러줌
-      watchNotes: function (date, place, onData) {
+      // 그 날짜의 한줄평들을 받아오고, 바뀔 때마다 onData를 불러줌
+      // (장소 구분은 script.js에서 함: place가 없는 옛날 글도 빠지지 않게)
+      watchNotes: function (date, onData) {
         if (unsubscribeNotes) {
           unsubscribeNotes();
         }
         const q = query(
           collection(db, "families", currentCode, "notes"),
-          where("date", "==", date),
-          where("place", "==", place)
+          where("date", "==", date)
         );
         unsubscribeNotes = onSnapshot(q, function (snap) {
           const list = [];

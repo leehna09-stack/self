@@ -373,6 +373,8 @@ function onDayData(map) {
   drawCalendar();
   if (!document.getElementById("detailModal").classList.contains("hidden")) {
     drawDetailWeather();
+    buildNotes();
+    drawDetailNotes();
   }
 }
 
@@ -963,20 +965,49 @@ function chooseWeather(key) {
 // 상세창을 열 때: 그 날짜의 한줄평 받아오기 시작
 function startNotes() {
   notes = [];
+  rawNotes = [];
   resetNoteForm();
   drawDetailNotes();
   if (cloudConnected) {
-    window.cloud.watchNotes(currentDetailDate, viewPlace, onNotesData);
+    window.cloud.watchNotes(currentDetailDate, onNotesData);
   }
 }
 
-// 한줄평이 도착하거나 바뀌면 실행 (오래된 것이 위, 새 것이 아래)
+// 저장소에서 받은 한줄평 (장소 구분 전)
+let rawNotes = [];
+
+// 한줄평이 도착하거나 바뀌면 실행
 function onNotesData(list) {
+  rawNotes = list;
+  buildNotes();
+  drawDetailNotes();
+}
+
+// 보고 있는 장소의 한줄평 목록 만들기 (오래된 것이 위, 새 것이 아래)
+// - 장소가 없는 옛날 글은 산본집 글로 봄
+// - 맨 처음 방식(하루 한 줄, days에 저장)으로 쓴 글도 산본집에 보여줌
+function buildNotes() {
+  const list = [];
+  for (let i = 0; i < rawNotes.length; i++) {
+    if ((rawNotes[i].place || "산본집") === viewPlace) {
+      list.push(rawNotes[i]);
+    }
+  }
+
+  const day = days[currentDetailDate];
+  if (viewPlace === "산본집" && day && day.note) {
+    list.push({
+      id: "legacy",
+      text: day.note,
+      by: day.noteBy || "",
+      createdAt: 0
+    });
+  }
+
   list.sort(function (a, b) {
     return a.createdAt - b.createdAt;
   });
   notes = list;
-  drawDetailNotes();
 }
 
 // 입력칸을 새 한줄평 쓰기 상태로 되돌림
@@ -1062,7 +1093,11 @@ function deleteNote(id) {
   if (editingNoteId === id) {
     resetNoteForm();
   }
-  window.cloud.removeNote(id).catch(function (err) {
+  // 맨 처음 방식으로 쓴 글은 days 문서의 글을 비움
+  const job = id === "legacy"
+    ? window.cloud.saveDay(currentDetailDate, { note: "" })
+    : window.cloud.removeNote(id);
+  job.catch(function (err) {
     console.log("한줄평 삭제 실패", err);
     alert("삭제하지 못했어요. 인터넷 연결을 확인해 주세요.");
   });
@@ -1085,14 +1120,28 @@ function saveNote() {
   }
 
   let job;
-  if (editingNoteId !== "") {
+  if (editingNoteId === "legacy") {
+    // 맨 처음 방식의 글을 고치면 새 방식으로 옮겨 저장 (작성 순서는 맨 위 유지)
+    const oldBy = days[currentDetailDate] ? days[currentDetailDate].noteBy : user;
+    job = window.cloud.addNote(
+      currentDetailDate,
+      { text: text, by: oldBy || user, place: "산본집", createdAt: 1 },
+      []
+    ).then(function () {
+      return window.cloud.saveDay(currentDetailDate, { note: "" });
+    });
+  } else if (editingNoteId !== "") {
     job = window.cloud.updateNote(editingNoteId, text);
   } else {
     // 새 글을 넣으면 MAX_NOTES개를 넘는 만큼 오래된 것부터 지움
-    const overflow = notes.length + 1 - MAX_NOTES;
+    // (옛날 방식 글은 개수에 넣지 않음)
+    const real = notes.filter(function (n) {
+      return n.id !== "legacy";
+    });
+    const overflow = real.length + 1 - MAX_NOTES;
     const deleteIds = [];
     for (let i = 0; i < overflow; i++) {
-      deleteIds.push(notes[i].id);
+      deleteIds.push(real[i].id);
     }
     job = window.cloud.addNote(
       currentDetailDate,
