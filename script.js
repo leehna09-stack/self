@@ -50,6 +50,11 @@ let notes = [];
 let editingNoteId = "";
 const MAX_NOTES = 10;
 
+// 새 소식(다른 사람이 올린 사진·한줄평) 기록과, 어디까지 확인했는지 저장하는 이름표
+let activity = [];
+const SEEN_KEY = "catHouseSeen";
+let seenFallback = Date.now();
+
 // 지금 쓰는 사람 이름 (이 폰에 저장해 둠)
 const USER_KEY = "catHouseUser";
 
@@ -168,6 +173,7 @@ function chooseUser(name) {
   }
   document.getElementById("userModal").classList.add("hidden");
   updateUserInfo();
+  updateBell();
 }
 
 // 사용자를 아직 안 골랐으면 선택창을 띄움
@@ -223,6 +229,115 @@ function connectCloud(code) {
   window.cloud.start(code, onCloudData, onCloudStatus);
   cloudConnected = true;
   watchMonthPhotos();
+  activity = [];
+  window.cloud.watchActivity(getSeen(), onActivityData);
+}
+
+// ===== 종 알림 (다른 사람이 올린 사진·한줄평) =====
+
+// 마지막으로 새 소식을 확인한 시각 (처음이면 지금부터 셈)
+function getSeen() {
+  try {
+    const saved = Number(localStorage.getItem(SEEN_KEY));
+    if (saved > 0) {
+      return saved;
+    }
+    localStorage.setItem(SEEN_KEY, String(seenFallback));
+  } catch (e) {
+    // 저장소를 못 쓰면 이번 접속 동안만 기억
+  }
+  return seenFallback;
+}
+
+// 확인한 시각을 지금으로 저장
+function markSeen() {
+  seenFallback = Date.now();
+  try {
+    localStorage.setItem(SEEN_KEY, String(seenFallback));
+  } catch (e) {
+    // 저장소를 못 쓰면 이번 접속 동안만 기억
+  }
+}
+
+// 확인 안 한 새 소식 (내가 올린 건 제외, 최신이 위)
+function getUnseen() {
+  const seen = getSeen();
+  const user = getUser();
+  const list = [];
+  for (let i = 0; i < activity.length; i++) {
+    if (activity[i].at > seen && activity[i].by !== user) {
+      list.push(activity[i]);
+    }
+  }
+  list.sort(function (a, b) {
+    return b.at - a.at;
+  });
+  return list;
+}
+
+// 새 소식 기록이 도착하면 실행
+function onActivityData(list) {
+  activity = list;
+  updateBell();
+}
+
+// 종 아이콘의 숫자 표시
+function updateBell() {
+  const count = getUnseen().length;
+  const badge = document.getElementById("bellBadge");
+  badge.hidden = (count === 0);
+  badge.textContent = count > 9 ? "9+" : String(count);
+  document.getElementById("bellBtn").setAttribute(
+    "aria-label", count === 0 ? "새 소식" : "새 소식 " + count + "개");
+}
+
+// 종을 누르면 새 소식 목록을 보여주고, 확인한 것으로 처리
+function openNotif() {
+  const list = document.getElementById("notifList");
+  list.innerHTML = "";
+
+  const unseen = getUnseen();
+  if (unseen.length === 0) {
+    const li = document.createElement("li");
+    li.className = "note-empty";
+    li.textContent = "새 소식이 없어요";
+    list.appendChild(li);
+  }
+
+  for (let i = 0; i < unseen.length; i++) {
+    const a = unseen[i];
+    const li = document.createElement("li");
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.textContent = a.by + " 님이 " + a.place + " " + a.date +
+      (a.type === "photo" ? " 사진을 올렸어요 📷" : " 한줄평을 남겼어요 💬");
+    btn.onclick = function () {
+      gotoActivity(a);
+    };
+    li.appendChild(btn);
+    list.appendChild(li);
+  }
+
+  markSeen();
+  updateBell();
+  document.getElementById("notifModal").classList.remove("hidden");
+  document.querySelector("#notifModal .modal-title button").focus();
+}
+
+// 새 소식창 닫기
+function closeNotif() {
+  document.getElementById("notifModal").classList.add("hidden");
+}
+
+// 새 소식을 누르면 그 장소의 그 달로 가서 그 날짜를 엶
+function gotoActivity(a) {
+  closeNotif();
+  viewPlace = a.place;
+  viewYear = Number(a.date.slice(0, 4));
+  viewMonth = Number(a.date.slice(5, 7)) - 1;
+  drawCalendar();
+  watchMonthPhotos();
+  openDetail(a.date);
 }
 
 // 지금 보고 있는 장소의 사진 저장 위치 (산본집과 제주도 사진은 따로 저장)
@@ -679,12 +794,11 @@ function openDetail(dateString, keepFocus) {
     placeBox.appendChild(warn);
   }
 
-  // 날씨는 제주도 달력, 한줄평은 산본집 달력에서만
+  // 날씨는 제주도 달력에서만
   document.getElementById("weatherSection").hidden = (viewPlace !== "제주도");
-  document.getElementById("noteSection").hidden = (viewPlace !== "산본집");
   drawDetailWeather();
   drawDetailPhoto();
-  if (viewPlace === "산본집" && !keepFocus) {
+  if (!keepFocus) {
     startNotes();
   }
 
@@ -852,7 +966,7 @@ function startNotes() {
   resetNoteForm();
   drawDetailNotes();
   if (cloudConnected) {
-    window.cloud.watchNotes(currentDetailDate, onNotesData);
+    window.cloud.watchNotes(currentDetailDate, viewPlace, onNotesData);
   }
 }
 
@@ -982,7 +1096,7 @@ function saveNote() {
     }
     job = window.cloud.addNote(
       currentDetailDate,
-      { text: text, by: user, createdAt: Date.now() },
+      { text: text, by: user, place: viewPlace, createdAt: Date.now() },
       deleteIds
     );
   }
@@ -1098,6 +1212,7 @@ document.addEventListener("keydown", function (e) {
     closeForm();
     closeDetail();
     closeManage();
+    closeNotif();
     closeCodeModal();
     closeUserModal();
   }

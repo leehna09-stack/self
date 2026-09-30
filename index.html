@@ -35,6 +35,7 @@
           <button class="round-btn" onclick="switchPlace()" aria-label="이전 장소">◀</button>
           <h2 id="placeTitle" aria-live="polite">🏠 산본집</h2>
           <button class="round-btn" onclick="switchPlace()" aria-label="다음 장소">▶</button>
+          <button class="round-btn bell-btn" id="bellBtn" onclick="openNotif()" aria-label="새 소식">🔔<span id="bellBadge" class="badge" hidden></span></button>
         </div>
 
         <div class="calendar-header">
@@ -156,6 +157,16 @@
     </div>
   </div>
 
+  <div id="notifModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="notifTitle">
+    <div class="modal-box">
+      <div class="modal-title">
+        <h2 id="notifTitle">새 소식</h2>
+        <button class="round-btn" onclick="closeNotif()" aria-label="닫기">✕</button>
+      </div>
+      <ul id="notifList"></ul>
+    </div>
+  </div>
+
   <div id="userModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="userTitle">
     <div class="modal-box">
       <div class="modal-title">
@@ -196,6 +207,7 @@
     let unsubscribePhotos = null;
     let unsubscribeDays = null;
     let unsubscribeNotes = null;
+    let unsubscribeActivity = null;
     let currentCode = "";
 
     function scheduleCollection() {
@@ -267,11 +279,42 @@
       },
 
       // 그 날짜의 사진 저장 (이미 있으면 바꿈, 하루 한 장, by = 올린 사람)
+      // (종 알림용 activity 기록도 같이 저장)
       savePhoto: function (name, date, image, by) {
-        return setDoc(doc(db, "families", currentCode, name, date), {
+        const now = Date.now();
+        const batch = writeBatch(db);
+        batch.set(doc(db, "families", currentCode, name, date), {
           image: image,
           by: by,
-          savedAt: Date.now()
+          savedAt: now
+        });
+        batch.set(doc(collection(db, "families", currentCode, "activity")), {
+          type: "photo",
+          by: by,
+          date: date,
+          place: name === "jejuPhotos" ? "제주도" : "산본집",
+          at: now
+        });
+        return batch.commit();
+      },
+
+      // since 이후에 올라온 새 활동(사진·한줄평)을 받아오고, 바뀔 때마다 onData를 불러줌
+      watchActivity: function (since, onData) {
+        if (unsubscribeActivity) {
+          unsubscribeActivity();
+        }
+        const q = query(
+          collection(db, "families", currentCode, "activity"),
+          where("at", ">", since)
+        );
+        unsubscribeActivity = onSnapshot(q, function (snap) {
+          const list = [];
+          snap.forEach(function (d) {
+            list.push(d.data());
+          });
+          onData(list);
+        }, function (error) {
+          console.log("새 소식 읽기 실패", error);
         });
       },
 
@@ -296,14 +339,15 @@
         });
       },
 
-      // 그 날짜의 한줄평들을 받아오고, 바뀔 때마다 onData를 불러줌
-      watchNotes: function (date, onData) {
+      // 그 날짜·그 장소(산본집/제주도)의 한줄평들을 받아오고, 바뀔 때마다 onData를 불러줌
+      watchNotes: function (date, place, onData) {
         if (unsubscribeNotes) {
           unsubscribeNotes();
         }
         const q = query(
           collection(db, "families", currentCode, "notes"),
-          where("date", "==", date)
+          where("date", "==", date),
+          where("place", "==", place)
         );
         unsubscribeNotes = onSnapshot(q, function (snap) {
           const list = [];
@@ -329,9 +373,17 @@
         const batch = writeBatch(db);
         batch.set(doc(collection(db, "families", currentCode, "notes")), {
           date: date,
+          place: item.place,
           text: item.text,
           by: item.by,
           createdAt: item.createdAt
+        });
+        batch.set(doc(collection(db, "families", currentCode, "activity")), {
+          type: "note",
+          by: item.by,
+          date: date,
+          place: item.place,
+          at: item.createdAt
         });
         deleteIds.forEach(function (id) {
           batch.delete(doc(db, "families", currentCode, "notes", id));
