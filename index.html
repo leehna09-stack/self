@@ -102,18 +102,20 @@
         <button class="round-btn" onclick="closeDetail()" aria-label="닫기">✕</button>
       </div>
       <div id="detailPlaces"></div>
-      <div id="jejuOnly">
+      <div id="weatherSection">
         <h3>이 날의 날씨</h3>
         <div id="detailWeather"></div>
-        <h3>이 날의 사진</h3>
-        <div id="detailPhoto"></div>
-        <input type="file" id="photoInput" accept="image/*" hidden>
       </div>
-      <h3>오늘의 한줄평</h3>
-      <div id="detailNote"></div>
-      <div class="note-form">
-        <input type="text" id="noteInput" maxlength="50" autocomplete="off" placeholder="최대 50자">
-        <button type="button" onclick="saveNote()">저장</button>
+      <h3>이 날의 사진</h3>
+      <div id="detailPhoto"></div>
+      <input type="file" id="photoInput" accept="image/*" hidden>
+      <div id="noteSection">
+        <h3>오늘의 한줄평</h3>
+        <div id="detailNote"></div>
+        <div class="note-form">
+          <input type="text" id="noteInput" maxlength="50" autocomplete="off" placeholder="최대 50자">
+          <button type="button" onclick="saveNote()">저장</button>
+        </div>
       </div>
       <h3>이 날짜의 일정</h3>
       <ul id="detailSchedules"></ul>
@@ -225,12 +227,13 @@
       },
 
       // 보고 있는 달(시작일~끝일)의 사진만 받아오고, 바뀔 때마다 onData를 불러줌
-      watchPhotos: function (startDate, endDate, onData) {
+      // (name = 컬렉션 이름: 산본집 "photos", 제주도 "jejuPhotos")
+      watchPhotos: function (name, startDate, endDate, onData) {
         if (unsubscribePhotos) {
           unsubscribePhotos();
         }
         const q = query(
-          collection(db, "families", currentCode, "photos"),
+          collection(db, "families", currentCode, name),
           where(documentId(), ">=", startDate),
           where(documentId(), "<=", endDate)
         );
@@ -246,8 +249,8 @@
       },
 
       // 그 날짜의 사진 저장 (이미 있으면 바꿈, 하루 한 장, by = 올린 사람)
-      savePhoto: function (date, image, by) {
-        return setDoc(doc(db, "families", currentCode, "photos", date), {
+      savePhoto: function (name, date, image, by) {
+        return setDoc(doc(db, "families", currentCode, name, date), {
           image: image,
           by: by,
           savedAt: Date.now()
@@ -281,8 +284,8 @@
       },
 
       // 그 날짜의 사진 삭제
-      removePhoto: function (date) {
-        return deleteDoc(doc(db, "families", currentCode, "photos", date));
+      removePhoto: function (name, date) {
+        return deleteDoc(doc(db, "families", currentCode, name, date));
       }
     };
 

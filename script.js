@@ -220,6 +220,11 @@ function connectCloud(code) {
   watchMonthPhotos();
 }
 
+// 지금 보고 있는 장소의 사진 저장 위치 (산본집과 제주도 사진은 따로 저장)
+function photoCollection() {
+  return viewPlace === "제주도" ? "jejuPhotos" : "photos";
+}
+
 // 지금 보고 있는 달의 사진을 받아오기 시작
 function watchMonthPhotos() {
   if (!cloudConnected) {
@@ -229,7 +234,7 @@ function watchMonthPhotos() {
   days = {};
   const start = makeDateString(viewYear, viewMonth, 1);
   const end = makeDateString(viewYear, viewMonth, 31);
-  window.cloud.watchPhotos(start, end, onPhotoData);
+  window.cloud.watchPhotos(photoCollection(), start, end, onPhotoData);
   window.cloud.watchDays(start, end, onDayData);
 }
 
@@ -381,7 +386,7 @@ function drawCalendar() {
       }
     }
 
-    // 제주도 달력: 날씨와 사진 표시
+    // 제주도 달력: 날씨 표시
     if (viewPlace === "제주도") {
       const day = days[dateString];
       const weather = day ? findWeather(day.weather) : null;
@@ -391,12 +396,14 @@ function drawCalendar() {
         w.textContent = weather.icon;
         cell.appendChild(w);
       }
-      if (photos[dateString]) {
-        const mark = document.createElement("div");
-        mark.className = "day-photo";
-        mark.textContent = "📷";
-        cell.appendChild(mark);
-      }
+    }
+
+    // 사진이 있는 날은 표시 (산본집·제주도 각각의 사진)
+    if (photos[dateString]) {
+      const mark = document.createElement("div");
+      mark.className = "day-photo";
+      mark.textContent = "📷";
+      cell.appendChild(mark);
     }
 
     // 날짜 칸을 누르면 상세창 열기
@@ -427,6 +434,7 @@ function changeMonth(step) {
 function switchPlace() {
   viewPlace = (viewPlace === "산본집") ? "제주도" : "산본집";
   drawCalendar();
+  watchMonthPhotos();
 }
 
 // ===== 일정 입력 =====
@@ -536,15 +544,16 @@ function openDetail(dateString, keepFocus) {
   // 장소별로 누가 있는지
   const placeBox = document.getElementById("detailPlaces");
   placeBox.innerHTML = "";
-  for (let p = 0; p < placeList.length; p++) {
+  const shownPlaces = ["산본집", "제주도"];
+  for (let p = 0; p < shownPlaces.length; p++) {
     const names = [];
     for (let i = 0; i < people.length; i++) {
-      if (getPlace(people[i], dateString) === placeList[p]) {
+      if (getPlace(people[i], dateString) === shownPlaces[p]) {
         names.push(people[i]);
       }
     }
     const line = document.createElement("div");
-    line.textContent = placeIcons[placeList[p]] + " " + placeList[p] + ": " +
+    line.textContent = placeIcons[shownPlaces[p]] + " " + shownPlaces[p] + ": " +
       (names.length > 0 ? names.join(", ") : "없음");
     placeBox.appendChild(line);
   }
@@ -598,8 +607,9 @@ function openDetail(dateString, keepFocus) {
     list.appendChild(li);
   }
 
-  // 날씨·사진은 제주도 달력에서 열었을 때만
-  document.getElementById("jejuOnly").hidden = (viewPlace !== "제주도");
+  // 날씨는 제주도 달력, 한줄평은 산본집 달력에서만
+  document.getElementById("weatherSection").hidden = (viewPlace !== "제주도");
+  document.getElementById("noteSection").hidden = (viewPlace !== "산본집");
   drawDetailWeather();
   drawDetailPhoto();
   drawDetailNote(!keepFocus);
@@ -692,8 +702,9 @@ function onPhotoChosen(e) {
     return;
   }
   const date = currentDetailDate;
+  const collectionName = photoCollection();
   shrinkPhoto(file).then(function (image) {
-    return window.cloud.savePhoto(date, image, user);
+    return window.cloud.savePhoto(collectionName, date, image, user);
   }).catch(function (err) {
     console.log("사진 저장 실패", err);
     alert("사진을 저장하지 못했어요. 인터넷 연결과 사진 파일을 확인해 주세요.");
@@ -705,7 +716,7 @@ function deletePhoto() {
   if (!confirm("이 날의 사진을 삭제할까요?")) {
     return;
   }
-  window.cloud.removePhoto(currentDetailDate).catch(function (err) {
+  window.cloud.removePhoto(photoCollection(), currentDetailDate).catch(function (err) {
     console.log("사진 삭제 실패", err);
     alert("삭제하지 못했어요. 인터넷 연결을 확인해 주세요.");
   });
