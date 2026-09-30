@@ -30,8 +30,23 @@ const defaultPlaces = {
 // 일정을 담아둘 배열 (인터넷 저장소에서 받아와서 채워져요)
 const schedules = [];
 
-// 보고 있는 달의 사진들 ("2026-10-05" → 사진 데이터)
+// 보고 있는 달의 사진들 ("2026-10-05" → { image, by })
 let photos = {};
+
+// 보고 있는 달의 날씨·한줄평 ("2026-10-05" → { weather, note, noteBy ... })
+let days = {};
+
+// 날씨 종류 (저장은 key로, 화면에는 icon)
+const weatherList = [
+  { key: "sun", icon: "☀️", label: "맑음" },
+  { key: "cloud", icon: "⛅", label: "구름" },
+  { key: "overcast", icon: "☁️", label: "흐림" },
+  { key: "rain", icon: "🌧️", label: "비" },
+  { key: "typhoon", icon: "🌀", label: "태풍" }
+];
+
+// 지금 쓰는 사람 이름 (이 폰에 저장해 둠)
+const USER_KEY = "catHouseUser";
 
 // 인터넷 저장소에 연결됐는지
 let cloudConnected = false;
@@ -107,6 +122,57 @@ function getSavedCode() {
   }
 }
 
+// 이 폰에 저장된 사용자 이름 꺼내기
+function getUser() {
+  try {
+    const name = localStorage.getItem(USER_KEY) || "";
+    return people.indexOf(name) >= 0 ? name : "";
+  } catch (e) {
+    return "";
+  }
+}
+
+// 하단에 현재 사용자 표시
+function updateUserInfo() {
+  const name = getUser();
+  document.getElementById("userInfo").textContent = name === "" ? "" : "👤 " + name;
+}
+
+// 사용자 선택창 열기
+function openUserModal() {
+  // 아직 사용자를 안 골랐으면 닫기 버튼을 숨김
+  document.getElementById("userCloseBtn").style.display = getUser() === "" ? "none" : "";
+  document.getElementById("userModal").classList.remove("hidden");
+}
+
+// 사용자 선택창 닫기 (이미 골랐을 때만)
+function closeUserModal() {
+  if (getUser() === "") {
+    return;
+  }
+  document.getElementById("userModal").classList.add("hidden");
+}
+
+// 사용자 선택
+function chooseUser(name) {
+  try {
+    localStorage.setItem(USER_KEY, name);
+  } catch (e) {
+    alert("이 브라우저에서는 저장할 수 없어요. 시크릿 모드가 아닌지 확인해 주세요.");
+    return;
+  }
+  document.getElementById("userModal").classList.add("hidden");
+  updateUserInfo();
+}
+
+// 사용자를 아직 안 골랐으면 선택창을 띄움
+function ensureUser() {
+  updateUserInfo();
+  if (getUser() === "") {
+    openUserModal();
+  }
+}
+
 // 가족 코드 입력창 열기
 function openCodeModal() {
   document.getElementById("familyCodeInput").value = "";
@@ -143,6 +209,7 @@ function saveCode() {
 
   document.getElementById("codeModal").classList.add("hidden");
   connectCloud(code);
+  ensureUser();
 }
 
 // 인터넷 저장소에 연결
@@ -159,11 +226,11 @@ function watchMonthPhotos() {
     return;
   }
   photos = {};
-  window.cloud.watchPhotos(
-    makeDateString(viewYear, viewMonth, 1),
-    makeDateString(viewYear, viewMonth, 31),
-    onPhotoData
-  );
+  days = {};
+  const start = makeDateString(viewYear, viewMonth, 1);
+  const end = makeDateString(viewYear, viewMonth, 31);
+  window.cloud.watchPhotos(start, end, onPhotoData);
+  window.cloud.watchDays(start, end, onDayData);
 }
 
 // 사진이 도착하거나 바뀌면 실행
@@ -172,6 +239,16 @@ function onPhotoData(map) {
   drawCalendar();
   if (!document.getElementById("detailModal").classList.contains("hidden")) {
     drawDetailPhoto();
+  }
+}
+
+// 날씨·한줄평이 도착하거나 바뀌면 실행
+function onDayData(map) {
+  days = map;
+  drawCalendar();
+  if (!document.getElementById("detailModal").classList.contains("hidden")) {
+    drawDetailWeather();
+    drawDetailNote(false);
   }
 }
 
@@ -220,6 +297,7 @@ function startSync() {
     openCodeModal();
   } else {
     connectCloud(code);
+    ensureUser();
   }
 }
 
@@ -303,12 +381,22 @@ function drawCalendar() {
       }
     }
 
-    // 사진이 있는 날은 표시
-    if (photos[dateString]) {
-      const mark = document.createElement("div");
-      mark.className = "day-photo";
-      mark.textContent = "📷";
-      cell.appendChild(mark);
+    // 제주도 달력: 날씨와 사진 표시
+    if (viewPlace === "제주도") {
+      const day = days[dateString];
+      const weather = day ? findWeather(day.weather) : null;
+      if (weather) {
+        const w = document.createElement("div");
+        w.className = "day-weather";
+        w.textContent = weather.icon;
+        cell.appendChild(w);
+      }
+      if (photos[dateString]) {
+        const mark = document.createElement("div");
+        mark.className = "day-photo";
+        mark.textContent = "📷";
+        cell.appendChild(mark);
+      }
     }
 
     // 날짜 칸을 누르면 상세창 열기
@@ -510,7 +598,11 @@ function openDetail(dateString, keepFocus) {
     list.appendChild(li);
   }
 
+  // 날씨·사진은 제주도 달력에서 열었을 때만
+  document.getElementById("jejuOnly").hidden = (viewPlace !== "제주도");
+  drawDetailWeather();
   drawDetailPhoto();
+  drawDetailNote(!keepFocus);
 
   document.getElementById("detailModal").classList.remove("hidden");
   if (!keepFocus) {
@@ -523,12 +615,20 @@ function drawDetailPhoto() {
   const box = document.getElementById("detailPhoto");
   box.innerHTML = "";
 
-  const image = photos[currentDetailDate];
+  const photo = photos[currentDetailDate];
+  const image = photo ? photo.image : "";
   if (image) {
     const img = document.createElement("img");
     img.src = image;
     img.alt = currentDetailDate + " 사진";
     box.appendChild(img);
+
+    if (photo.by) {
+      const by = document.createElement("div");
+      by.className = "photo-by";
+      by.textContent = "📷 " + photo.by + " 님이 올렸어요";
+      box.appendChild(by);
+    }
   }
 
   const addBtn = document.createElement("button");
@@ -586,9 +686,14 @@ function onPhotoChosen(e) {
     alert("아직 가족 코드로 연결되지 않았어요. 잠시 후 다시 시도해 주세요.");
     return;
   }
+  const user = getUser();
+  if (user === "") {
+    openUserModal();
+    return;
+  }
   const date = currentDetailDate;
   shrinkPhoto(file).then(function (image) {
-    return window.cloud.savePhoto(date, image);
+    return window.cloud.savePhoto(date, image, user);
   }).catch(function (err) {
     console.log("사진 저장 실패", err);
     alert("사진을 저장하지 못했어요. 인터넷 연결과 사진 파일을 확인해 주세요.");
@@ -603,6 +708,89 @@ function deletePhoto() {
   window.cloud.removePhoto(currentDetailDate).catch(function (err) {
     console.log("사진 삭제 실패", err);
     alert("삭제하지 못했어요. 인터넷 연결을 확인해 주세요.");
+  });
+}
+
+// key로 날씨 정보 찾기 (없으면 null)
+function findWeather(key) {
+  for (let i = 0; i < weatherList.length; i++) {
+    if (weatherList[i].key === key) {
+      return weatherList[i];
+    }
+  }
+  return null;
+}
+
+// 상세창의 날씨 선택 버튼 그리기 (같은 걸 다시 누르면 해제)
+function drawDetailWeather() {
+  const box = document.getElementById("detailWeather");
+  box.innerHTML = "";
+
+  const day = days[currentDetailDate];
+  const selected = day ? day.weather : "";
+
+  for (let i = 0; i < weatherList.length; i++) {
+    const w = weatherList[i];
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.textContent = w.icon + " " + w.label;
+    btn.setAttribute("aria-pressed", w.key === selected ? "true" : "false");
+    btn.onclick = function () {
+      chooseWeather(w.key === selected ? "" : w.key);
+    };
+    box.appendChild(btn);
+  }
+}
+
+// 날씨 저장
+function chooseWeather(key) {
+  const user = getUser();
+  if (user === "") {
+    openUserModal();
+    return;
+  }
+  if (!cloudConnected) {
+    alert("아직 가족 코드로 연결되지 않았어요. 잠시 후 다시 시도해 주세요.");
+    return;
+  }
+  window.cloud.saveDay(currentDetailDate, { weather: key, weatherBy: user }).catch(function (err) {
+    console.log("날씨 저장 실패", err);
+    alert("저장하지 못했어요. 인터넷 연결을 확인해 주세요.");
+  });
+}
+
+// 상세창의 한줄평 그리기 (resetInput이 true면 입력칸도 저장된 글로 채움)
+function drawDetailNote(resetInput) {
+  const day = days[currentDetailDate];
+  const note = day && day.note ? day.note : "";
+
+  const view = document.getElementById("detailNote");
+  view.textContent = note === ""
+    ? "아직 한줄평이 없어요"
+    : "“" + note + "” — " + (day.noteBy || "");
+
+  // 입력 중인 글이 지워지지 않게, 입력칸에 포커스가 없을 때만 채움
+  const input = document.getElementById("noteInput");
+  if (resetInput || document.activeElement !== input) {
+    input.value = note;
+  }
+}
+
+// 한줄평 저장 (비우고 저장하면 삭제)
+function saveNote() {
+  const user = getUser();
+  if (user === "") {
+    openUserModal();
+    return;
+  }
+  if (!cloudConnected) {
+    alert("아직 가족 코드로 연결되지 않았어요. 잠시 후 다시 시도해 주세요.");
+    return;
+  }
+  const note = document.getElementById("noteInput").value.trim().slice(0, 50);
+  window.cloud.saveDay(currentDetailDate, { note: note, noteBy: user }).catch(function (err) {
+    console.log("한줄평 저장 실패", err);
+    alert("저장하지 못했어요. 인터넷 연결을 확인해 주세요.");
   });
 }
 
@@ -651,6 +839,7 @@ document.addEventListener("keydown", function (e) {
     closeForm();
     closeDetail();
     closeCodeModal();
+    closeUserModal();
   }
 });
 

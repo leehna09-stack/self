@@ -47,6 +47,8 @@
     <div class="sync-bar">
       <span id="syncStatus" aria-live="polite">연결 준비 중…</span>
       <span id="codeInfo"></span>
+      <span id="userInfo"></span>
+      <button class="link-btn" onclick="openUserModal()">사용자 바꾸기</button>
       <button class="link-btn" onclick="openCodeModal()">가족 코드 바꾸기</button>
     </div>
   </main>
@@ -100,9 +102,19 @@
         <button class="round-btn" onclick="closeDetail()" aria-label="닫기">✕</button>
       </div>
       <div id="detailPlaces"></div>
-      <h3>이 날의 사진</h3>
-      <div id="detailPhoto"></div>
-      <input type="file" id="photoInput" accept="image/*" hidden>
+      <div id="jejuOnly">
+        <h3>이 날의 날씨</h3>
+        <div id="detailWeather"></div>
+        <h3>이 날의 사진</h3>
+        <div id="detailPhoto"></div>
+        <input type="file" id="photoInput" accept="image/*" hidden>
+      </div>
+      <h3>오늘의 한줄평</h3>
+      <div id="detailNote"></div>
+      <div class="note-form">
+        <input type="text" id="noteInput" maxlength="50" autocomplete="off" placeholder="최대 50자">
+        <button type="button" onclick="saveNote()">저장</button>
+      </div>
       <h3>이 날짜의 일정</h3>
       <ul id="detailSchedules"></ul>
     </div>
@@ -121,6 +133,22 @@
           <input type="text" id="familyCodeInput" name="familyCode" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="영문·숫자 20자 이상">
         </label>
         <button id="codeSaveBtn" onclick="saveCode()">입장하기</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="userModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="userTitle">
+    <div class="modal-box">
+      <div class="modal-title">
+        <h2 id="userTitle">누구세요?</h2>
+        <button class="round-btn" id="userCloseBtn" onclick="closeUserModal()" aria-label="닫기">✕</button>
+      </div>
+      <p class="hint">고르면 이 폰에 저장돼요. 사진과 한줄평에 이름이 남아요.</p>
+      <div class="user-buttons">
+        <button type="button" onclick="chooseUser('엄마')">엄마</button>
+        <button type="button" onclick="chooseUser('아빠')">아빠</button>
+        <button type="button" onclick="chooseUser('한나')">한나</button>
+        <button type="button" onclick="chooseUser('한비')">한비</button>
       </div>
     </div>
   </div>
@@ -147,6 +175,7 @@
 
     let unsubscribe = null;
     let unsubscribePhotos = null;
+    let unsubscribeDays = null;
     let currentCode = "";
 
     function scheduleCollection() {
@@ -208,7 +237,7 @@
         unsubscribePhotos = onSnapshot(q, function (snap) {
           const map = {};
           snap.forEach(function (d) {
-            map[d.id] = d.data().image;
+            map[d.id] = d.data();
           });
           onData(map);
         }, function (error) {
@@ -216,12 +245,39 @@
         });
       },
 
-      // 그 날짜의 사진 저장 (이미 있으면 바꿈, 하루 한 장)
-      savePhoto: function (date, image) {
+      // 그 날짜의 사진 저장 (이미 있으면 바꿈, 하루 한 장, by = 올린 사람)
+      savePhoto: function (date, image, by) {
         return setDoc(doc(db, "families", currentCode, "photos", date), {
           image: image,
+          by: by,
           savedAt: Date.now()
         });
+      },
+
+      // 보고 있는 달의 날씨·한줄평을 받아오고, 바뀔 때마다 onData를 불러줌
+      watchDays: function (startDate, endDate, onData) {
+        if (unsubscribeDays) {
+          unsubscribeDays();
+        }
+        const q = query(
+          collection(db, "families", currentCode, "days"),
+          where(documentId(), ">=", startDate),
+          where(documentId(), "<=", endDate)
+        );
+        unsubscribeDays = onSnapshot(q, function (snap) {
+          const map = {};
+          snap.forEach(function (d) {
+            map[d.id] = d.data();
+          });
+          onData(map);
+        }, function (error) {
+          console.log("날씨·한줄평 읽기 실패", error);
+        });
+      },
+
+      // 그 날짜의 날씨/한줄평 저장 (넘긴 항목만 바뀜)
+      saveDay: function (date, fields) {
+        return setDoc(doc(db, "families", currentCode, "days", date), fields, { merge: true });
       },
 
       // 그 날짜의 사진 삭제

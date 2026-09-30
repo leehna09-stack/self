@@ -537,6 +537,77 @@ fieldset.people-check {
   font-size: 14px;
 }
 
+.day-weather {
+  font-size: 14px;
+  line-height: 1;
+}
+
+.photo-by {
+  width: 100%;
+  font-size: 13px;
+  color: var(--sub);
+}
+
+/* 날씨 선택 */
+#detailWeather {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+#detailWeather button {
+  min-height: 40px;
+  padding: 0 14px;
+  font-size: 14px;
+}
+
+#detailWeather button[aria-pressed="true"] {
+  background-color: var(--ink);
+  border-color: var(--ink);
+  color: #ffffff;
+}
+
+/* 한줄평 */
+#detailNote {
+  background-color: var(--soft);
+  border-radius: 14px;
+  padding: 8px 14px;
+  margin-bottom: 8px;
+  font-size: 15px;
+  overflow-wrap: anywhere;
+}
+
+.note-form {
+  display: flex;
+  gap: 8px;
+}
+
+.note-form input[type="text"] {
+  flex: 1;
+  min-width: 0;
+  font: inherit;
+  font-size: 16px;
+  color: var(--ink);
+  background-color: #ffffff;
+  min-height: 44px;
+  padding: 0 12px;
+  border: 1.5px solid var(--line);
+  border-radius: 14px;
+}
+
+/* 사용자 선택 */
+.user-buttons {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.user-buttons button {
+  min-height: 52px;
+  font-size: 16px;
+}
+
 /* 가족 코드 입력 */
 .form-box input[type="text"] {
   font: inherit;
