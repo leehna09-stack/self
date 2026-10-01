@@ -6,6 +6,9 @@
 <meta name="color-scheme" content="light">
 <meta name="theme-color" content="#ffffff">
 <title>우리 가계부</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
 
 <!-- ============================================================
   [1] 꾸미기(CSS) 영역
@@ -14,41 +17,42 @@
 ============================================================= -->
 <style>
 :root {
-  --bg: #f5f5f4;        /* 화면 바탕 (연한 회색) */
+  --bg: #f6f5f3;        /* 화면 바탕 (따뜻한 연회색) */
   --surface: #ffffff;   /* 카드 바탕 (흰색) */
   --text: #1c1917;      /* 기본 글자색 */
   --muted: #57534e;     /* 보조 글자색 */
-  --line: #d6d3d1;      /* 구분선 */
+  --line: #e7e5e4;      /* 구분선 */
   --dark: #1c1917;      /* 한나 막대 / 주요 버튼 */
-  --mid: #8a847e;       /* 동일 막대 / 입력칸 테두리 */
+  --mid: #78716c;       /* 동일 막대 / 입력칸 테두리 */
   --red: #b91c1c;       /* 증가·삭제 강조에만 사용 */
   --green: #15803d;     /* 감소 강조에만 사용 */
-  --radius: 12px;
+  --radius: 16px;
 }
 * { box-sizing: border-box; }
 [hidden] { display: none !important; }
 html { -webkit-text-size-adjust: 100%; }
 body {
   margin: 0; background: var(--bg); color: var(--text);
-  font: 16px/1.5 system-ui, -apple-system, "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", sans-serif;
+  font: 16px/1.6 "Noto Sans KR", system-ui, -apple-system, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+  letter-spacing: -0.01em;
 }
-.wrap { max-width: 560px; margin: 0 auto; padding: 16px 16px calc(96px + env(safe-area-inset-bottom)); }
-h1 { font-size: 22px; margin: 0; }
-h2 { font-size: 18px; margin: 0 0 12px; }
-h3 { font-size: 15px; margin: 0; color: var(--muted); font-weight: 600; }
+.wrap { max-width: 560px; margin: 0 auto; padding: 20px 20px calc(96px + env(safe-area-inset-bottom)); }
+h1 { font-size: 24px; font-weight: 700; letter-spacing: -0.03em; margin: 0; }
+h2 { font-size: 18px; font-weight: 700; margin: 0 0 12px; }
+h3 { font-size: 15px; margin: 0; color: var(--muted); font-weight: 500; }
 p { margin: 0; }
 .num { font-variant-numeric: tabular-nums; }
 
 /* 위쪽: 제목 + 누가 쓰는지 고르는 버튼 */
-.top { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 16px; }
-.who { display: flex; border: 1px solid var(--mid); border-radius: 999px; overflow: hidden; background: var(--surface); }
-.who button {
-  min-height: 44px; min-width: 64px; padding: 0 18px; border: 0; background: transparent;
-  font: inherit; color: var(--text); cursor: pointer; touch-action: manipulation;
+.top { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 20px; }
+.who { display: flex; gap: 4px; }
+.who button, .tabs button {
+  min-height: 44px; padding: 0 14px; border: 0; border-bottom: 3px solid transparent; border-radius: 0; background: transparent;
+  font: inherit; color: var(--muted); cursor: pointer; touch-action: manipulation;
 }
-.who button[aria-pressed="true"] { background: var(--dark); color: #fff; font-weight: 700; }
+.who button[aria-selected="true"], .tabs button[aria-selected="true"] { color: var(--text); font-weight: 700; border-bottom-color: var(--dark); }
 
-.card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px; margin-bottom: 16px; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 20px; margin-bottom: 20px; box-shadow: 0 1px 2px rgba(28,25,23,.05); }
 
 /* 버튼 공통 */
 .btn {
@@ -72,6 +76,7 @@ p { margin: 0; }
 .label { color: var(--muted); font-size: 14px; }
 .big { font-size: 32px; font-weight: 800; line-height: 1.2; margin-bottom: 14px; }
 .empty { color: var(--muted); padding: 8px 0; }
+.empty.card { white-space: pre-line; padding: 32px 24px; text-align: center; line-height: 1.7; }
 .bar { position: relative; display: flex; height: 40px; border-radius: 10px; overflow: hidden; background: var(--line); }
 .bar button { flex: 0 1 auto; min-width: 24px; height: 100%; margin: 0; padding: 0; border: 0; cursor: pointer; touch-action: manipulation; color: #fff; font: inherit; font-weight: 700; white-space: nowrap; overflow: hidden; }
 .seg-a { background: var(--dark); }
@@ -110,6 +115,7 @@ p { margin: 0; }
   min-height: 56px; padding: 6px 0 4px; border: 1px solid var(--line); border-radius: 8px;
   background: var(--surface); font: inherit; color: var(--text); cursor: pointer; touch-action: manipulation;
 }
+.day:active { background: var(--bg); }
 .day .dn { font-size: 16px; line-height: 1.2; }
 .day .da { font-size: 14px; line-height: 1.2; color: var(--muted); white-space: nowrap; }
 .day.today { border: 2px solid var(--dark); padding: 5px 0 3px; font-weight: 700; }
@@ -130,6 +136,14 @@ input[type="date"], input[type="number"], input[type="text"] {
 .hint { color: var(--muted); font-size: 14px; margin: -6px 0 12px; }
 .seg { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .seg.three { grid-template-columns: 1fr 1fr 1fr; }
+.titlebox { display: flex; align-items: center; gap: 10px; }
+.bell { position: relative; width: 44px; height: 44px; }
+.badge { position: absolute; top: -6px; right: -6px; min-width: 20px; height: 20px; padding: 0 5px; border-radius: 10px; background: var(--red); color: #fff; font-size: 12px; font-weight: 700; line-height: 20px; text-align: center; }
+.newlist { list-style: none; margin: 0; padding: 0; }
+.newlist li { padding: 10px 0; border-bottom: 1px solid var(--line); }
+.newlist li:last-child { border-bottom: 0; }
+.newlist .nw { font-weight: 600; overflow-wrap: anywhere; }
+.newlist .nm2 { color: var(--muted); font-size: 14px; }
 .prog { height: 10px; border-radius: 5px; background: var(--line); overflow: hidden; margin: 0 0 6px; }
 .prog > div { height: 100%; background: var(--dark); }
 .prog.over > div { background: var(--red); }
@@ -149,14 +163,13 @@ input[type="date"], input[type="number"], input[type="text"] {
 .actions .primary { flex: 1; }
 
 /* 내역 목록 */
-.listhead { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; margin-bottom: 8px; }
-.tabs { display: flex; gap: 8px; margin-bottom: 8px; }
-.tabs button { min-height: 44px; padding: 0 16px; border: 1px solid var(--mid); border-radius: 999px; background: var(--surface); font: inherit; cursor: pointer; touch-action: manipulation; }
-.tabs button[aria-pressed="true"] { background: var(--dark); color: #fff; border-color: var(--dark); font-weight: 700; }
-.dategroup { margin-top: 14px; }
-.dategroup h3 { display: flex; justify-content: space-between; padding: 0 2px 6px; }
-.items { list-style: none; margin: 0; padding: 0; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); }
-.item { padding: 10px 14px; border-bottom: 1px solid var(--line); }
+.listhead { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; margin: 28px 4px 12px; }
+.tabs { display: flex; border-bottom: 1px solid var(--line); margin-bottom: 4px; }
+.tabs button { flex: 1; margin-bottom: -1px; }
+.dategroup { margin-top: 20px; }
+.dategroup h3 { display: flex; justify-content: space-between; padding: 0 4px 8px; }
+.items { list-style: none; margin: 0; padding: 0; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: 0 1px 2px rgba(28,25,23,.05); }
+.item { padding: 14px 16px; border-bottom: 1px solid var(--line); }
 .item:last-child { border-bottom: 0; }
 .row { display: flex; justify-content: space-between; gap: 12px; }
 .main { min-width: 0; }
@@ -206,9 +219,15 @@ input[type="date"], input[type="number"], input[type="text"] {
 <div class="wrap">
 
   <header class="top">
-    <h1>우리 가계부</h1>
+    <div class="titlebox">
+      <h1>우리 가계부</h1>
+      <button type="button" class="icon-btn bell" id="bellBtn" aria-label="새 소식">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>
+        <span class="badge" id="bellBadge" hidden></span>
+      </button>
+    </div>
     <!-- 지금 쓰는 사람 선택: 나중에 로그인으로 바뀌는 부분 -->
-    <div class="who" id="who" role="group" aria-label="지금 쓰는 사람"></div>
+    <div class="who" id="who" role="tablist" aria-label="지금 쓰는 사람"></div>
   </header>
 
   <main>
@@ -238,7 +257,7 @@ input[type="date"], input[type="number"], input[type="text"] {
       <div class="listhead">
         <h2 id="listTitle" style="margin:0"></h2>
       </div>
-      <div class="tabs" id="tabs" role="group" aria-label="작성자별 보기"></div>
+      <div class="tabs" id="tabs" role="tablist" aria-label="작성자별 보기"></div>
       <div id="list"></div>
     </section>
 
@@ -313,6 +332,15 @@ input[type="date"], input[type="number"], input[type="text"] {
   </div>
 </div>
 
+<!-- 새 소식 (상대방이 추가·수정한 지출) -->
+<div id="newsModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="newsTitle" hidden>
+  <div class="modal-box">
+    <h2 id="newsTitle">새 소식</h2>
+    <div id="newsBody"></div>
+    <button type="button" class="btn" id="newsClose">닫기</button>
+  </div>
+</div>
+
 <!-- 누구세요? -->
 <div id="userModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="userTitle" hidden>
   <div class="modal-box">
@@ -382,6 +410,7 @@ input[type="date"], input[type="number"], input[type="text"] {
   var DAY_ALERT = 100000;       // 하루 합계가 이 금액 이상이면 달력에 빨간색으로 표시
   var KEY_GOALS = 'gagyebu.goals.v1';
   var KEY_SEEDED = 'gagyebu.seeded.v1';
+  var KEY_SEEN = 'gagyebu.seen.v1';
   var KEY_ENTRIES = 'gagyebu.entries.v1';
   var KEY_USER = 'gagyebu.user.v1';
 
@@ -533,6 +562,40 @@ input[type="date"], input[type="number"], input[type="text"] {
       : errorCode === 'permission-denied' ? '⚠ 저장소 권한이 없어서 이 폰에만 저장돼요 (Firebase 규칙 확인 필요)'
       : '⚠ 연결 오류 (' + (errorCode || '알 수 없음') + ') — 이 폰에만 저장돼요';
   }
+  // 종 모양: 내가 마지막으로 확인한 뒤 '다른 사람'이 추가·수정한 지출
+  function getSeen() {
+    var v = 0;
+    try { v = Number(localStorage.getItem(KEY_SEEN)) || 0; } catch (e) {}
+    if (!v) { v = Date.now(); setSeen(v); }        // 처음 쓰는 기기는 지금부터 새 소식으로 쳐요
+    return v;
+  }
+  function setSeen(v) { try { localStorage.setItem(KEY_SEEN, String(v)); } catch (e) {} }
+  function newItems() {
+    var seen = getSeen();
+    return entries.filter(function (e) { return e.updatedBy && e.updatedBy !== user && e.updatedAt > seen; })
+      .sort(function (a, b) { return b.updatedAt - a.updatedAt; });
+  }
+  function renderBell() {
+    var n = user ? newItems().length : 0;
+    $('#bellBadge').hidden = !n;
+    $('#bellBadge').textContent = n > 99 ? '99+' : String(n);
+    $('#bellBtn').setAttribute('aria-label', n ? '새 소식 ' + n + '건' : '새 소식');
+  }
+  function openNews() {
+    var list = newItems();
+    var body = $('#newsBody');
+    body.replaceChildren(list.length
+      ? h('ul', { class: 'newlist' }, list.slice(0, 30).map(function (e) {
+          return h('li', null,
+            h('p', { class: 'nw' }, e.updatedBy + '님이 ' + (e.createdAt === e.updatedAt ? '추가' : '수정') + ' · ' + (e.memo || '(메모 없음)') + ' ' + fmtWon(e.amount)),
+            h('p', { class: 'nm2' }, fmtDate(e.date) + ' · ' + e.cat));
+        }))
+      : h('p', { class: 'empty' }, '새 소식이 없어요.'));
+    setSeen(Date.now());
+    renderBell();
+    $('#newsModal').hidden = false;
+  }
+
   function goalOf(ym) { return goals[ym] > 0 ? goals[ym] : DEFAULT_GOAL; }
   function digitsOnly(input) { input.addEventListener('input', function () { var v = input.value.replace(/\D/g, ''); if (v !== input.value) input.value = v; }); }
 
@@ -593,7 +656,7 @@ input[type="date"], input[type="number"], input[type="text"] {
   /* ---------- (5) 화면 그리기 ---------- */
   function renderWho() {
     $('#who').replaceChildren.apply($('#who'), PEOPLE.map(function (p) {
-      return h('button', { type: 'button', 'aria-pressed': String(p === user), onclick: function () { setUser(p); } }, p);
+      return h('button', { type: 'button', role: 'tab', 'aria-selected': String(p === user), onclick: function () { setUser(p); } }, p);
     }));
     $('#whoHint').textContent = '지금은 "' + user + '" 이름으로 기록돼요.';
   }
@@ -649,7 +712,7 @@ input[type="date"], input[type="number"], input[type="text"] {
   function renderTabs() {
     var box = $('#tabs');
     box.replaceChildren.apply(box, ['전체'].concat(PEOPLE).map(function (f) {
-      return h('button', { type: 'button', 'aria-pressed': String(f === filter), onclick: function () { filter = f; renderTabs(); renderList(); } }, f);
+      return h('button', { type: 'button', role: 'tab', 'aria-selected': String(f === filter), onclick: function () { filter = f; renderTabs(); renderList(); } }, f);
     }));
   }
 
@@ -664,7 +727,7 @@ input[type="date"], input[type="number"], input[type="text"] {
     var box = $('#list');
 
     if (!items.length) {
-      box.replaceChildren(h('p', { class: 'empty card' }, '보여줄 내역이 없어요.'));
+      box.replaceChildren(h('p', { class: 'empty card' }, filter === '전체' ? '이 달에는 아직 내역이 없어요.\n달력에서 날짜를 눌러 입력해 보세요.' : filter + ' 님의 내역이 이 달에는 없어요.'));
       return;
     }
     var groups = [], cur = null;
@@ -739,7 +802,7 @@ input[type="date"], input[type="number"], input[type="text"] {
     box.replaceChildren.apply(box, cells);
   }
 
-  function renderAll() { renderWho(); renderSummary(); renderCalendar(); renderTabs(); renderList(); renderCompare(); }
+  function renderAll() { renderWho(); renderBell(); renderSummary(); renderCalendar(); renderTabs(); renderList(); renderCompare(); }
 
   /* ---------- (6) 알림 ---------- */
   function showToast(msg, actionLabel, actionFn) {
@@ -813,10 +876,11 @@ input[type="date"], input[type="number"], input[type="text"] {
 
     if (editingId) {
       var e = entries.filter(function (x) { return x.id === editingId; })[0];
-      if (e) { e.date = date; e.cat = cat; e.amount = amount; e.memo = memo; cloudSet(e); }
+      if (e) { e.date = date; e.cat = cat; e.amount = amount; e.memo = memo; e.updatedAt = Date.now(); e.updatedBy = user; cloudSet(e); }
       showToast('수정했어요.');
     } else {
       var added = { id: newId(), who: user, date: date, cat: cat, amount: amount, memo: memo, createdAt: Date.now() };
+      added.updatedAt = added.createdAt; added.updatedBy = user;
       entries.push(added);
       cloudSet(added);
       showToast(user + ' 이름으로 저장했어요.');
@@ -884,6 +948,8 @@ input[type="date"], input[type="number"], input[type="text"] {
     $('#prevMonth').addEventListener('click', function () { month = shiftMonth(month, -1); renderAll(); });
     $('#nextMonth').addEventListener('click', function () { month = shiftMonth(month, 1); renderAll(); });
     $('#exportBtn').addEventListener('click', exportCsv);
+    $('#bellBtn').addEventListener('click', openNews);
+    $('#newsClose').addEventListener('click', function () { $('#newsModal').hidden = true; });
     digitsOnly($('#f-amount')); digitsOnly($('#goalInput'));
     $('#goalForm').addEventListener('submit', onGoalSubmit);
     $('#goalCancel').addEventListener('click', function () { $('#goalModal').hidden = true; });
