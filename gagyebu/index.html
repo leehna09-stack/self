@@ -596,7 +596,11 @@ input[type="date"], input[type="number"], input[type="text"] {
     $('#newsModal').hidden = false;
   }
 
-  function goalOf(ym) { return goals[ym] > 0 ? goals[ym] : DEFAULT_GOAL; }
+  function goalOf(ym) {
+    if (goals[ym] > 0) return goals[ym];
+    var prev = Object.keys(goals).filter(function (k) { return k < ym && goals[k] > 0; }).sort().pop();
+    return prev ? goals[prev] : DEFAULT_GOAL;      // 이전에 정한 목표가 있으면 이어받고, 없으면 기본값
+  }
   function digitsOnly(input) { input.addEventListener('input', function () { var v = input.value.replace(/\D/g, ''); if (v !== input.value) input.value = v; }); }
 
   /* ---------- (3) 작은 도구 함수들 ---------- */
@@ -762,7 +766,7 @@ input[type="date"], input[type="number"], input[type="text"] {
     var shown = months.slice(-12).reverse();
 
     $('#compare').replaceChildren.apply($('#compare'), shown.map(function (m) {
-      var st = stats[m], prev = stats[shiftMonth(m, -1)], delta = null;
+      var st = stats[m], prev = stats[shiftMonth(m, -1)], delta = null, goal = goalOf(m);
       if (prev && prev.total > 0 && st.total > 0) {
         var diff = st.total - prev.total;
         delta = diff > 0 ? h('span', { class: 'delta up num' }, '▲ 전월보다 ' + fmtWon(diff) + ' 늘었어요')
@@ -773,7 +777,9 @@ input[type="date"], input[type="number"], input[type="text"] {
         h('button', { type: 'button', 'aria-current': String(m === month), 'aria-label': fmtMonth(m) + ' 내역 보기', onclick: function () { month = m; renderAll(); window.scrollTo({ top: 0, behavior: reducedMotion() ? 'auto' : 'smooth' }); } },
           h('div', { class: 'r1' }, h('span', { class: 'mn' }, fmtMonth(m)), h('span', { class: 'num' }, st.total ? fmtWon(st.total) : '기록 없음')),
           h('div', { class: 'bartrack', 'aria-hidden': 'true' }, h('div', { class: 'barfill', style: 'width:' + (max ? st.total / max * 100 : 0) + '%' })),
-          delta ? h('div', { class: 'r1' }, delta) : null));
+          h('div', { class: 'r1' },
+          h('span', { class: 'split num' }, '목표 ' + fmtGoal(goal) + (st.total && st.total <= goal ? ' · 남은 금액 ' + fmtWon(goal - st.total) : '')),
+          st.total > goal ? h('span', { class: 'delta up num' }, fmtWon(st.total - goal) + ' 초과') : delta)));
     }));
   }
 
