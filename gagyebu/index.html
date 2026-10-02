@@ -33,13 +33,13 @@
 html { -webkit-text-size-adjust: 100%; }
 body {
   margin: 0; background: var(--bg); color: var(--text);
-  font: 16px/1.6 "Noto Sans KR", system-ui, -apple-system, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+  font: 14px/1.6 "Noto Sans KR", system-ui, -apple-system, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
   letter-spacing: -0.01em;
 }
 .wrap { max-width: 560px; margin: 0 auto; padding: 20px 20px calc(96px + env(safe-area-inset-bottom)); }
-h1 { font-size: 24px; font-weight: 700; letter-spacing: -0.03em; margin: 0; }
-h2 { font-size: 18px; font-weight: 700; margin: 0 0 12px; }
-h3 { font-size: 15px; margin: 0; color: var(--muted); font-weight: 500; }
+h1 { font-size: 22px; font-weight: 700; letter-spacing: -0.03em; margin: 0; }
+h2 { font-size: 16px; font-weight: 700; margin: 0 0 12px; }
+h3 { font-size: 13px; margin: 0; color: var(--muted); font-weight: 500; }
 p { margin: 0; }
 .num { font-variant-numeric: tabular-nums; }
 
@@ -73,8 +73,8 @@ p { margin: 0; }
 .icon-btn svg { width: 22px; height: 22px; stroke: var(--text); fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 
 /* 합계 카드 */
-.label { color: var(--muted); font-size: 14px; }
-.big { font-size: 32px; font-weight: 800; line-height: 1.2; margin-bottom: 14px; }
+.label { color: var(--muted); font-size: 12px; }
+.big { font-size: 30px; font-weight: 800; line-height: 1.2; margin-bottom: 14px; }
 .empty { color: var(--muted); padding: 8px 0; }
 .empty.card { white-space: pre-line; padding: 32px 24px; text-align: center; line-height: 1.7; }
 .bar { position: relative; display: flex; height: 40px; border-radius: 10px; overflow: hidden; background: var(--line); }
@@ -83,8 +83,8 @@ p { margin: 0; }
 .seg-b { background: var(--mid); }
 .bar button:focus-visible { outline: 3px solid #fff; outline-offset: -6px; }
 .mid-tick { position: absolute; top: 0; bottom: 0; left: calc(50% - 1px); width: 2px; background: #fff; pointer-events: none; }
-.reveal { margin: 8px 0 10px; min-height: 26px; color: var(--muted); font-size: 14px; }
-.reveal.on { color: var(--text); font-size: 18px; font-weight: 700; }
+.reveal { margin: 8px 0 10px; min-height: 26px; color: var(--muted); font-size: 12px; }
+.reveal.on { color: var(--text); font-size: 16px; font-weight: 700; }
 .over { color: var(--red); font-weight: 700; margin: -6px 0 12px; }
 .legend { list-style: none; margin: 0 0 14px; padding: 0; }
 .legend li { display: flex; align-items: center; gap: 8px; min-height: 40px; border-bottom: 1px solid var(--line); }
@@ -93,7 +93,7 @@ p { margin: 0; }
 .dot.a { background: var(--dark); } .dot.b { background: var(--mid); }
 .legend .nm { font-weight: 700; }
 .legend .pct { margin-left: auto; font-weight: 700; }
-.cats { color: var(--muted); font-size: 14px; margin-top: 10px; }
+.cats { color: var(--muted); font-size: 12px; margin-top: 10px; }
 
 /* 코드 입력 / 사용자 선택 창 */
 .modal { position: fixed; inset: 0; z-index: 10; display: grid; place-items: center; padding: 16px; background: rgba(28,25,23,.6); }
@@ -109,15 +109,15 @@ p { margin: 0; }
 .cal { padding: 12px 8px; }
 .cal h2, .cal .hint { padding: 0 8px; }
 .calgrid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
-.calhead { text-align: center; font-size: 14px; color: var(--muted); padding: 4px 0; }
+.calhead { text-align: center; font-size: 12px; color: var(--muted); padding: 4px 0; }
 .day {
   display: flex; flex-direction: column; align-items: center; justify-content: flex-start; gap: 2px;
   min-height: 56px; padding: 6px 0 4px; border: 1px solid var(--line); border-radius: 8px;
   background: var(--surface); font: inherit; color: var(--text); cursor: pointer; touch-action: manipulation;
 }
 .day:active { background: var(--bg); }
-.day .dn { font-size: 16px; line-height: 1.2; }
-.day .da { font-size: 14px; line-height: 1.2; color: var(--muted); white-space: nowrap; }
+.day .dn { font-size: 14px; line-height: 1.2; }
+.day .da { font-size: 12px; line-height: 1.2; color: var(--muted); white-space: nowrap; }
 .day.today { border: 2px solid var(--dark); padding: 5px 0 3px; font-weight: 700; }
 .day[aria-pressed="true"] { background: var(--dark); color: #fff; border-color: var(--dark); }
 .day .da.over { color: var(--red); font-weight: 700; }
@@ -127,13 +127,13 @@ p { margin: 0; }
 
 /* 입력 폼 */
 .field { margin: 0 0 14px; padding: 0; border: 0; min-width: 0; }
-.field > label, .field > legend { display: block; font-weight: 600; font-size: 15px; margin-bottom: 6px; padding: 0; }
+.field > label, .field > legend { display: block; font-weight: 600; font-size: 13px; margin-bottom: 6px; padding: 0; }
 input[type="date"], input[type="number"], input[type="text"] {
   width: 100%; height: 48px; padding: 0 12px; font: inherit; color: var(--text);
   background: var(--surface); border: 1px solid var(--mid); border-radius: 10px;
 }
-.err { color: var(--red); font-size: 14px; min-height: 0; margin-top: 4px; }
-.hint { color: var(--muted); font-size: 14px; margin: -6px 0 12px; }
+.err { color: var(--red); font-size: 12px; min-height: 0; margin-top: 4px; }
+.hint { color: var(--muted); font-size: 12px; margin: -6px 0 12px; }
 .seg { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .seg.three { grid-template-columns: 1fr 1fr 1fr; }
 .titlebox { display: flex; align-items: center; gap: 10px; }
@@ -143,11 +143,11 @@ input[type="date"], input[type="number"], input[type="text"] {
 .newlist li { padding: 10px 0; border-bottom: 1px solid var(--line); }
 .newlist li:last-child { border-bottom: 0; }
 .newlist .nw { font-weight: 600; overflow-wrap: anywhere; }
-.newlist .nm2 { color: var(--muted); font-size: 14px; }
+.newlist .nm2 { color: var(--muted); font-size: 12px; }
 .prog { height: 10px; border-radius: 5px; background: var(--line); overflow: hidden; margin: 0 0 6px; }
 .prog > div { height: 100%; background: var(--dark); }
 .prog.over > div { background: var(--red); }
-.progtxt { color: var(--muted); font-size: 14px; margin-bottom: 14px; }
+.progtxt { color: var(--muted); font-size: 12px; margin-bottom: 14px; }
 .status { color: var(--muted); font-size: 13px; margin-bottom: 8px; }
 .goalrow { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: -6px 0 10px; }
 .goalrow .link { min-height: 40px; padding: 0 4px; }
@@ -174,7 +174,7 @@ input[type="date"], input[type="number"], input[type="text"] {
 .row { display: flex; justify-content: space-between; gap: 12px; }
 .main { min-width: 0; }
 .memo { font-weight: 600; overflow-wrap: anywhere; }
-.meta { color: var(--muted); font-size: 14px; }
+.meta { color: var(--muted); font-size: 12px; }
 .item .amt { font-weight: 700; white-space: nowrap; }
 .acts { display: flex; justify-content: flex-end; gap: 4px; margin: 0 -8px -4px; }
 
@@ -190,12 +190,12 @@ input[type="date"], input[type="number"], input[type="text"] {
 .cmp .mn { font-weight: 700; }
 .cmp .bartrack { height: 8px; border-radius: 4px; background: var(--line); margin: 8px 0 6px; overflow: hidden; }
 .cmp .barfill { height: 100%; background: var(--mid); }
-.cmp .split { color: var(--muted); font-size: 14px; }
-.delta { font-size: 14px; font-weight: 700; }
+.cmp .split { color: var(--muted); font-size: 12px; }
+.delta { font-size: 12px; font-weight: 700; }
 .delta.up { color: var(--red); } .delta.down { color: var(--green); } .delta.flat { color: var(--muted); }
 
 .foot { text-align: center; margin-top: 8px; }
-.foot p { color: var(--muted); font-size: 14px; margin-bottom: 8px; }
+.foot p { color: var(--muted); font-size: 12px; margin-bottom: 8px; }
 
 /* 아래쪽에 잠깐 뜨는 알림 */
 #toast {
