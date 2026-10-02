@@ -1049,14 +1049,69 @@ function decodeWithImage(blob) {
   });
 }
 
-// 사진 파일 읽기: 파일을 먼저 통째로 읽고, 방법 1 → 방법 2 순서로 시도 (각각 20초 제한)
+// HEIC/HEIF 사진인지 확인 (갤럭시·아이폰의 "고효율" 사진은 Chrome이 못 읽어요)
+function isHeicPhoto(file, blob) {
+  const name = (file.name || "").toLowerCase();
+  if (/hei[cf]/.test(file.type || "") || /\.(heic|heif)$/.test(name)) {
+    return Promise.resolve(true);
+  }
+  // 이름·형식이 비어 있어도 파일 머리말(ftyp + heic 계열 이름표)로 한 번 더 확인
+  return blob.slice(0, 32).arrayBuffer().then(function (buffer) {
+    const head = new TextDecoder("latin1").decode(new Uint8Array(buffer));
+    return head.indexOf("ftyp") === 4 && /(heic|heix|hevc|hevx|heim|heis|mif1|msf1)/.test(head);
+  }, function () {
+    return false;
+  });
+}
+
+// HEIC 변환 도구는 필요할 때만 불러와요 (같은 폴더의 heic2any.min.js)
+function loadHeicLib() {
+  if (window.heic2any) {
+    return Promise.resolve();
+  }
+  return new Promise(function (resolve, reject) {
+    const tag = document.createElement("script");
+    tag.src = "heic2any.min.js";
+    tag.onload = function () {
+      resolve();
+    };
+    tag.onerror = function () {
+      reject(new Error("HEIC 변환 도구를 불러오지 못했어요"));
+    };
+    document.head.appendChild(tag);
+  });
+}
+
+// HEIC 사진을 JPEG로 바꾸기
+function convertHeic(blob) {
+  return loadHeicLib().then(function () {
+    return withTimeout(window.heic2any({ blob: blob, toType: "image/jpeg", quality: 0.8 }), 60000,
+      "HEIC 사진 변환 시간이 너무 오래 걸려요");
+  }).then(function (result) {
+    return Array.isArray(result) ? result[0] : result;
+  });
+}
+
+// 사진 읽기 (방법 1 → 방법 2, 각각 20초 제한)
+function decodePhoto(blob) {
+  return withTimeout(decodeWithBitmap(blob), 20000, "읽기 시간 초과").catch(function () {
+    return withTimeout(decodeWithImage(blob), 20000, "읽기 시간 초과");
+  });
+}
+
+// 사진 파일 읽기: 파일을 먼저 통째로 읽고, 못 읽으면 HEIC인지 확인해서 JPEG로 바꾼 뒤 다시 읽기
 function readPhoto(file) {
   return readFileBytes(file).then(function (blob) {
-    return withTimeout(decodeWithBitmap(blob), 20000, "읽기 시간 초과").catch(function () {
-      return withTimeout(decodeWithImage(blob), 20000, "읽기 시간 초과");
-    }).catch(function () {
-      throw new Error("사진 형식을 읽지 못했어요 (" + (file.type || "형식 알 수 없음") +
-        "). 다른 사진으로 올리거나, 카메라 설정에서 '가장 호환성 높은 형식(JPEG)'으로 바꿔 주세요");
+    return decodePhoto(blob).catch(function (firstError) {
+      return isHeicPhoto(file, blob).then(function (isHeic) {
+        if (!isHeic) {
+          throw firstError;
+        }
+        return convertHeic(blob).then(decodePhoto);
+      });
+    }).catch(function (error) {
+      throw new Error("사진을 읽지 못했어요 (" + (file.type || "형식 알 수 없음") + "). " +
+        (error && error.message ? "[" + error.message + "] " : "") + "다른 사진으로 다시 올려 주세요");
     });
   });
 }
