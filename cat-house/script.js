@@ -35,6 +35,7 @@ let photos = {};
 
 // 하루(장소별)에 남길 수 있는 사진 수, 그리고 직전에 그린 사진 수 (늘었는지 확인용)
 const MAX_PHOTOS = 5;
+let photoBusy = false; // 사진을 올리는 중인지
 let lastPhotoCount = 0;
 
 // 보고 있는 달의 날씨·한줄평 ("2026-10-05" → { weather, note, noteBy ... })
@@ -886,13 +887,34 @@ function drawDetailPhoto() {
   }
   lastPhotoCount = list.length;
 
-  const addBtn = document.createElement("button");
-  addBtn.type = "button";
-  addBtn.textContent = "📷 사진 추가 (" + list.length + "/" + MAX_PHOTOS + ")";
-  addBtn.onclick = function () {
+  // 카메라로 바로 찍기 / 앨범(갤러리·구글 포토 등)에서 고르기를 나눠서 항상 둘 다 고를 수 있게
+  const cameraBtn = document.createElement("button");
+  cameraBtn.type = "button";
+  cameraBtn.className = "photo-add";
+  cameraBtn.textContent = "📷 카메라";
+  cameraBtn.disabled = photoBusy;
+  cameraBtn.onclick = function () {
+    document.getElementById("cameraInput").click();
+  };
+  box.appendChild(cameraBtn);
+
+  const albumBtn = document.createElement("button");
+  albumBtn.type = "button";
+  albumBtn.className = "photo-add";
+  albumBtn.textContent = "🖼 앨범 (" + list.length + "/" + MAX_PHOTOS + ")";
+  albumBtn.disabled = photoBusy;
+  albumBtn.onclick = function () {
     document.getElementById("photoInput").click();
   };
-  box.appendChild(addBtn);
+  box.appendChild(albumBtn);
+
+  if (photoBusy) {
+    const busyNote = document.createElement("div");
+    busyNote.className = "photo-by";
+    busyNote.id = "photoBusyNote";
+    busyNote.textContent = "사진 올리는 중이에요… 잠시만 기다려 주세요";
+    box.appendChild(busyNote);
+  }
 
   if (list.length >= MAX_PHOTOS) {
     const note = document.createElement("div");
@@ -902,23 +924,59 @@ function drawDetailPhoto() {
   }
 }
 
+// 일정 시간 안에 끝나지 않으면 실패로 처리 (조용히 멈추는 일이 없게)
+function withTimeout(promise, ms, message) {
+  return new Promise(function (resolve, reject) {
+    const timer = setTimeout(function () {
+      reject(new Error(message));
+    }, ms);
+    promise.then(function (value) {
+      clearTimeout(timer);
+      resolve(value);
+    }, function (error) {
+      clearTimeout(timer);
+      reject(error);
+    });
+  });
+}
+
+// 캔버스를 JPEG 글자로 (너무 크면 화질을 낮춰서 다시, 저장소 한도 약 1MB)
+function encodeCanvas(canvas) {
+  let quality = 0.7;
+  let result = canvas.toDataURL("image/jpeg", quality);
+  while (result.length > 700000 && quality > 0.3) {
+    quality = quality - 0.1;
+    result = canvas.toDataURL("image/jpeg", quality);
+  }
+  return result;
+}
+
 // 사진을 줄여서 글자(JPEG data URL)로 바꾸기 (긴 변 900px)
 function shrinkPhoto(file) {
   return readPhoto(file).then(function (pic) {
     const scale = Math.min(1, 900 / Math.max(pic.width, pic.height));
-    const canvas = document.createElement("canvas");
-    canvas.width = Math.max(1, Math.round(pic.width * scale));
-    canvas.height = Math.max(1, Math.round(pic.height * scale));
-    canvas.getContext("2d").drawImage(pic.source, 0, 0, canvas.width, canvas.height);
+    const base = document.createElement("canvas");
+    base.width = Math.max(1, Math.round(pic.width * scale));
+    base.height = Math.max(1, Math.round(pic.height * scale));
+    const ctx = base.getContext("2d");
+    // PNG처럼 투명한 사진이 까맣게 저장되지 않도록 흰 배경을 먼저 깔기
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(0, 0, base.width, base.height);
+    ctx.drawImage(pic.source, 0, 0, base.width, base.height);
     if (pic.close) {
       pic.close();
     }
-    // 너무 크면 화질을 더 낮춰서 다시 만듦 (저장소 한도 약 1MB)
-    let quality = 0.7;
-    let result = canvas.toDataURL("image/jpeg", quality);
-    while (result.length > 700000 && quality > 0.3) {
-      quality = quality - 0.1;
-      result = canvas.toDataURL("image/jpeg", quality);
+    let result = encodeCanvas(base);
+    // 그래도 크면 크기를 20%씩 더 줄여서 한도 안에 넣기
+    let side = Math.max(base.width, base.height);
+    while (result.length > 700000 && side > 300) {
+      side = Math.round(side * 0.8);
+      const ratio = side / Math.max(base.width, base.height);
+      const small = document.createElement("canvas");
+      small.width = Math.max(1, Math.round(base.width * ratio));
+      small.height = Math.max(1, Math.round(base.height * ratio));
+      small.getContext("2d").drawImage(base, 0, 0, small.width, small.height);
+      result = encodeCanvas(small);
     }
     if (!result.startsWith("data:image/jpeg")) {
       throw new Error("사진을 JPEG로 바꾸지 못했어요");
@@ -927,36 +985,141 @@ function shrinkPhoto(file) {
   });
 }
 
-// 사진 파일 읽기: 먼저 <img>로, 안 되면 createImageBitmap으로 (갤러리의 큰 사진 대비)
-function readPhoto(file) {
+// 사진 파일을 통째로 먼저 읽어 두기 (구글 포토 등에서 고른 사진이 나중에 못 읽히는 일을 막음)
+function readFileBytes(file) {
+  const failMessage = "사진 파일을 읽지 못했어요. 구글 포토의 사진이라면 먼저 폰에 저장한 뒤 다시 골라 주세요";
+  if (file.arrayBuffer) {
+    return file.arrayBuffer().then(function (buffer) {
+      return new Blob([buffer], { type: file.type || "image/jpeg" });
+    }, function () {
+      throw new Error(failMessage);
+    });
+  }
   return new Promise(function (resolve, reject) {
-    const url = URL.createObjectURL(file);
+    const reader = new FileReader();
+    reader.onload = function () {
+      resolve(new Blob([reader.result], { type: file.type || "image/jpeg" }));
+    };
+    reader.onerror = function () {
+      reject(new Error(failMessage));
+    };
+    reader.readAsArrayBuffer(file);
+  });
+}
+
+// 방법 1: createImageBitmap (큰 사진·회전 정보에 강함)
+function decodeWithBitmap(blob) {
+  if (!window.createImageBitmap) {
+    return Promise.reject(new Error("createImageBitmap 없음"));
+  }
+  return createImageBitmap(blob, { imageOrientation: "from-image" }).catch(function () {
+    return createImageBitmap(blob);
+  }).then(function (bmp) {
+    return {
+      source: bmp,
+      width: bmp.width,
+      height: bmp.height,
+      close: function () {
+        bmp.close();
+      }
+    };
+  });
+}
+
+// 방법 2: <img>로 읽기
+function decodeWithImage(blob) {
+  return new Promise(function (resolve, reject) {
+    const url = URL.createObjectURL(blob);
     const img = new Image();
     img.onload = function () {
       URL.revokeObjectURL(url);
-      resolve({ source: img, width: img.naturalWidth || img.width, height: img.naturalHeight || img.height });
+      const width = img.naturalWidth || img.width;
+      const height = img.naturalHeight || img.height;
+      if (!width || !height) {
+        reject(new Error("크기를 알 수 없는 사진"));
+        return;
+      }
+      resolve({ source: img, width: width, height: height });
     };
     img.onerror = function () {
       URL.revokeObjectURL(url);
-      if (!window.createImageBitmap) {
-        reject(new Error("사진 형식을 읽지 못했어요 (" + (file.type || "형식 알 수 없음") + ")"));
-        return;
-      }
-      createImageBitmap(file).then(function (bmp) {
-        resolve({
-          source: bmp,
-          width: bmp.width,
-          height: bmp.height,
-          close: function () {
-            bmp.close();
-          }
-        });
-      }, function () {
-        reject(new Error("사진 형식을 읽지 못했어요 (" + (file.type || "형식 알 수 없음") + "). JPG/PNG로 올려 주세요"));
-      });
+      reject(new Error("img 읽기 실패"));
     };
     img.src = url;
   });
+}
+
+// HEIC/HEIF 사진인지 확인 (갤럭시·아이폰의 "고효율" 사진은 Chrome이 못 읽어요)
+function isHeicPhoto(file, blob) {
+  const name = (file.name || "").toLowerCase();
+  if (/hei[cf]/.test(file.type || "") || /\.(heic|heif)$/.test(name)) {
+    return Promise.resolve(true);
+  }
+  // 이름·형식이 비어 있어도 파일 머리말(ftyp + heic 계열 이름표)로 한 번 더 확인
+  return blob.slice(0, 32).arrayBuffer().then(function (buffer) {
+    const head = new TextDecoder("latin1").decode(new Uint8Array(buffer));
+    return head.indexOf("ftyp") === 4 && /(heic|heix|hevc|hevx|heim|heis|mif1|msf1)/.test(head);
+  }, function () {
+    return false;
+  });
+}
+
+// HEIC 변환 도구는 필요할 때만 불러와요 (같은 폴더의 heic2any.min.js)
+function loadHeicLib() {
+  if (window.heic2any) {
+    return Promise.resolve();
+  }
+  return new Promise(function (resolve, reject) {
+    const tag = document.createElement("script");
+    tag.src = "heic2any.min.js";
+    tag.onload = function () {
+      resolve();
+    };
+    tag.onerror = function () {
+      reject(new Error("HEIC 변환 도구를 불러오지 못했어요"));
+    };
+    document.head.appendChild(tag);
+  });
+}
+
+// HEIC 사진을 JPEG로 바꾸기
+function convertHeic(blob) {
+  return loadHeicLib().then(function () {
+    return withTimeout(window.heic2any({ blob: blob, toType: "image/jpeg", quality: 0.8 }), 60000,
+      "HEIC 사진 변환 시간이 너무 오래 걸려요");
+  }).then(function (result) {
+    return Array.isArray(result) ? result[0] : result;
+  });
+}
+
+// 사진 읽기 (방법 1 → 방법 2, 각각 20초 제한)
+function decodePhoto(blob) {
+  return withTimeout(decodeWithBitmap(blob), 20000, "읽기 시간 초과").catch(function () {
+    return withTimeout(decodeWithImage(blob), 20000, "읽기 시간 초과");
+  });
+}
+
+// 사진 파일 읽기: 파일을 먼저 통째로 읽고, 못 읽으면 HEIC인지 확인해서 JPEG로 바꾼 뒤 다시 읽기
+function readPhoto(file) {
+  return readFileBytes(file).then(function (blob) {
+    return decodePhoto(blob).catch(function (firstError) {
+      return isHeicPhoto(file, blob).then(function (isHeic) {
+        if (!isHeic) {
+          throw firstError;
+        }
+        return convertHeic(blob).then(decodePhoto);
+      });
+    }).catch(function (error) {
+      throw new Error("사진을 읽지 못했어요 (" + (file.type || "형식 알 수 없음") + "). " +
+        (error && error.message ? "[" + error.message + "] " : "") + "다른 사진으로 다시 올려 주세요");
+    });
+  });
+}
+
+// 사진 올리는 중 표시 켜고 끄기 (그동안 버튼을 막아서 중복 업로드 방지)
+function setPhotoBusy(busy) {
+  photoBusy = busy;
+  drawDetailPhoto();
 }
 
 // 사진을 고르면 줄여서 저장
@@ -975,8 +1138,12 @@ function onPhotoChosen(e) {
     openUserModal();
     return;
   }
+  if (photoBusy) {
+    return;
+  }
   const date = currentDetailDate;
   const collectionName = photoCollection();
+  setPhotoBusy(true);
   shrinkPhoto(file).then(function (image) {
     // 넣고 나서 MAX_PHOTOS장을 넘는 만큼 오래된 사진부터 지움
     const current = photos[date] || [];
@@ -985,11 +1152,15 @@ function onPhotoChosen(e) {
     for (let i = 0; i < overflow; i++) {
       deleteIds.push(current[i].id);
     }
-    return window.cloud.addPhoto(collectionName, date, image, user, deleteIds);
+    // 인터넷이 불안정하면 저장이 끝없이 대기할 수 있어서 30초 제한
+    return withTimeout(window.cloud.addPhoto(collectionName, date, image, user, deleteIds), 30000,
+      "저장이 오래 걸려요. 인터넷이 연결되면 자동으로 올라갈 수 있으니 잠시 뒤 확인해 주세요");
   }).catch(function (err) {
     console.log("사진 저장 실패", err);
-    alert("사진을 저장하지 못했어요. 인터넷 연결과 사진 파일을 확인해 주세요.\n(오류: " +
-      (err.code || err.message || "알 수 없음") + ")");
+    alert("사진을 올리지 못했어요.\n" + (err.message || err.code || "알 수 없는 오류") +
+      (err.code ? "\n(오류 코드: " + err.code + ")" : ""));
+  }).then(function () {
+    setPhotoBusy(false);
   });
 }
 
@@ -1361,6 +1532,7 @@ document.addEventListener("keydown", function (e) {
 });
 
 document.getElementById("photoInput").addEventListener("change", onPhotoChosen);
+document.getElementById("cameraInput").addEventListener("change", onPhotoChosen);
 
 // 옛날에 이 브라우저에 저장했던 일정은 더 이상 쓰지 않아서 정리
 try {
