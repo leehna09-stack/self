@@ -74,7 +74,11 @@ p { margin: 0; }
 
 /* 합계 카드 */
 .label { color: var(--muted); font-size: 11px; }
-.big { font-size: 27px; font-weight: 800; line-height: 1.2; margin-bottom: 10px; }
+.big { font-size: 22px; font-weight: 800; line-height: 1.2; margin-bottom: 10px; white-space: nowrap; }
+.sumgrid { display: grid; grid-template-columns: auto 1fr; column-gap: 6px; align-items: baseline; }
+.sumgrid .sep { color: var(--muted); font-weight: 400; }
+.sumgrid .goalamt { color: var(--muted); }
+.sumgrid .label .link { min-height: 28px; padding: 0 2px; font-size: 11px; }
 .empty { color: var(--muted); padding: 8px 0; }
 .empty.card { white-space: pre-line; padding: 24px 16px; text-align: center; line-height: 1.7; }
 .bar { position: relative; display: flex; height: 40px; border-radius: 10px; overflow: hidden; background: var(--line); }
@@ -82,7 +86,6 @@ p { margin: 0; }
 .seg-a { background: var(--dark); }
 .seg-b { background: var(--mid); }
 .bar button:focus-visible { outline: 3px solid #fff; outline-offset: -6px; }
-.mid-tick { position: absolute; top: 0; bottom: 0; left: calc(50% - 1px); width: 2px; background: #fff; pointer-events: none; }
 .reveal { margin: 8px 0 12px; min-height: 26px; color: var(--muted); font-size: 11px; }
 .reveal.on { color: var(--text); font-size: 15px; font-weight: 700; }
 .over { color: var(--red); font-weight: 700; margin: -6px 0 12px; }
@@ -147,10 +150,7 @@ input[type="date"], input[type="number"], input[type="text"] {
 .prog { height: 10px; border-radius: 5px; background: var(--line); overflow: hidden; margin: 0 0 6px; }
 .prog > div { height: 100%; background: var(--dark); }
 .prog.over > div { background: var(--red); }
-.progtxt { color: var(--muted); font-size: 11px; margin-bottom: 10px; }
 .status { color: var(--muted); font-size: 11px; margin-bottom: 8px; }
-.goalrow { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: -6px 0 10px; }
-.goalrow .link { min-height: 40px; padding: 0 4px; }
 .seg > div { position: relative; }
 .seg input { position: absolute; inset: 0; opacity: 0; margin: 0; cursor: pointer; }
 .seg label {
@@ -672,13 +672,13 @@ input[type="date"], input[type="number"], input[type="text"] {
     $('#monthTitle').textContent = fmtMonth(month);
     var box = $('#summary');
     var goal = goalOf(month);
-    var kids = [h('p', { class: 'label' }, '이달 합계'), h('p', { class: 'big num' }, fmtWon(total)),
-      h('div', { class: 'goalrow' },
-        h('span', { class: 'label num' }, '목표 ' + fmtGoal(goal)),
-        h('button', { type: 'button', class: 'link', onclick: openGoalModal }, '목표금액 수정')),
+    var kids = [h('div', { class: 'sumgrid' },
+        h('p', { class: 'label' }, '이달 합계'),
+        h('p', { class: 'label sg-r' }, '목표금액 ', h('button', { type: 'button', class: 'link', onclick: openGoalModal }, '수정')),
+        h('p', { class: 'big num' }, fmtWon(total), h('span', { class: 'sep', 'aria-hidden': 'true' }, ' /')),
+        h('p', { class: 'big goalamt num sg-r' }, fmtWon(goal))),
       h('div', { class: 'prog' + (total > goal ? ' over' : ''), role: 'progressbar', 'aria-valuemin': '0', 'aria-valuemax': '100', 'aria-valuenow': String(Math.min(100, Math.round(total / goal * 100))), 'aria-label': '목표 사용률' },
-        h('div', { style: 'width:' + Math.min(100, total / goal * 100) + '%' })),
-      h('p', { class: 'progtxt num' }, '목표의 ' + Math.round(total / goal * 100) + '% 사용 · ' + (total > goal ? fmtWon(total - goal) + ' 초과' : '남은 금액 ' + fmtWon(goal - total)))];
+        h('div', { style: 'width:' + Math.min(100, total / goal * 100) + '%' }))];
 
     if (total === 0) {
       kids.push(h('p', { class: 'empty' }, '이 달에는 아직 기록이 없어요. 아래에서 첫 지출을 입력해 보세요.'));
@@ -708,7 +708,7 @@ input[type="date"], input[type="number"], input[type="text"] {
       kids.push(h('p', { class: 'over num' }, '목표 ' + fmtGoal(goal) + '을 ' + fmtWon(total - goal) + ' 넘었어요'));
     }
     kids.push(
-      h('div', { class: 'bar' }, seg('한나', 'seg-a'), seg('동일', 'seg-b'), h('span', { class: 'mid-tick', 'aria-hidden': 'true' })),
+      h('div', { class: 'bar' }, seg('한나', 'seg-a'), seg('동일', 'seg-b')),
       reveal,
       h('p', { class: 'cats num' }, '식비 ' + fmtWon(s.cat['식비']) + ' · 생활용품 ' + fmtWon(s.cat['생활용품']) + ' · 기타 ' + fmtWon(s.cat['기타']))
     );
