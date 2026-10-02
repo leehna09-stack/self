@@ -169,15 +169,18 @@ input[type="date"], input[type="number"], input[type="text"] {
 .dategroup { margin-top: 12px; }
 .dategroup h3 { display: flex; justify-content: space-between; padding: 0 4px 8px; }
 .items { list-style: none; margin: 0; padding: 0; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: 0 1px 2px rgba(28,25,23,.05); }
-.item { padding: 10px 16px; border-bottom: 1px solid var(--line); }
+.item { padding: 6px 8px 6px 16px; border-bottom: 1px solid var(--line); }
 .item:last-child { border-bottom: 0; }
-.row { display: flex; justify-content: space-between; gap: 12px; }
-.main { min-width: 0; }
+.row { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.right { display: flex; align-items: center; flex: none; }
+.main { min-width: 0; padding: 2px 0; }
 .memo { font-weight: 600; overflow-wrap: anywhere; }
 .meta { color: var(--muted); font-size: 11px; }
-.item .amt { font-weight: 700; white-space: nowrap; }
-.acts { display: flex; justify-content: flex-end; gap: 4px; margin: -4px -8px -6px; }
-.acts .link { min-height: 32px; }
+.item .amt { font-weight: 700; white-space: nowrap; margin-right: 2px; }
+.act { width: 32px; height: 32px; padding: 0; border: 0; background: transparent; display: grid; place-items: center; cursor: pointer; touch-action: manipulation; border-radius: 8px; }
+.act:active { background: var(--bg); }
+.act svg { width: 18px; height: 18px; stroke: var(--text); fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.act.danger svg { stroke: var(--red); }
 
 /* 월간 비교 */
 .cmp { list-style: none; margin: 0; padding: 0; }
@@ -667,6 +670,13 @@ input[type="date"], input[type="number"], input[type="text"] {
     $('#whoHint').textContent = '지금은 "' + user + '" 이름으로 기록돼요.';
   }
 
+  // 수정(연필)·삭제(X) 아이콘 버튼. 모양은 이 파일 안의 고정 값이라 그대로 넣어도 안전해요.
+  function actBtn(cls, label, paths, onclick) {
+    var b = h('button', { type: 'button', class: cls, 'aria-label': label, onclick: onclick });
+    b.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true">' + paths + '</svg>';
+    return b;
+  }
+
   function renderSummary() {
     var s = monthStats(month), by = s.by, total = s.total;
     $('#monthTitle').textContent = fmtMonth(month);
@@ -751,10 +761,10 @@ input[type="date"], input[type="number"], input[type="text"] {
           return h('li', { class: 'item' },
             h('div', { class: 'row' },
               h('div', { class: 'main' }, h('p', { class: 'memo' }, e.memo || '(메모 없음)'), h('p', { class: 'meta' }, e.who + ' · ' + e.cat)),
-              h('p', { class: 'amt num' }, fmtWon(e.amount))),
-            h('div', { class: 'acts' },
-              h('button', { type: 'button', class: 'link', 'aria-label': name + ' 수정', onclick: function () { startEdit(e.id); } }, '수정'),
-              h('button', { type: 'button', class: 'link danger', 'aria-label': name + ' 삭제', onclick: function () { removeEntry(e.id); } }, '삭제')));
+              h('div', { class: 'right' },
+                h('p', { class: 'amt num' }, fmtWon(e.amount)),
+                actBtn('act', name + ' 수정', '<path d="M4 20h4l10.5-10.5a2.1 2.1 0 0 0-3-3L5 17z"/><path d="M13.5 8.5l3 3"/>', function () { startEdit(e.id); }),
+                actBtn('act danger', name + ' 삭제', '<path d="M6 6l12 12M18 6L6 18"/>', function () { removeEntry(e.id); }))));
         })));
     }));
   }
