@@ -37,7 +37,7 @@ body {
   letter-spacing: -0.01em;
 }
 .wrap { max-width: 560px; margin: 0 auto; padding: 20px 20px calc(96px + env(safe-area-inset-bottom)); }
-h1 { font-size: 22px; font-weight: 700; letter-spacing: -0.03em; margin: 0; }
+h1 { font-size: 20px; font-weight: 700; letter-spacing: -0.03em; margin: 0; }
 h2 { font-size: 16px; font-weight: 700; margin: 0 0 12px; }
 h3 { font-size: 13px; margin: 0; color: var(--muted); font-weight: 500; }
 p { margin: 0; }
@@ -67,14 +67,14 @@ p { margin: 0; }
 :focus-visible { outline: 3px solid var(--dark); outline-offset: 2px; }
 
 /* 월 이동 */
-.monthnav { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.monthnav { display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 8px; }
 .monthnav h2 { margin: 0; }
-.icon-btn { width: 48px; height: 48px; border: 1px solid var(--mid); border-radius: 10px; background: var(--surface); display: grid; place-items: center; cursor: pointer; touch-action: manipulation; }
-.icon-btn svg { width: 22px; height: 22px; stroke: var(--text); fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.icon-btn { width: 36px; height: 36px; border: 1px solid var(--mid); border-radius: 10px; background: var(--surface); display: grid; place-items: center; cursor: pointer; touch-action: manipulation; }
+.icon-btn svg { width: 18px; height: 18px; stroke: var(--text); fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 
 /* 합계 카드 */
 .label { color: var(--muted); font-size: 12px; }
-.big { font-size: 30px; font-weight: 800; line-height: 1.2; margin-bottom: 14px; }
+.big { font-size: 28px; font-weight: 800; line-height: 1.2; margin-bottom: 14px; }
 .empty { color: var(--muted); padding: 8px 0; }
 .empty.card { white-space: pre-line; padding: 32px 24px; text-align: center; line-height: 1.7; }
 .bar { position: relative; display: flex; height: 40px; border-radius: 10px; overflow: hidden; background: var(--line); }
@@ -83,7 +83,7 @@ p { margin: 0; }
 .seg-b { background: var(--mid); }
 .bar button:focus-visible { outline: 3px solid #fff; outline-offset: -6px; }
 .mid-tick { position: absolute; top: 0; bottom: 0; left: calc(50% - 1px); width: 2px; background: #fff; pointer-events: none; }
-.reveal { margin: 8px 0 10px; min-height: 26px; color: var(--muted); font-size: 12px; }
+.reveal { margin: 8px 0 12px; min-height: 26px; color: var(--muted); font-size: 12px; }
 .reveal.on { color: var(--text); font-size: 16px; font-weight: 700; }
 .over { color: var(--red); font-weight: 700; margin: -6px 0 12px; }
 .legend { list-style: none; margin: 0 0 14px; padding: 0; }
@@ -117,7 +117,7 @@ p { margin: 0; }
 }
 .day:active { background: var(--bg); }
 .day .dn { font-size: 14px; line-height: 1.2; }
-.day .da { font-size: 12px; line-height: 1.2; color: var(--muted); white-space: nowrap; }
+.day .da { font-size: 11px; line-height: 1.2; color: var(--muted); white-space: nowrap; }
 .day.today { border: 2px solid var(--dark); padding: 5px 0 3px; font-weight: 700; }
 .day[aria-pressed="true"] { background: var(--dark); color: #fff; border-color: var(--dark); }
 .day .da.over { color: var(--red); font-weight: 700; }
@@ -138,7 +138,7 @@ input[type="date"], input[type="number"], input[type="text"] {
 .seg.three { grid-template-columns: 1fr 1fr 1fr; }
 .titlebox { display: flex; align-items: center; gap: 10px; }
 .bell { position: relative; width: 44px; height: 44px; }
-.badge { position: absolute; top: -6px; right: -6px; min-width: 20px; height: 20px; padding: 0 5px; border-radius: 10px; background: var(--red); color: #fff; font-size: 12px; font-weight: 700; line-height: 20px; text-align: center; }
+.badge { position: absolute; top: -6px; right: -6px; min-width: 20px; height: 20px; padding: 0 5px; border-radius: 10px; background: var(--red); color: #fff; font-size: 11px; font-weight: 700; line-height: 20px; text-align: center; }
 .newlist { list-style: none; margin: 0; padding: 0; }
 .newlist li { padding: 10px 0; border-bottom: 1px solid var(--line); }
 .newlist li:last-child { border-bottom: 0; }
@@ -148,7 +148,7 @@ input[type="date"], input[type="number"], input[type="text"] {
 .prog > div { height: 100%; background: var(--dark); }
 .prog.over > div { background: var(--red); }
 .progtxt { color: var(--muted); font-size: 12px; margin-bottom: 14px; }
-.status { color: var(--muted); font-size: 13px; margin-bottom: 8px; }
+.status { color: var(--muted); font-size: 12px; margin-bottom: 8px; }
 .goalrow { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: -6px 0 10px; }
 .goalrow .link { min-height: 40px; padding: 0 4px; }
 .seg > div { position: relative; }
