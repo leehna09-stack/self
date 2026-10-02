@@ -1281,6 +1281,21 @@ function resetNoteForm() {
   document.getElementById("noteCancelBtn").hidden = true;
 }
 
+// 한줄평을 남긴 시각을 24시간 기준 "시:분"으로 (옛날 글은 시각이 없어 빈칸)
+// 그 날짜가 아닌 다른 날에 남긴 글이면 "월/일"도 같이 보여줌
+function formatNoteTime(createdAt, noteDate) {
+  if (typeof createdAt !== "number" || createdAt < 1000000000000) {
+    return "";
+  }
+  const d = new Date(createdAt);
+  const hh = String(d.getHours()).padStart(2, "0");
+  const mm = String(d.getMinutes()).padStart(2, "0");
+  const writtenDate = d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" +
+    String(d.getDate()).padStart(2, "0");
+  const prefix = writtenDate === noteDate ? "" : (d.getMonth() + 1) + "/" + d.getDate() + " ";
+  return " · " + prefix + hh + ":" + mm;
+}
+
 // 상세창의 한줄평 목록 그리기 (내가 쓴 글에만 ✏️ ✕ 표시)
 function drawDetailNotes() {
   const list = document.getElementById("detailNote");
@@ -1303,7 +1318,7 @@ function drawDetailNotes() {
     text.className = "note-text";
     text.textContent = "“" + n.text + "” ";
     const by = document.createElement("small");
-    by.textContent = "— " + n.by;
+    by.textContent = "— " + n.by + formatNoteTime(n.createdAt, n.date || currentDetailDate);
     text.appendChild(by);
     li.appendChild(text);
 
