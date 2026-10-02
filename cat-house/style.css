@@ -546,10 +546,46 @@ fieldset.people-check {
   scroll-snap-align: center;
 }
 
+/* 세로 비율(3:4) 틀: 가로 사진은 틀 안에서 줄어들어 보이고, 누르면 팝업으로 크게 열림 */
+.photo-frame {
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  max-height: 62vh;
+  background-color: rgba(0, 0, 0, 0.06);
+  border-radius: 14px;
+  overflow: hidden;
+  cursor: zoom-in;
+}
+
 .photo-slide img {
   width: 100%;
+  height: 100%;
   display: block;
-  border-radius: 14px;
+  object-fit: contain;
+}
+
+/* 사진 크게 보기 팝업 */
+#photoViewer {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(0, 0, 0, 0.88);
+  cursor: zoom-out;
+}
+
+#photoViewer img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+#photoViewer .round-btn {
+  position: absolute;
+  top: 12px;
+  right: 12px;
 }
 
 .photo-slide .photo-by {

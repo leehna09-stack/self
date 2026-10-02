@@ -845,10 +845,17 @@ function drawDetailPhoto() {
       const slide = document.createElement("div");
       slide.className = "photo-slide";
 
+      // 세로 비율(3:4) 틀 안에 사진을 맞춰 넣음 (가로 사진은 틀 안에서 작게 보이고, 누르면 크게 열림)
+      const frame = document.createElement("div");
+      frame.className = "photo-frame";
       const img = document.createElement("img");
       img.src = p.image;
       img.alt = currentDetailDate + " 사진 " + (i + 1);
-      slide.appendChild(img);
+      frame.appendChild(img);
+      frame.onclick = function () {
+        openPhotoViewer(p.image, img.alt);
+      };
+      slide.appendChild(frame);
 
       const by = document.createElement("div");
       by.className = "photo-by";
@@ -1120,6 +1127,39 @@ function readPhoto(file) {
 function setPhotoBusy(busy) {
   photoBusy = busy;
   drawDetailPhoto();
+}
+
+// 사진 크게 보기 팝업 (사진이나 바깥쪽을 누르면 닫힘)
+function openPhotoViewer(src, alt) {
+  closePhotoViewer();
+  const viewer = document.createElement("div");
+  viewer.id = "photoViewer";
+  viewer.setAttribute("role", "dialog");
+  viewer.setAttribute("aria-modal", "true");
+  viewer.setAttribute("aria-label", "사진 크게 보기");
+  viewer.onclick = closePhotoViewer;
+
+  const img = document.createElement("img");
+  img.src = src;
+  img.alt = alt;
+  viewer.appendChild(img);
+
+  const close = document.createElement("button");
+  close.type = "button";
+  close.className = "round-btn";
+  close.textContent = "✕";
+  close.setAttribute("aria-label", "닫기");
+  close.onclick = closePhotoViewer;
+  viewer.appendChild(close);
+
+  document.body.appendChild(viewer);
+}
+
+function closePhotoViewer() {
+  const viewer = document.getElementById("photoViewer");
+  if (viewer) {
+    viewer.remove();
+  }
 }
 
 // 사진을 고르면 줄여서 저장
@@ -1537,6 +1577,10 @@ function deleteSchedule(id) {
 // Esc 키로 열려 있는 창 닫기
 document.addEventListener("keydown", function (e) {
   if (e.key === "Escape") {
+    if (document.getElementById("photoViewer")) {
+      closePhotoViewer();
+      return;
+    }
     closeForm();
     closeDetail();
     closeManage();
