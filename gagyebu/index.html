@@ -169,14 +169,15 @@ input[type="date"], input[type="number"], input[type="text"] {
 .dategroup { margin-top: 20px; }
 .dategroup h3 { display: flex; justify-content: space-between; padding: 0 4px 8px; }
 .items { list-style: none; margin: 0; padding: 0; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: 0 1px 2px rgba(28,25,23,.05); }
-.item { padding: 14px 16px; border-bottom: 1px solid var(--line); }
+.item { padding: 10px 16px; border-bottom: 1px solid var(--line); }
 .item:last-child { border-bottom: 0; }
 .row { display: flex; justify-content: space-between; gap: 12px; }
 .main { min-width: 0; }
 .memo { font-weight: 600; overflow-wrap: anywhere; }
 .meta { color: var(--muted); font-size: 12px; }
 .item .amt { font-weight: 700; white-space: nowrap; }
-.acts { display: flex; justify-content: flex-end; gap: 4px; margin: 0 -8px -4px; }
+.acts { display: flex; justify-content: flex-end; gap: 4px; margin: -4px -8px -6px; }
+.acts .link { min-height: 32px; }
 
 /* 월간 비교 */
 .cmp { list-style: none; margin: 0; padding: 0; }
@@ -186,7 +187,9 @@ input[type="date"], input[type="number"], input[type="text"] {
   border: 1px solid var(--line); border-radius: 10px; padding: 12px; cursor: pointer; touch-action: manipulation;
 }
 .cmp button[aria-current="true"] { border: 2px solid var(--dark); padding: 11px; }
-.cmp .r1 { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.cmp .r1 { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 2px 8px; }
+.cmp .r1 > span { white-space: nowrap; }
+.cmp .r1 > span:last-child { margin-left: auto; }
 .cmp .mn { font-weight: 700; }
 .cmp .bartrack { height: 8px; border-radius: 4px; background: var(--line); margin: 8px 0 6px; overflow: hidden; }
 .cmp .barfill { height: 100%; background: var(--mid); }
@@ -612,9 +615,8 @@ input[type="date"], input[type="number"], input[type="text"] {
   function fmtWon(n) { return n.toLocaleString('ko-KR') + '원'; }
   // 달력 칸처럼 좁은 곳에 쓰는 짧은 금액 표시 (예: 129,400 → 13만, 4,500 → 4.5천)
   function fmtShort(n) {
-    if (n >= 100000) return Math.round(n / 10000) + '만';
-    if (n >= 10000) return (Math.round(n / 1000) / 10) + '만';
-    return (Math.round(n / 100) / 10) + '천';
+    if (n >= 10000) return (Math.floor(n / 1000) / 10) + '만';
+    return (Math.floor(n / 100) / 10) + '천';
   }
   function fmtGoal(n) { return n % 10000 === 0 ? (n / 10000) + '만원' : fmtWon(n); }
   function shiftMonth(ym, delta) {
