@@ -186,7 +186,9 @@ input[type="date"], input[type="number"], input[type="text"] {
   border: 1px solid var(--line); border-radius: 10px; padding: 12px; cursor: pointer; touch-action: manipulation;
 }
 .cmp button[aria-current="true"] { border: 2px solid var(--dark); padding: 11px; }
-.cmp .r1 { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.cmp .r1 { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 2px 8px; }
+.cmp .r1 > span { white-space: nowrap; }
+.cmp .r1 > span:last-child { margin-left: auto; }
 .cmp .mn { font-weight: 700; }
 .cmp .bartrack { height: 8px; border-radius: 4px; background: var(--line); margin: 8px 0 6px; overflow: hidden; }
 .cmp .barfill { height: 100%; background: var(--mid); }
