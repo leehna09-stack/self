@@ -614,7 +614,6 @@ input[type="date"], input[type="number"], input[type="text"] {
   function fmtWon(n) { return n.toLocaleString('ko-KR') + '원'; }
   // 달력 칸처럼 좁은 곳에 쓰는 짧은 금액 표시 (예: 129,400 → 13만, 4,500 → 4.5천)
   function fmtShort(n) {
-    if (n >= 100000) return Math.floor(n / 10000) + '만';
     if (n >= 10000) return (Math.floor(n / 1000) / 10) + '만';
     return (Math.floor(n / 100) / 10) + '천';
   }
