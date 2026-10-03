@@ -359,7 +359,7 @@ function closeNotif() {
   document.getElementById("notifModal").classList.add("hidden");
 }
 
-// 새 소식을 누르면 그 소식만 확인 처리하고, 그 장소의 그 달로 가서 그 날짜를 엶
+// 새 소식을 누르면 그 소식만 확인 처리하고, 그 장소의 그 달 그 날짜를 열어 해당 소식이 있는 칸으로 이동
 function gotoActivity(a) {
   markRead(a);
   updateBell();
@@ -370,6 +370,9 @@ function gotoActivity(a) {
   drawCalendar();
   watchMonthPhotos();
   openDetail(a.date);
+  // 사진 소식이면 사진 칸으로, 한줄평 소식이면 한줄평 칸으로 바로 내려가서 보여줌
+  const target = document.getElementById(a.type === "photo" ? "photoSectionTitle" : "noteSection");
+  target.scrollIntoView({ block: "start" });
 }
 
 // 지금 보고 있는 장소의 사진 저장 위치 (산본집과 제주도 사진은 따로 저장)

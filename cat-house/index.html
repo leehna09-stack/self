@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Jua&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=20261003a">
+  <link rel="stylesheet" href="style.css?v=20261003b">
 </head>
 <body>
   <main class="app">
@@ -122,7 +122,7 @@
         <h3>이 날의 날씨</h3>
         <div id="detailWeather"></div>
       </div>
-      <h3>이 날의 사진</h3>
+      <h3 id="photoSectionTitle">이 날의 사진</h3>
       <div id="detailPhoto"></div>
       <input type="file" id="photoInput" accept="image/*" hidden>
       <input type="file" id="cameraInput" accept="image/*" capture="environment" hidden>
@@ -437,6 +437,6 @@
     window.dispatchEvent(new Event("cloud-ready"));
   </script>
 
-  <script src="script.js?v=20261003a"></script>
+  <script src="script.js?v=20261003b"></script>
 </body>
 </html>
