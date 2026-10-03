@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Jua&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=20261002b">
+  <link rel="stylesheet" href="style.css?v=20261003a">
 </head>
 <body>
   <main class="app">
@@ -330,7 +330,9 @@
         unsubscribeActivity = onSnapshot(q, function (snap) {
           const list = [];
           snap.forEach(function (d) {
-            list.push(d.data());
+            const item = d.data();
+            item.id = d.id;
+            list.push(item);
           });
           onData(list);
         }, function (error) {
@@ -435,6 +437,6 @@
     window.dispatchEvent(new Event("cloud-ready"));
   </script>
 
-  <script src="script.js?v=20261002b"></script>
+  <script src="script.js?v=20261003a"></script>
 </body>
 </html>

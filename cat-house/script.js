@@ -59,6 +59,9 @@ const MAX_NOTES = 10;
 let activity = [];
 const SEEN_KEY = "catHouseSeen";
 let seenFallback = Date.now();
+const READ_KEY = "catHouseRead";
+const NOTIF_KEEP_MS = 14 * 24 * 60 * 60 * 1000;  // 새 소식은 2주 동안 목록에 남김
+let readFallback = {};
 
 // 지금 쓰는 사람 이름 (이 폰에 저장해 둠)
 const USER_KEY = "catHouseUser";
@@ -235,7 +238,7 @@ function connectCloud(code) {
   cloudConnected = true;
   watchMonthPhotos();
   activity = [];
-  window.cloud.watchActivity(getSeen(), onActivityData);
+  window.cloud.watchActivity(Math.max(getSeen(), Date.now() - NOTIF_KEEP_MS), onActivityData);
 }
 
 // ===== 종 알림 (다른 사람이 올린 사진·한줄평) =====
@@ -254,28 +257,52 @@ function getSeen() {
   return seenFallback;
 }
 
-// 확인한 시각을 지금으로 저장
-function markSeen() {
-  seenFallback = Date.now();
+// 눌러서 확인한 소식 목록 { 소식 id: 올라온 시각 }
+function getReadMap() {
   try {
-    localStorage.setItem(SEEN_KEY, String(seenFallback));
+    const saved = JSON.parse(localStorage.getItem(READ_KEY));
+    if (saved && typeof saved === "object") {
+      return saved;
+    }
+  } catch (e) {
+    // 저장소를 못 쓰면 이번 접속 동안만 기억
+  }
+  return readFallback;
+}
+
+// 소식 하나를 확인한 것으로 저장 (오래된 기록은 정리)
+function markRead(a) {
+  const map = getReadMap();
+  const limit = Date.now() - NOTIF_KEEP_MS;
+  const next = {};
+  Object.keys(map).forEach(function (id) {
+    if (map[id] > limit) {
+      next[id] = map[id];
+    }
+  });
+  next[a.id] = a.at;
+  readFallback = next;
+  try {
+    localStorage.setItem(READ_KEY, JSON.stringify(next));
   } catch (e) {
     // 저장소를 못 쓰면 이번 접속 동안만 기억
   }
 }
 
-// 확인 안 한 새 소식 (내가 올린 건 제외, 최신이 위)
+// 아직 누르지 않은 새 소식 (내가 올린 건 제외, 최신이 위)
 function getUnseen() {
   const seen = getSeen();
   const user = getUser();
+  const readMap = getReadMap();
   const list = [];
   for (let i = 0; i < activity.length; i++) {
-    if (activity[i].at > seen && activity[i].by !== user) {
-      list.push(activity[i]);
+    const a = activity[i];
+    if (a.at > seen && a.by !== user && !readMap[a.id]) {
+      list.push(a);
     }
   }
-  list.sort(function (a, b) {
-    return b.at - a.at;
+  list.sort(function (x, y) {
+    return y.at - x.at;
   });
   return list;
 }
@@ -296,7 +323,7 @@ function updateBell() {
     "aria-label", count === 0 ? "새 소식" : "새 소식 " + count + "개");
 }
 
-// 종을 누르면 새 소식 목록을 보여주고, 확인한 것으로 처리
+// 종을 누르면 아직 안 누른 새 소식 목록을 보여줌 (소식을 눌러야 확인한 것으로 처리)
 function openNotif() {
   const list = document.getElementById("notifList");
   list.innerHTML = "";
@@ -323,8 +350,6 @@ function openNotif() {
     list.appendChild(li);
   }
 
-  markSeen();
-  updateBell();
   document.getElementById("notifModal").classList.remove("hidden");
   document.querySelector("#notifModal .modal-title button").focus();
 }
@@ -334,8 +359,10 @@ function closeNotif() {
   document.getElementById("notifModal").classList.add("hidden");
 }
 
-// 새 소식을 누르면 그 장소의 그 달로 가서 그 날짜를 엶
+// 새 소식을 누르면 그 소식만 확인 처리하고, 그 장소의 그 달로 가서 그 날짜를 엶
 function gotoActivity(a) {
+  markRead(a);
+  updateBell();
   closeNotif();
   viewPlace = a.place;
   viewYear = Number(a.date.slice(0, 4));
