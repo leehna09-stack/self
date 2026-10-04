@@ -58,7 +58,7 @@ h1, h2, h3 {
 }
 
 .hero h1 {
-  font-size: 28px;
+  font-size: 26px;
   margin: 0 0 4px 0;
 }
 
@@ -92,12 +92,12 @@ h1, h2, h3 {
 /* ===== 버튼 ===== */
 button {
   font-family: inherit;
-  font-size: 15px;
+  font-size: 13px;
   color: var(--ink);
   background-color: var(--card);
   border: 1.5px solid var(--line);
   border-radius: 999px;
-  min-height: 44px;
+  min-height: 42px;
   padding: 0 16px;
   cursor: pointer;
   touch-action: manipulation;
@@ -114,9 +114,9 @@ button:active {
 }
 
 .round-btn {
-  width: 44px;
+  width: 42px;
   padding: 0;
-  font-size: 14px;
+  font-size: 12px;
   flex-shrink: 0;
 }
 
@@ -161,9 +161,9 @@ button:active {
 
 .add-card .add-btn {
   flex: 0 0 auto;
-  min-height: 48px;
+  min-height: 46px;
   padding: 0 16px;
-  font-size: 15px;
+  font-size: 13px;
   white-space: nowrap;
 }
 
@@ -183,9 +183,9 @@ button:active {
 }
 
 .toolbar .round-btn {
-  width: 40px;
-  height: 40px;
-  min-height: 40px;
+  width: 38px;
+  height: 38px;
+  min-height: 38px;
 }
 
 .place-switch,
@@ -875,9 +875,9 @@ fieldset.people-check {
 }
 
 .sub-btn {
-  min-height: 44px;
+  min-height: 42px;
   padding: 0 16px;
-  font-size: 15px;
+  font-size: 13px;
   white-space: nowrap;
 }
 
@@ -966,7 +966,7 @@ fieldset.people-check {
   }
 
   .hero h1 {
-    font-size: 25px;
+    font-size: 23px;
   }
 
   .calendar {
@@ -979,9 +979,9 @@ fieldset.people-check {
   }
 
   .toolbar .round-btn {
-    width: 34px;
-    height: 34px;
-    min-height: 34px;
+    width: 32px;
+    height: 32px;
+    min-height: 32px;
   }
 
   .place-switch h2 {
@@ -1007,10 +1007,10 @@ fieldset.people-check {
   }
 
   .toolbar .round-btn {
-    width: 30px;
-    height: 30px;
-    min-height: 30px;
-    font-size: 12px;
+    width: 28px;
+    height: 28px;
+    min-height: 28px;
+    font-size: 10px;
   }
 
   .place-switch h2 {
