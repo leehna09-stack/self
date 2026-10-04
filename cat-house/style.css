@@ -659,14 +659,18 @@ fieldset.people-check {
 /* 날씨 선택 */
 #detailWeather {
   display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
+  flex-wrap: nowrap;
+  gap: 6px;
 }
 
+/* 날씨 버튼 5개는 좁은 화면에서도 한 줄 */
 #detailWeather button {
+  flex: 1 1 auto;
+  min-width: 0;
   min-height: 40px;
-  padding: 0 14px;
-  font-size: 14px;
+  padding: 0 4px;
+  font-size: clamp(11px, 3.3vw, 14px);
+  white-space: nowrap;
 }
 
 #detailWeather button[aria-pressed="true"] {
