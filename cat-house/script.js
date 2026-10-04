@@ -423,6 +423,7 @@ function onDayData(map) {
   drawCalendar();
   if (!document.getElementById("detailModal").classList.contains("hidden")) {
     drawDetailWeather();
+    drawDetailPhoto();
     buildNotes();
     drawDetailNotes();
   }
@@ -562,24 +563,44 @@ function drawCalendar() {
       }
     }
 
+    // 날씨(제주도)·사진·밥줬어요·치웠어요 아이콘은 한 줄로 나란히
+    const marks = document.createElement("div");
+    marks.className = "day-marks";
+    const day = days[dateString];
+
     // 제주도 달력: 날씨 표시
     if (viewPlace === "제주도") {
-      const day = days[dateString];
       const weather = day ? findWeather(day.weather) : null;
       if (weather) {
-        const w = document.createElement("div");
+        const w = document.createElement("span");
         w.className = "day-weather";
         w.textContent = weather.icon;
-        cell.appendChild(w);
+        marks.appendChild(w);
       }
     }
 
     // 사진이 있는 날은 표시 (산본집·제주도 각각의 사진)
     if (photos[dateString] && photos[dateString].length > 0) {
-      const mark = document.createElement("div");
+      const mark = document.createElement("span");
       mark.className = "day-photo";
       mark.textContent = "📷";
-      cell.appendChild(mark);
+      marks.appendChild(mark);
+    }
+
+    // 산본집 달력: 밥줬어요 / 치웠어요 표시
+    if (viewPlace === "산본집" && day) {
+      for (let i = 0; i < careList.length; i++) {
+        if (day[careList[i].key] === true) {
+          const c = document.createElement("span");
+          c.className = "day-care";
+          c.textContent = careList[i].icon;
+          marks.appendChild(c);
+        }
+      }
+    }
+
+    if (marks.children.length > 0) {
+      cell.appendChild(marks);
     }
 
     // 날짜 칸을 누르면 상세창 열기
@@ -939,6 +960,11 @@ function drawDetailPhoto() {
   }
   lastPhotoCount = list.length;
 
+  // 카메라 / 앨범 / 밥줬어요 / 치웠어요 버튼은 줄바꿈 없이 한 줄에
+  const actions = document.createElement("div");
+  actions.className = "photo-actions";
+  box.appendChild(actions);
+
   // 카메라로 바로 찍기 / 앨범(갤러리·구글 포토 등)에서 고르기를 나눠서 항상 둘 다 고를 수 있게
   const cameraBtn = document.createElement("button");
   cameraBtn.type = "button";
@@ -948,17 +974,34 @@ function drawDetailPhoto() {
   cameraBtn.onclick = function () {
     document.getElementById("cameraInput").click();
   };
-  box.appendChild(cameraBtn);
+  actions.appendChild(cameraBtn);
 
   const albumBtn = document.createElement("button");
   albumBtn.type = "button";
   albumBtn.className = "photo-add";
-  albumBtn.textContent = "🖼 앨범 (" + list.length + "/" + MAX_PHOTOS + ")";
+  albumBtn.textContent = "🖼 앨범 " + list.length + "/" + MAX_PHOTOS;
   albumBtn.disabled = photoBusy;
   albumBtn.onclick = function () {
     document.getElementById("photoInput").click();
   };
-  box.appendChild(albumBtn);
+  actions.appendChild(albumBtn);
+
+  // 산본집 날짜에만: 밥줬어요 / 치웠어요 표시 (제주도 날씨처럼 같은 걸 다시 누르면 해제)
+  if (viewPlace === "산본집") {
+    const day = days[currentDetailDate] || {};
+    for (let i = 0; i < careList.length; i++) {
+      const c = careList[i];
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "care-btn";
+      btn.textContent = c.icon + " " + c.label;
+      btn.setAttribute("aria-pressed", day[c.key] === true ? "true" : "false");
+      btn.onclick = function () {
+        toggleCare(c.key, day[c.key] !== true);
+      };
+      actions.appendChild(btn);
+    }
+  }
 
   if (photoBusy) {
     const busyNote = document.createElement("div");
@@ -1289,6 +1332,26 @@ function drawDetailWeather() {
     };
     box.appendChild(btn);
   }
+}
+
+// 산본집 돌봄 표시 (누가·언제는 남기지 않고 그날 했는지만 표시)
+const careList = [
+  { key: "fed", icon: "🍚", label: "밥줬어요" },
+  { key: "cleaned", icon: "💩", label: "치웠어요" }
+];
+
+// 밥줬어요 / 치웠어요 표시 저장
+function toggleCare(key, value) {
+  if (!cloudConnected) {
+    alert("아직 가족 코드로 연결되지 않았어요. 잠시 후 다시 시도해 주세요.");
+    return;
+  }
+  const fields = {};
+  fields[key] = value;
+  window.cloud.saveDay(currentDetailDate, fields).catch(function (err) {
+    console.log("돌봄 표시 저장 실패", err);
+    alert("저장하지 못했어요. 인터넷 연결을 확인해 주세요.");
+  });
 }
 
 // 날씨 저장
