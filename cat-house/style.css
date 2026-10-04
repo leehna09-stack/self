@@ -618,7 +618,7 @@ fieldset.people-check {
 }
 
 #detailPhoto button {
-  min-height: 38px;
+  min-height: 35px;
   padding: 0 18px;
   font-size: 12px;
 }
@@ -667,7 +667,7 @@ fieldset.people-check {
 #detailWeather button {
   flex: 1 1 auto;
   min-width: 0;
-  min-height: 38px;
+  min-height: 35px;
   padding: 0 4px;
   font-size: clamp(9px, 2.75vw, 12px);
   white-space: nowrap;
@@ -778,9 +778,9 @@ fieldset.people-check {
 /* 한줄평 ✏️ ✕ 아이콘 버튼 */
 .icon-btn {
   flex-shrink: 0;
-  width: 34px;
-  min-height: 34px;
-  height: 34px;
+  width: 31px;
+  min-height: 31px;
+  height: 31px;
   padding: 0;
   font-size: 12px;
 }
@@ -788,6 +788,10 @@ fieldset.people-check {
 .note-form {
   display: flex;
   gap: 8px;
+}
+
+.note-form button {
+  min-height: 39px;
 }
 
 .note-form input[type="text"] {
