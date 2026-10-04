@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Jua&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=20261003b">
+  <link rel="stylesheet" href="style.css?v=20261004a">
 </head>
 <body>
   <main class="app">
@@ -162,6 +162,7 @@
     <div class="modal-box">
       <div class="modal-title">
         <h2 id="notifTitle">새 소식</h2>
+        <button type="button" id="notifReadAllBtn" class="read-all-btn" onclick="readAllNotif()" hidden>모두 읽음</button>
         <button class="round-btn" onclick="closeNotif()" aria-label="닫기">✕</button>
       </div>
       <ul id="notifList"></ul>
@@ -437,6 +438,6 @@
     window.dispatchEvent(new Event("cloud-ready"));
   </script>
 
-  <script src="script.js?v=20261003b"></script>
+  <script src="script.js?v=20261004a"></script>
 </body>
 </html>

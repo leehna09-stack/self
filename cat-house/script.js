@@ -270,8 +270,8 @@ function getReadMap() {
   return readFallback;
 }
 
-// 소식 하나를 확인한 것으로 저장 (오래된 기록은 정리)
-function markRead(a) {
+// 소식들을 확인한 것으로 저장 (오래된 기록은 정리)
+function markRead(items) {
   const map = getReadMap();
   const limit = Date.now() - NOTIF_KEEP_MS;
   const next = {};
@@ -280,7 +280,9 @@ function markRead(a) {
       next[id] = map[id];
     }
   });
-  next[a.id] = a.at;
+  items.forEach(function (a) {
+    next[a.id] = a.at;
+  });
   readFallback = next;
   try {
     localStorage.setItem(READ_KEY, JSON.stringify(next));
@@ -325,6 +327,13 @@ function updateBell() {
 
 // 종을 누르면 아직 안 누른 새 소식 목록을 보여줌 (소식을 눌러야 확인한 것으로 처리)
 function openNotif() {
+  drawNotifList();
+  document.getElementById("notifModal").classList.remove("hidden");
+  document.querySelector("#notifModal .modal-title .round-btn").focus();
+}
+
+// 새 소식 목록 그리기
+function drawNotifList() {
   const list = document.getElementById("notifList");
   list.innerHTML = "";
 
@@ -350,8 +359,14 @@ function openNotif() {
     list.appendChild(li);
   }
 
-  document.getElementById("notifModal").classList.remove("hidden");
-  document.querySelector("#notifModal .modal-title button").focus();
+  document.getElementById("notifReadAllBtn").hidden = (unseen.length === 0);
+}
+
+// 지금 보이는 새 소식을 모두 읽은 것으로 처리 (창은 열어 둠)
+function readAllNotif() {
+  markRead(getUnseen());
+  updateBell();
+  drawNotifList();
 }
 
 // 새 소식창 닫기
@@ -361,7 +376,7 @@ function closeNotif() {
 
 // 새 소식을 누르면 그 소식만 확인 처리하고, 그 장소의 그 달 그 날짜를 열어 해당 소식이 있는 칸으로 이동
 function gotoActivity(a) {
-  markRead(a);
+  markRead([a]);
   updateBell();
   closeNotif();
   viewPlace = a.place;
