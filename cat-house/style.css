@@ -704,6 +704,22 @@ fieldset.people-check {
   display: none;
 }
 
+#notifTitle {
+  flex: 1;
+}
+
+.read-all-btn {
+  min-height: 36px;
+  padding: 6px 12px;
+  border-radius: 18px;
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.read-all-btn[hidden] {
+  display: none;
+}
+
 #notifList {
   list-style: none;
   padding: 0;
