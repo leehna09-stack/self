@@ -58,7 +58,7 @@ h1, h2, h3 {
 }
 
 .hero h1 {
-  font-size: 28px;
+  font-size: 26px;
   margin: 0 0 4px 0;
 }
 
@@ -92,12 +92,12 @@ h1, h2, h3 {
 /* ===== 버튼 ===== */
 button {
   font-family: inherit;
-  font-size: 15px;
+  font-size: 13px;
   color: var(--ink);
   background-color: var(--card);
   border: 1.5px solid var(--line);
   border-radius: 999px;
-  min-height: 44px;
+  min-height: 42px;
   padding: 0 16px;
   cursor: pointer;
   touch-action: manipulation;
@@ -114,9 +114,9 @@ button:active {
 }
 
 .round-btn {
-  width: 44px;
+  width: 42px;
   padding: 0;
-  font-size: 14px;
+  font-size: 12px;
   flex-shrink: 0;
 }
 
@@ -161,9 +161,9 @@ button:active {
 
 .add-card .add-btn {
   flex: 0 0 auto;
-  min-height: 48px;
+  min-height: 46px;
   padding: 0 16px;
-  font-size: 15px;
+  font-size: 13px;
   white-space: nowrap;
 }
 
@@ -183,9 +183,9 @@ button:active {
 }
 
 .toolbar .round-btn {
-  width: 40px;
-  height: 40px;
-  min-height: 40px;
+  width: 38px;
+  height: 38px;
+  min-height: 38px;
 }
 
 .place-switch,
@@ -432,9 +432,9 @@ fieldset.people-check {
   align-items: center;
   justify-content: center;
   gap: 4px;
-  min-height: 44px;
+  min-height: 42px;
   padding: 0 6px;
-  font-size: 15px;
+  font-size: 13px;
   white-space: nowrap;
   color: var(--ink);
   border: 1.5px solid var(--line);
@@ -462,13 +462,13 @@ fieldset.people-check {
 
 .quick-buttons button {
   flex: 1;
-  font-size: 14px;
+  font-size: 12px;
   padding: 0 8px;
 }
 
 #saveBtn {
-  font-size: 16px;
-  min-height: 52px;
+  font-size: 14px;
+  min-height: 50px;
   margin-top: 4px;
 }
 
@@ -508,9 +508,9 @@ fieldset.people-check {
 }
 
 #manageSchedules li button {
-  min-height: 40px;
+  min-height: 38px;
   padding: 0 18px;
-  font-size: 14px;
+  font-size: 12px;
 }
 
 /* 사진 */
@@ -618,9 +618,9 @@ fieldset.people-check {
 }
 
 #detailPhoto button {
-  min-height: 40px;
+  min-height: 38px;
   padding: 0 18px;
-  font-size: 14px;
+  font-size: 12px;
 }
 
 /* 카메라·앨범·밥줬어요·치웠어요는 좁은 화면에서도 한 줄 */
@@ -635,7 +635,7 @@ fieldset.people-check {
   flex: 1 1 auto;
   min-width: 0;
   padding: 0 4px;
-  font-size: clamp(11px, 3.3vw, 14px);
+  font-size: clamp(9px, 2.75vw, 12px);
   white-space: nowrap;
 }
 
@@ -667,9 +667,9 @@ fieldset.people-check {
 #detailWeather button {
   flex: 1 1 auto;
   min-width: 0;
-  min-height: 40px;
+  min-height: 38px;
   padding: 0 4px;
-  font-size: clamp(11px, 3.3vw, 14px);
+  font-size: clamp(9px, 2.75vw, 12px);
   white-space: nowrap;
 }
 
@@ -745,10 +745,10 @@ fieldset.people-check {
 }
 
 .read-all-btn {
-  min-height: 36px;
+  min-height: 34px;
   padding: 6px 12px;
   border-radius: 18px;
-  font-size: 13px;
+  font-size: 11px;
   white-space: nowrap;
 }
 
@@ -768,21 +768,21 @@ fieldset.people-check {
 
 #notifList li button {
   width: 100%;
-  min-height: 44px;
+  min-height: 42px;
   padding: 8px 14px;
   border-radius: 14px;
   text-align: left;
-  font-size: 14px;
+  font-size: 12px;
 }
 
 /* 한줄평 ✏️ ✕ 아이콘 버튼 */
 .icon-btn {
   flex-shrink: 0;
-  width: 36px;
-  min-height: 36px;
-  height: 36px;
+  width: 34px;
+  min-height: 34px;
+  height: 34px;
   padding: 0;
-  font-size: 14px;
+  font-size: 12px;
 }
 
 .note-form {
@@ -828,9 +828,9 @@ fieldset.people-check {
 }
 
 .range-nav .round-btn {
-  width: 40px;
-  height: 40px;
-  min-height: 40px;
+  width: 38px;
+  height: 38px;
+  min-height: 38px;
 }
 
 .range-calendar {
@@ -846,12 +846,12 @@ fieldset.people-check {
 }
 
 .range-day {
-  min-height: 40px;
+  min-height: 38px;
   padding: 0;
   border: none;
   border-radius: 10px;
   background-color: transparent;
-  font-size: 14px;
+  font-size: 12px;
   font-variant-numeric: tabular-nums;
 }
 
@@ -875,9 +875,9 @@ fieldset.people-check {
 }
 
 .sub-btn {
-  min-height: 44px;
+  min-height: 42px;
   padding: 0 16px;
-  font-size: 15px;
+  font-size: 13px;
   white-space: nowrap;
 }
 
@@ -890,8 +890,8 @@ fieldset.people-check {
 }
 
 .user-buttons button {
-  min-height: 52px;
-  font-size: 16px;
+  min-height: 50px;
+  font-size: 14px;
 }
 
 /* 가족 코드 입력 */
@@ -927,9 +927,9 @@ fieldset.people-check {
 }
 
 .link-btn {
-  min-height: 40px;
+  min-height: 38px;
   padding: 0 14px;
-  font-size: 13px;
+  font-size: 11px;
 }
 
 /* ===== 폰 화면 (넓이 600px 이하) ===== */
@@ -966,7 +966,7 @@ fieldset.people-check {
   }
 
   .hero h1 {
-    font-size: 25px;
+    font-size: 23px;
   }
 
   .calendar {
@@ -979,9 +979,9 @@ fieldset.people-check {
   }
 
   .toolbar .round-btn {
-    width: 34px;
-    height: 34px;
-    min-height: 34px;
+    width: 32px;
+    height: 32px;
+    min-height: 32px;
   }
 
   .place-switch h2 {
@@ -1007,10 +1007,10 @@ fieldset.people-check {
   }
 
   .toolbar .round-btn {
-    width: 30px;
-    height: 30px;
-    min-height: 30px;
-    font-size: 12px;
+    width: 28px;
+    height: 28px;
+    min-height: 28px;
+    font-size: 10px;
   }
 
   .place-switch h2 {
