@@ -514,9 +514,19 @@ fieldset.people-check {
 }
 
 /* 사진 */
-.day-photo {
+.day-photo,
+.day-care {
   font-size: 11px;
   line-height: 1;
+}
+
+/* 달력 칸의 아이콘들은 줄바꿈 없이 한 줄로 */
+.day-marks {
+  display: flex;
+  flex-wrap: nowrap;
+  justify-content: center;
+  gap: 1px;
+  white-space: nowrap;
 }
 
 #detailPhoto {
@@ -613,6 +623,28 @@ fieldset.people-check {
   font-size: 14px;
 }
 
+/* 카메라·앨범·밥줬어요·치웠어요는 좁은 화면에서도 한 줄 */
+.photo-actions {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 6px;
+  width: 100%;
+}
+
+#detailPhoto .photo-actions button {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 0 4px;
+  font-size: clamp(11px, 3.3vw, 14px);
+  white-space: nowrap;
+}
+
+.care-btn[aria-pressed="true"] {
+  background-color: var(--ink);
+  border-color: var(--ink);
+  color: #ffffff;
+}
+
 .day-weather {
   font-size: 14px;
   line-height: 1;
@@ -627,14 +659,18 @@ fieldset.people-check {
 /* 날씨 선택 */
 #detailWeather {
   display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
+  flex-wrap: nowrap;
+  gap: 6px;
 }
 
+/* 날씨 버튼 5개는 좁은 화면에서도 한 줄 */
 #detailWeather button {
+  flex: 1 1 auto;
+  min-width: 0;
   min-height: 40px;
-  padding: 0 14px;
-  font-size: 14px;
+  padding: 0 4px;
+  font-size: clamp(11px, 3.3vw, 14px);
+  white-space: nowrap;
 }
 
 #detailWeather button[aria-pressed="true"] {
