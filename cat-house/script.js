@@ -551,7 +551,9 @@ function drawCalendar() {
       const emptyDays = getEmptyDays(dateString);
       const label = document.createElement("div");
       label.className = "day-empty-text";
-      label.textContent = "빈집 " + emptyDays + "일차";
+      label.appendChild(document.createTextNode("빈집"));
+      label.appendChild(document.createElement("br"));
+      label.appendChild(document.createTextNode(emptyDays + "일차"));
       cell.appendChild(label);
 
       if (emptyDays === 2) {
