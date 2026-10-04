@@ -1350,7 +1350,8 @@ function toggleCare(key, value) {
   fields[key] = value;
   window.cloud.saveDay(currentDetailDate, fields).catch(function (err) {
     console.log("돌봄 표시 저장 실패", err);
-    alert("저장하지 못했어요. 인터넷 연결을 확인해 주세요.");
+    alert("저장하지 못했어요. 인터넷 연결을 확인해 주세요." +
+      (err && err.code ? "\n(" + err.code + ")" : ""));
   });
 }
 
