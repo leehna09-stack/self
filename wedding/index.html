@@ -38,12 +38,7 @@ button { cursor: pointer; }
   position: sticky; top: 0; z-index: 5; background: var(--bg);
   padding: 8px 0 12px; display: grid; gap: 8px;
 }
-.sorts { display: flex; gap: 6px; flex-wrap: wrap; }
-.chip {
-  border: 1px solid var(--line); background: var(--surface);
-  border-radius: 999px; padding: 7px 14px; min-height: 38px;
-}
-.chip[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 700; }
+.sortsel { width: 100%; padding: 8px 10px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); min-height: 44px; font-weight: 700; }
 .filters { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
 .filters input, .filters select {
   width: 100%; padding: 8px 10px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); min-height: 40px;
@@ -92,12 +87,13 @@ form.edit input, form.edit textarea {
   </header>
 
   <div class="toolbar">
-    <div class="sorts" id="sorts" role="group" aria-label="정렬">
-      <button class="chip" data-sort="cheap">저렴한순</button>
-      <button class="chip" data-sort="expensive">고액순</button>
-      <button class="chip" data-sort="near">가까운순</button>
-      <button class="chip" data-sort="recent">최근등록순</button>
-    </div>
+    <select id="sort" class="sortsel" aria-label="정렬">
+      <option value="cheap">저가순</option>
+      <option value="expensive">고가순</option>
+      <option value="recent">최근등록순</option>
+      <option value="far">거리먼순</option>
+      <option value="near">거리가까운순</option>
+    </select>
     <div class="filters">
       <input class="search" id="q" type="search" placeholder="예식장 이름·메모 검색">
       <input id="maxPrice" type="number" min="0" inputmode="numeric" placeholder="최대 금액(만원)">
@@ -159,19 +155,19 @@ function visible() {
     (isNaN(mp) || h.price <= mp) &&
     (isNaN(md) || (h.distance != null && h.distance <= md)) &&
     (!likedOnly || h.liked));
-  // 거리 미입력 항목은 거리순에서 맨 뒤로
+  // 거리 미입력 항목은 거리순(가까운순·먼순 모두)에서 맨 뒤로
   const d = h => h.distance == null ? Infinity : h.distance;
   const by = {
     cheap: (a, b) => a.price - b.price,
     expensive: (a, b) => b.price - a.price,
     near: (a, b) => d(a) - d(b) || a.price - b.price,
+    far: (a, b) => (h => h(b) - h(a))(x => x.distance == null ? -1 : x.distance) || a.price - b.price,
     recent: (a, b) => b.created - a.created,
   }[sort];
   return r.sort(by);
 }
 
 function render() {
-  document.querySelectorAll('#sorts .chip').forEach(b => b.setAttribute('aria-pressed', b.dataset.sort === sort));
   const r = visible();
   const prices = halls.map(h => h.price);
   const min = Math.min(...prices), max = Math.max(...prices);
@@ -275,10 +271,7 @@ $('list').onclick = e => {
 };
 $('lb').onclick = () => $('lb').close();
 
-$('sorts').onclick = e => {
-  const s = e.target.dataset.sort;
-  if (s) { sort = s; render(); }
-};
+$('sort').onchange = e => { sort = e.target.value; render(); };
 ['q', 'maxPrice', 'maxDist', 'liked'].forEach(id => $(id).addEventListener('input', render));
 
 render();
