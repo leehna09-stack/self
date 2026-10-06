@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Jua&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=20261011a">
+  <link rel="stylesheet" href="style.css?v=20261012a">
 </head>
 <body>
   <main class="app">
@@ -222,7 +222,7 @@
     const db = getFirestore(app);
 
     // 푸시 알림용 웹 푸시 인증서 공개키 (Firebase 콘솔 > 프로젝트 설정 > 클라우드 메시징 > 웹 푸시 인증서)
-    const VAPID_KEY = "";
+    const VAPID_KEY = "BKEedAKgQ322XrOYRjLy8jb-_TUxLZ6feGiQJwvbH6uv-s30UJsxiDxm1Otmr9vJgXWLCLCyfnxGB31XIYcTIHI";
 
     let unsubscribe = null;
     let unsubscribePhotos = null;
@@ -511,6 +511,6 @@
     window.dispatchEvent(new Event("cloud-ready"));
   </script>
 
-  <script src="script.js?v=20261011a"></script>
+  <script src="script.js?v=20261012a"></script>
 </body>
 </html>

@@ -11,8 +11,8 @@ initializeApp();
 const SITE_URL = "https://leehna09-stack.github.io/self/cat-house/";
 
 // Firestore 데이터베이스와 같은 지역으로 맞춰야 함 (Firebase 콘솔 > Firestore > 데이터 위치 확인)
-// 예: 서울 "asia-northeast3", 미국 멀티리전(nam5) "us-central1"
-const REGION = "us-central1";
+// (이 프로젝트는 서울 = asia-northeast3)
+const REGION = "asia-northeast3";
 
 exports.notifyFamily = onDocumentCreated(
   { document: "families/{familyCode}/activity/{activityId}", region: REGION },
