@@ -182,6 +182,7 @@ function chooseUser(name) {
   document.getElementById("userModal").classList.add("hidden");
   updateUserInfo();
   updateBell();
+  refreshPush();
 }
 
 // 사용자를 아직 안 골랐으면 선택창을 띄움
@@ -239,6 +240,124 @@ function connectCloud(code) {
   watchMonthPhotos();
   activity = [];
   window.cloud.watchActivity(Math.max(getSeen(), Date.now() - NOTIF_KEEP_MS), onActivityData);
+  refreshPush();
+  openFromLink();
+}
+
+// ===== 앱을 닫아도 오는 푸시 알림 =====
+
+const PUSH_FLAG_KEY = "catHousePush";
+
+// 이 기기에서 푸시 알림을 켜 둔 상태인지
+function isPushOn() {
+  try {
+    return localStorage.getItem(PUSH_FLAG_KEY) === "1" && Notification.permission === "granted";
+  } catch (e) {
+    return false;
+  }
+}
+
+// 푸시 버튼 글자 갱신 (이 브라우저에서 못 쓰면 숨김)
+function updatePushButton() {
+  const btn = document.getElementById("pushBtn");
+  if (!window.cloud || !window.cloud.push || !window.cloud.push.ready()) {
+    btn.hidden = true;
+    return;
+  }
+  btn.hidden = false;
+  btn.textContent = isPushOn() ? "🔔 푸시 알림 켜짐" : "🔔 푸시 알림 켜기";
+}
+
+// 켜 둔 기기는 접속할 때마다 알림 주소와 사용자 이름을 최신으로 맞춤 (허용창은 띄우지 않음)
+function refreshPush() {
+  updatePushButton();
+  const user = getUser();
+  if (!isPushOn() || user === "" || !cloudConnected) {
+    return;
+  }
+  window.cloud.push.register(user, false).catch(function (err) {
+    console.log("푸시 주소 갱신 실패", err);
+  });
+}
+
+// 푸시 버튼을 누르면 켜기 / 끄기
+function togglePush() {
+  if (!window.cloud.push.ready()) {
+    return;
+  }
+  const user = getUser();
+  if (user === "") {
+    openUserModal();
+    return;
+  }
+  if (!cloudConnected) {
+    alert("아직 가족 코드로 연결되지 않았어요. 잠시 후 다시 시도해 주세요.");
+    return;
+  }
+
+  if (isPushOn()) {
+    if (!confirm("이 기기의 푸시 알림을 끌까요?")) {
+      return;
+    }
+    window.cloud.push.unregister().then(function () {
+      try {
+        localStorage.removeItem(PUSH_FLAG_KEY);
+      } catch (e) {
+        // 저장소를 못 쓰면 이번 접속 동안만 꺼짐
+      }
+      updatePushButton();
+    }).catch(function (err) {
+      console.log("푸시 끄기 실패", err);
+      alert("끄지 못했어요. 인터넷 연결을 확인해 주세요.");
+    });
+    return;
+  }
+
+  if (Notification.permission === "denied") {
+    alert("이 사이트의 알림이 차단되어 있어요.\n주소창 왼쪽 아이콘 → 권한(또는 사이트 설정) → 알림을 '허용'으로 바꾼 뒤 다시 눌러 주세요.");
+    return;
+  }
+
+  window.cloud.push.register(user, true).then(function (result) {
+    if (result === "on") {
+      try {
+        localStorage.setItem(PUSH_FLAG_KEY, "1");
+      } catch (e) {
+        // 저장소를 못 쓰면 다음 접속 때 다시 눌러야 함
+      }
+      alert("이제 앱을 닫아도 새 소식이 알림으로 와요 🔔");
+    } else if (result === "denied") {
+      alert("알림이 허용되지 않았어요.");
+    }
+    updatePushButton();
+  }).catch(function (err) {
+    console.log("푸시 켜기 실패", err);
+    alert("알림을 켜지 못했어요. 인터넷 연결을 확인해 주세요." +
+      (err && err.code ? "\n(" + err.code + ")" : ""));
+  });
+}
+
+// 알림을 눌러서 앱이 열렸으면 그 소식으로 이동 (주소에 date·place가 들어 있음)
+function openFromLink() {
+  let params;
+  try {
+    params = new URLSearchParams(location.search);
+  } catch (e) {
+    return;
+  }
+  const date = params.get("date");
+  const place = params.get("place");
+  if (!date || !/^\d{4}-\d{2}-\d{2}$/.test(date) || (place !== "산본집" && place !== "제주도")) {
+    return;
+  }
+  history.replaceState(null, "", location.pathname);
+  gotoActivity({
+    id: params.get("id") || "",
+    at: Date.now(),
+    date: date,
+    place: place,
+    type: params.get("type") === "photo" ? "photo" : "note"
+  });
 }
 
 // ===== 종 알림 (다른 사람이 올린 사진·한줄평) =====
@@ -281,7 +400,9 @@ function markRead(items) {
     }
   });
   items.forEach(function (a) {
-    next[a.id] = a.at;
+    if (a.id) {
+      next[a.id] = a.at;
+    }
   });
   readFallback = next;
   try {

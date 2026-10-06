@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Jua&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=20261008a">
+  <link rel="stylesheet" href="style.css?v=20261009a">
 </head>
 <body>
   <main class="app">
@@ -52,6 +52,7 @@
       <span id="syncStatus" aria-live="polite">연결 준비 중…</span>
       <span id="codeInfo"></span>
       <span id="userInfo"></span>
+      <button class="link-btn" id="pushBtn" onclick="togglePush()" hidden>🔔 푸시 알림 켜기</button>
       <button class="link-btn" onclick="openUserModal()">사용자 바꾸기</button>
       <button class="link-btn" onclick="openCodeModal()">가족 코드 바꾸기</button>
     </div>
@@ -204,6 +205,9 @@
 
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
+
+    // 푸시 알림용 웹 푸시 인증서 공개키 (Firebase 콘솔 > 프로젝트 설정 > 클라우드 메시징 > 웹 푸시 인증서)
+    const VAPID_KEY = "";
 
     let unsubscribe = null;
     let unsubscribePhotos = null;
@@ -435,9 +439,66 @@
       }
     };
 
+    // 앱을 닫아도 오는 푸시 알림 (이 기기의 알림 주소를 가족 코드 아래에 저장)
+    const PUSH_TOKEN_KEY = "catHousePushToken";
+    window.cloud.push = {
+      // 이 브라우저에서 푸시를 쓸 수 있는지
+      ready: function () {
+        return VAPID_KEY !== "" && "serviceWorker" in navigator &&
+          "Notification" in window && "PushManager" in window;
+      },
+
+      // 알림을 켬 (askPermission이 true일 때만 허용창을 띄움) → "on" / "denied" / "default"
+      register: async function (by, askPermission) {
+        let permission = Notification.permission;
+        if (permission === "default" && askPermission) {
+          permission = await Notification.requestPermission();
+        }
+        if (permission !== "granted") {
+          return permission;
+        }
+        const reg = await navigator.serviceWorker.register("firebase-messaging-sw.js");
+        await navigator.serviceWorker.ready;
+        const mod = await import("https://www.gstatic.com/firebasejs/12.19.0/firebase-messaging.js");
+        const token = await mod.getToken(mod.getMessaging(app), {
+          vapidKey: VAPID_KEY,
+          serviceWorkerRegistration: reg
+        });
+        if (!token) {
+          throw new Error("no-token");
+        }
+        await setDoc(doc(db, "families", currentCode, "pushTokens", token), {
+          by: by,
+          updatedAt: Date.now()
+        });
+        try {
+          localStorage.setItem(PUSH_TOKEN_KEY, token);
+        } catch (e) {
+          // 저장소를 못 쓰면 다음 접속 때 다시 받아옴
+        }
+        return "on";
+      },
+
+      // 알림을 끔 (이 기기의 알림 주소를 지움)
+      unregister: async function () {
+        let token = "";
+        try {
+          token = localStorage.getItem(PUSH_TOKEN_KEY) || "";
+          localStorage.removeItem(PUSH_TOKEN_KEY);
+        } catch (e) {
+          token = "";
+        }
+        if (token !== "") {
+          await deleteDoc(doc(db, "families", currentCode, "pushTokens", token));
+        }
+        const mod = await import("https://www.gstatic.com/firebasejs/12.19.0/firebase-messaging.js");
+        await mod.deleteToken(mod.getMessaging(app));
+      }
+    };
+
     window.dispatchEvent(new Event("cloud-ready"));
   </script>
 
-  <script src="script.js?v=20261008a"></script>
+  <script src="script.js?v=20261009a"></script>
 </body>
 </html>
