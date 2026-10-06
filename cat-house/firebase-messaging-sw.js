@@ -39,8 +39,11 @@ self.addEventListener("notificationclick", function (event) {
       for (let i = 0; i < list.length; i++) {
         const client = list[i];
         if (client.url.indexOf(self.registration.scope) === 0 && "navigate" in client) {
+          // 열려 있는 앱을 그 소식 주소로 이동 (이동이 안 되면 새 창으로 엶)
           return client.navigate(link).then(function (c) {
-            return c ? c.focus() : undefined;
+            return c ? c.focus() : self.clients.openWindow(link);
+          }).catch(function () {
+            return self.clients.openWindow(link);
           });
         }
       }

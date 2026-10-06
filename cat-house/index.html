@@ -16,7 +16,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Jua&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=20261014a">
+  <link rel="stylesheet" href="style.css?v=20261015a">
 </head>
 <body>
   <main class="app">
@@ -59,8 +59,8 @@
       <span id="syncStatus" aria-live="polite">연결 준비 중…</span>
       <span id="codeInfo"></span>
       <span id="userInfo"></span>
-      <button class="link-btn" id="installBtn" onclick="installApp()" hidden>📲 앱 설치</button>
       <button class="link-btn" id="adminBtn" onclick="openAdmin()" hidden>🛠 관리</button>
+      <button class="link-btn" id="installBtn" onclick="installApp()">📲 앱 설치</button>
       <button class="link-btn" onclick="openUserModal()">사용자 바꾸기</button>
       <button class="link-btn" onclick="openCodeModal()">가족 코드 바꾸기</button>
     </div>
@@ -519,6 +519,6 @@
     window.dispatchEvent(new Event("cloud-ready"));
   </script>
 
-  <script src="script.js?v=20261014a"></script>
+  <script src="script.js?v=20261015a"></script>
 </body>
 </html>
