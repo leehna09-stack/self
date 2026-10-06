@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Jua&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=20261009a">
+  <link rel="stylesheet" href="style.css?v=20261010a">
 </head>
 <body>
   <main class="app">
@@ -52,7 +52,6 @@
       <span id="syncStatus" aria-live="polite">연결 준비 중…</span>
       <span id="codeInfo"></span>
       <span id="userInfo"></span>
-      <button class="link-btn" id="pushBtn" onclick="togglePush()" hidden>🔔 푸시 알림 켜기</button>
       <button class="link-btn" onclick="openUserModal()">사용자 바꾸기</button>
       <button class="link-btn" onclick="openCodeModal()">가족 코드 바꾸기</button>
     </div>
@@ -477,28 +476,12 @@
           // 저장소를 못 쓰면 다음 접속 때 다시 받아옴
         }
         return "on";
-      },
-
-      // 알림을 끔 (이 기기의 알림 주소를 지움)
-      unregister: async function () {
-        let token = "";
-        try {
-          token = localStorage.getItem(PUSH_TOKEN_KEY) || "";
-          localStorage.removeItem(PUSH_TOKEN_KEY);
-        } catch (e) {
-          token = "";
-        }
-        if (token !== "") {
-          await deleteDoc(doc(db, "families", currentCode, "pushTokens", token));
-        }
-        const mod = await import("https://www.gstatic.com/firebasejs/12.19.0/firebase-messaging.js");
-        await mod.deleteToken(mod.getMessaging(app));
       }
     };
 
     window.dispatchEvent(new Event("cloud-ready"));
   </script>
 
-  <script src="script.js?v=20261009a"></script>
+  <script src="script.js?v=20261010a"></script>
 </body>
 </html>
