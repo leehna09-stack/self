@@ -1,0 +1,113 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /families/{familyCode}/schedules/{scheduleId} {
+      allow read, delete: if familyCode.size() >= 20;
+
+      allow create, update: if familyCode.size() >= 20
+        && request.resource.data.keys().hasAll(['person', 'place', 'startDate', 'endDate'])
+        && request.resource.data.keys().hasOnly(['person', 'place', 'startDate', 'endDate'])
+        && request.resource.data.person in ['엄마', '아빠', '한나', '한비']
+        && request.resource.data.place in ['산본집', '제주도', '송정지구']
+        && request.resource.data.startDate is string
+        && request.resource.data.endDate is string
+        && request.resource.data.startDate.size() == 10
+        && request.resource.data.endDate.size() == 10;
+    }
+
+    match /families/{familyCode}/photos/{photoId} {
+      allow read, delete: if familyCode.size() >= 20;
+
+      allow create, update: if familyCode.size() >= 20
+        && photoId.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}(_[0-9]+)?$')
+        && request.resource.data.keys().hasAll(['image', 'savedAt'])
+        && request.resource.data.keys().hasOnly(['image', 'savedAt', 'by'])
+        && request.resource.data.image is string
+        && request.resource.data.image.size() < 900000
+        && request.resource.data.image.matches('^data:image/jpeg;base64,.*')
+        && request.resource.data.savedAt is number
+        && (!('by' in request.resource.data) || request.resource.data.by in ['엄마', '아빠', '한나', '한비']);
+    }
+
+    match /families/{familyCode}/jejuPhotos/{photoId} {
+      allow read, delete: if familyCode.size() >= 20;
+
+      allow create, update: if familyCode.size() >= 20
+        && photoId.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}(_[0-9]+)?$')
+        && request.resource.data.keys().hasAll(['image', 'savedAt'])
+        && request.resource.data.keys().hasOnly(['image', 'savedAt', 'by'])
+        && request.resource.data.image is string
+        && request.resource.data.image.size() < 900000
+        && request.resource.data.image.matches('^data:image/jpeg;base64,.*')
+        && request.resource.data.savedAt is number
+        && (!('by' in request.resource.data) || request.resource.data.by in ['엄마', '아빠', '한나', '한비']);
+    }
+
+    match /families/{familyCode}/days/{dayDate} {
+      allow read, delete: if familyCode.size() >= 20;
+
+      allow create, update: if familyCode.size() >= 20
+        && dayDate.size() == 10
+        && request.resource.data.keys().hasOnly(['weather', 'weatherBy', 'note', 'noteBy', 'fed', 'cleaned'])
+        && (!('weather' in request.resource.data)
+            || request.resource.data.weather in ['', 'sun', 'cloud', 'overcast', 'rain', 'typhoon'])
+        && (!('note' in request.resource.data)
+            || (request.resource.data.note is string && request.resource.data.note.size() <= 50))
+        && (!('weatherBy' in request.resource.data)
+            || request.resource.data.weatherBy in ['엄마', '아빠', '한나', '한비'])
+        && (!('noteBy' in request.resource.data)
+            || request.resource.data.noteBy in ['엄마', '아빠', '한나', '한비'])
+        && (!('fed' in request.resource.data)
+            || request.resource.data.fed is bool)
+        && (!('cleaned' in request.resource.data)
+            || request.resource.data.cleaned is bool);
+    }
+
+    match /families/{familyCode}/notes/{noteId} {
+      allow read, delete: if familyCode.size() >= 20;
+
+      allow create: if familyCode.size() >= 20
+        && request.resource.data.keys().hasAll(['date', 'place', 'text', 'by', 'createdAt'])
+        && request.resource.data.keys().hasOnly(['date', 'place', 'text', 'by', 'createdAt'])
+        && request.resource.data.date is string
+        && request.resource.data.date.size() == 10
+        && request.resource.data.place in ['산본집', '제주도']
+        && request.resource.data.text is string
+        && request.resource.data.text.size() >= 1
+        && request.resource.data.text.size() <= 50
+        && request.resource.data.by in ['엄마', '아빠', '한나', '한비']
+        && request.resource.data.createdAt is number;
+
+      allow update: if familyCode.size() >= 20
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['text'])
+        && request.resource.data.text is string
+        && request.resource.data.text.size() >= 1
+        && request.resource.data.text.size() <= 50;
+    }
+
+    match /families/{familyCode}/activity/{activityId} {
+      allow read: if familyCode.size() >= 20;
+
+      allow create: if familyCode.size() >= 20
+        && request.resource.data.keys().hasAll(['type', 'by', 'date', 'place', 'at'])
+        && request.resource.data.keys().hasOnly(['type', 'by', 'date', 'place', 'at'])
+        && request.resource.data.type in ['photo', 'note']
+        && request.resource.data.by in ['엄마', '아빠', '한나', '한비']
+        && request.resource.data.date is string
+        && request.resource.data.date.size() == 10
+        && request.resource.data.place in ['산본집', '제주도']
+        && request.resource.data.at is number;
+    }
+
+    // 푸시 알림을 받을 기기 주소 (읽기는 서버 기능만 하므로 막아 둠)
+    match /families/{familyCode}/pushTokens/{token} {
+      allow create, update: if familyCode.size() >= 20
+        && request.resource.data.keys().hasAll(['by', 'updatedAt'])
+        && request.resource.data.keys().hasOnly(['by', 'updatedAt'])
+        && request.resource.data.by in ['엄마', '아빠', '한나', '한비']
+        && request.resource.data.updatedAt is number;
+
+      allow delete: if familyCode.size() >= 20;
+    }
+  }
+}

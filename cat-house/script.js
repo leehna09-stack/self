@@ -154,6 +154,76 @@ function getUser() {
 function updateUserInfo() {
   const name = getUser();
   document.getElementById("userInfo").textContent = name === "" ? "" : "👤 " + name;
+  // 관리 메뉴는 한나로 접속했을 때만 보임
+  document.getElementById("adminBtn").hidden = (name !== ADMIN_USER);
+}
+
+// ===== 관리 메뉴 (한나만) =====
+
+const ADMIN_USER = "한나";
+
+// 관리 메뉴 열기
+function openAdmin() {
+  if (getUser() !== ADMIN_USER) {
+    return;
+  }
+  document.getElementById("backupStatus").textContent = "";
+  document.getElementById("adminModal").classList.remove("hidden");
+}
+
+// 관리 메뉴 닫기
+function closeAdmin() {
+  document.getElementById("adminModal").classList.add("hidden");
+}
+
+// 모든 데이터를 파일 하나로 내려받기
+function downloadBackup() {
+  if (getUser() !== ADMIN_USER) {
+    return;
+  }
+  if (!cloudConnected) {
+    alert("아직 가족 코드로 연결되지 않았어요. 잠시 후 다시 시도해 주세요.");
+    return;
+  }
+  const btn = document.getElementById("backupBtn");
+  const status = document.getElementById("backupStatus");
+  btn.disabled = true;
+  status.textContent = "데이터를 모으는 중이에요… 잠시만 기다려 주세요";
+
+  window.cloud.exportAll().then(function (data) {
+    const counts = [];
+    Object.keys(data).forEach(function (name) {
+      counts.push(name + " " + data[name].length + "개");
+    });
+    const backup = {
+      app: "cat-house",
+      exportedAt: new Date().toISOString(),
+      exportedBy: ADMIN_USER,
+      data: data
+    };
+    const blob = new Blob([JSON.stringify(backup)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    const today = new Date();
+    const stamp = today.getFullYear() + "-" +
+      String(today.getMonth() + 1).padStart(2, "0") + "-" +
+      String(today.getDate()).padStart(2, "0");
+    a.href = url;
+    a.download = "cat-house-backup-" + stamp + ".json";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(function () {
+      URL.revokeObjectURL(url);
+    }, 10000);
+    status.textContent = "✅ 내려받기 시작했어요 (" + counts.join(", ") + ")";
+  }).catch(function (err) {
+    console.log("백업 실패", err);
+    status.textContent = "⚠ 백업하지 못했어요. 인터넷 연결을 확인해 주세요." +
+      (err && err.code ? " (" + err.code + ")" : "");
+  }).then(function () {
+    btn.disabled = false;
+  });
 }
 
 // 사용자 선택창 열기
@@ -182,6 +252,7 @@ function chooseUser(name) {
   document.getElementById("userModal").classList.add("hidden");
   updateUserInfo();
   updateBell();
+  refreshPush();
 }
 
 // 사용자를 아직 안 골랐으면 선택창을 띄움
@@ -239,6 +310,74 @@ function connectCloud(code) {
   watchMonthPhotos();
   activity = [];
   window.cloud.watchActivity(Math.max(getSeen(), Date.now() - NOTIF_KEEP_MS), onActivityData);
+  refreshPush();
+  openFromLink();
+}
+
+// ===== 앱을 닫아도 오는 푸시 알림 (기본으로 켜짐) =====
+
+let pushArmed = false;
+
+// 푸시 알림을 자동으로 켬
+// - 이미 허용한 기기: 접속할 때마다 알림 주소와 사용자 이름을 최신으로 맞춤
+// - 처음인 기기: 브라우저가 화면을 누를 때만 허용창을 띄우게 해서, 처음 한 번 화면을 누르면 허용창을 띄움
+// - 차단한 기기: 아무것도 안 함 (브라우저 사이트 설정에서 알림을 허용으로 바꾸면 켜짐)
+function refreshPush() {
+  const user = getUser();
+  if (!window.cloud || !window.cloud.push || !window.cloud.push.ready()) {
+    return;
+  }
+  if (user === "" || !cloudConnected) {
+    return;
+  }
+
+  if (Notification.permission === "granted") {
+    window.cloud.push.register(user, false).catch(function (err) {
+      console.log("푸시 주소 갱신 실패", err);
+    });
+    return;
+  }
+
+  if (Notification.permission === "default" && !pushArmed) {
+    pushArmed = true;
+    const ask = function () {
+      document.removeEventListener("pointerup", ask, true);
+      document.removeEventListener("keydown", ask, true);
+      pushArmed = false;
+      const who = getUser();
+      if (who === "" || !cloudConnected) {
+        return;
+      }
+      window.cloud.push.register(who, true).catch(function (err) {
+        console.log("푸시 켜기 실패", err);
+      });
+    };
+    document.addEventListener("pointerup", ask, true);
+    document.addEventListener("keydown", ask, true);
+  }
+}
+
+// 알림을 눌러서 앱이 열렸으면 그 소식으로 이동 (주소에 date·place가 들어 있음)
+function openFromLink() {
+  let params;
+  try {
+    params = new URLSearchParams(location.search);
+  } catch (e) {
+    return;
+  }
+  const date = params.get("date");
+  const place = params.get("place");
+  if (!date || !/^\d{4}-\d{2}-\d{2}$/.test(date) || (place !== "산본집" && place !== "제주도")) {
+    return;
+  }
+  history.replaceState(null, "", location.pathname);
+  gotoActivity({
+    id: params.get("id") || "",
+    at: Date.now(),
+    date: date,
+    place: place,
+    type: params.get("type") === "photo" ? "photo" : "note"
+  });
 }
 
 // ===== 종 알림 (다른 사람이 올린 사진·한줄평) =====
@@ -281,7 +420,9 @@ function markRead(items) {
     }
   });
   items.forEach(function (a) {
-    next[a.id] = a.at;
+    if (a.id) {
+      next[a.id] = a.at;
+    }
   });
   readFallback = next;
   try {
@@ -1696,6 +1837,7 @@ document.addEventListener("keydown", function (e) {
     closeDetail();
     closeManage();
     closeNotif();
+    closeAdmin();
     closeCodeModal();
     closeUserModal();
   }

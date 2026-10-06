@@ -1,0 +1,13 @@
+{
+  "name": "cat-house-push",
+  "private": true,
+  "description": "새 소식이 올라오면 다른 가족에게 푸시 알림을 보내는 서버 기능",
+  "engines": {
+    "node": "22"
+  },
+  "main": "index.js",
+  "dependencies": {
+    "firebase-admin": "^13.0.0",
+    "firebase-functions": "^6.0.0"
+  }
+}

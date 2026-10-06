@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Jua&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=20261007a">
+  <link rel="stylesheet" href="style.css?v=20261012a">
 </head>
 <body>
   <main class="app">
@@ -21,7 +21,7 @@
     <section class="card add-card">
       <div class="add-card-text">
         <h2>가족 일정 넣기</h2>
-        <p>일정을 넣으면 산본집이 비는 날을 달력에 표시해 줘요.<br>날짜를 누르면 사진과 한줄평을 남길 수 있어요.<br>버그가 생기면 한나관리자에게 연락해주세요!</p>
+        <p>일정을 넣으면 산본집이 비는 날을 달력에 표시해 줘요. 날짜를 누르면 사진과 한줄평을 남길 수 있어요. 버그가 생기면 한나관리자에게 연락해주세요!</p>
       </div>
       <div class="add-card-buttons">
         <button class="add-btn" onclick="openForm()">📅 일정 입력</button>
@@ -52,6 +52,7 @@
       <span id="syncStatus" aria-live="polite">연결 준비 중…</span>
       <span id="codeInfo"></span>
       <span id="userInfo"></span>
+      <button class="link-btn" id="adminBtn" onclick="openAdmin()" hidden>🛠 관리</button>
       <button class="link-btn" onclick="openUserModal()">사용자 바꾸기</button>
       <button class="link-btn" onclick="openCodeModal()">가족 코드 바꾸기</button>
     </div>
@@ -169,6 +170,21 @@
     </div>
   </div>
 
+  <div id="adminModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="adminTitle">
+    <div class="modal-box">
+      <div class="modal-title">
+        <h2 id="adminTitle">관리 메뉴</h2>
+        <button class="round-btn" onclick="closeAdmin()" aria-label="닫기">✕</button>
+      </div>
+      <h3>백업</h3>
+      <p class="hint">일정·사진·한줄평·날씨·소식 기록을 파일 하나로 내려받아요. 사진이 많으면 파일이 커서 시간이 걸릴 수 있어요.</p>
+      <div class="form-box">
+        <button type="button" id="backupBtn" onclick="downloadBackup()">💾 백업 내려받기</button>
+        <div class="hint" id="backupStatus" aria-live="polite"></div>
+      </div>
+    </div>
+  </div>
+
   <div id="userModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="userTitle">
     <div class="modal-box">
       <div class="modal-title">
@@ -190,7 +206,7 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
     import {
       getFirestore, collection, doc, onSnapshot, writeBatch, deleteDoc,
-      setDoc, updateDoc, query, where, documentId
+      setDoc, updateDoc, query, where, documentId, getDocs
     } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
 
     const firebaseConfig = {
@@ -204,6 +220,9 @@
 
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
+
+    // 푸시 알림용 웹 푸시 인증서 공개키 (Firebase 콘솔 > 프로젝트 설정 > 클라우드 메시징 > 웹 푸시 인증서)
+    const VAPID_KEY = "BKEedAKgQ322XrOYRjLy8jb-_TUxLZ6feGiQJwvbH6uv-s30UJsxiDxm1Otmr9vJgXWLCLCyfnxGB31XIYcTIHI";
 
     let unsubscribe = null;
     let unsubscribePhotos = null;
@@ -429,15 +448,69 @@
         return setDoc(doc(db, "families", currentCode, "days", date), fields, { merge: true });
       },
 
+      // 가족 코드 아래의 모든 데이터를 한 번에 읽어서 돌려줌 (백업용)
+      exportAll: async function () {
+        const names = ["schedules", "photos", "jejuPhotos", "days", "notes", "activity"];
+        const result = {};
+        for (let i = 0; i < names.length; i++) {
+          const snap = await getDocs(collection(db, "families", currentCode, names[i]));
+          result[names[i]] = snap.docs.map(function (d) {
+            return { id: d.id, ...d.data() };
+          });
+        }
+        return result;
+      },
+
       // 그 날짜의 사진 삭제
       removePhoto: function (name, id) {
         return deleteDoc(doc(db, "families", currentCode, name, id));
       }
     };
 
+    // 앱을 닫아도 오는 푸시 알림 (이 기기의 알림 주소를 가족 코드 아래에 저장)
+    const PUSH_TOKEN_KEY = "catHousePushToken";
+    window.cloud.push = {
+      // 이 브라우저에서 푸시를 쓸 수 있는지
+      ready: function () {
+        return VAPID_KEY !== "" && "serviceWorker" in navigator &&
+          "Notification" in window && "PushManager" in window;
+      },
+
+      // 알림을 켬 (askPermission이 true일 때만 허용창을 띄움) → "on" / "denied" / "default"
+      register: async function (by, askPermission) {
+        let permission = Notification.permission;
+        if (permission === "default" && askPermission) {
+          permission = await Notification.requestPermission();
+        }
+        if (permission !== "granted") {
+          return permission;
+        }
+        const reg = await navigator.serviceWorker.register("firebase-messaging-sw.js");
+        await navigator.serviceWorker.ready;
+        const mod = await import("https://www.gstatic.com/firebasejs/12.19.0/firebase-messaging.js");
+        const token = await mod.getToken(mod.getMessaging(app), {
+          vapidKey: VAPID_KEY,
+          serviceWorkerRegistration: reg
+        });
+        if (!token) {
+          throw new Error("no-token");
+        }
+        await setDoc(doc(db, "families", currentCode, "pushTokens", token), {
+          by: by,
+          updatedAt: Date.now()
+        });
+        try {
+          localStorage.setItem(PUSH_TOKEN_KEY, token);
+        } catch (e) {
+          // 저장소를 못 쓰면 다음 접속 때 다시 받아옴
+        }
+        return "on";
+      }
+    };
+
     window.dispatchEvent(new Event("cloud-ready"));
   </script>
 
-  <script src="script.js?v=20261007a"></script>
+  <script src="script.js?v=20261012a"></script>
 </body>
 </html>
