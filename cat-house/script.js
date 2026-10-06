@@ -357,6 +357,55 @@ function refreshPush() {
   }
 }
 
+// ===== 앱 설치 안내 =====
+
+let installPrompt = null;
+
+// 이미 앱으로 열었는지 (홈 화면 앱이면 설치 버튼이 필요 없음)
+function isStandalone() {
+  return (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches) ||
+    window.navigator.standalone === true;
+}
+
+// 서비스 워커는 앱 설치 조건이라 알림을 켜기 전에도 미리 등록
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", function () {
+    navigator.serviceWorker.register("firebase-messaging-sw.js").catch(function (err) {
+      console.log("서비스 워커 등록 실패", err);
+    });
+  });
+}
+
+// 크롬이 설치 창을 띄울 수 있다고 알려 주면 보관해 둠 (버튼은 항상 보이고, 누를 때 사용)
+window.addEventListener("beforeinstallprompt", function (e) {
+  e.preventDefault();
+  installPrompt = e;
+});
+
+// 설치가 끝나면 버튼을 숨김
+window.addEventListener("appinstalled", function () {
+  installPrompt = null;
+  document.getElementById("installBtn").hidden = true;
+});
+
+// 이미 앱으로 열었으면 설치 버튼이 필요 없음
+document.getElementById("installBtn").hidden = isStandalone();
+
+// 앱 설치 버튼: 설치 창을 띄울 수 있으면 바로 띄우고, 아니면 설치 방법을 안내
+function installApp() {
+  if (installPrompt) {
+    const e = installPrompt;
+    installPrompt = null;
+    e.prompt();
+    return;
+  }
+  if (/iPad|iPhone|iPod/.test(navigator.userAgent)) {
+    alert("아이폰은 사파리로 이 페이지를 연 뒤\n공유 버튼(네모에 화살표) → '홈 화면에 추가'를 눌러 주세요.");
+  } else {
+    alert("크롬 오른쪽 위 점 세 개(⋮) 메뉴에서\n'앱 설치' 또는 '홈 화면에 추가'를 눌러 주세요.\n(이미 설치했다면 메뉴에 보이지 않을 수 있어요)");
+  }
+}
+
 // 알림을 눌러서 앱이 열렸으면 그 소식으로 이동 (주소에 date·place가 들어 있음)
 function openFromLink() {
   let params;
@@ -515,8 +564,12 @@ function closeNotif() {
   document.getElementById("notifModal").classList.add("hidden");
 }
 
+// 알림으로 열었을 때 가장 최근 한줄평을 눈에 띄게 보여줄지
+let highlightNewNote = false;
+
 // 새 소식을 누르면 그 소식만 확인 처리하고, 그 장소의 그 달 그 날짜를 열어 해당 소식이 있는 칸으로 이동
 function gotoActivity(a) {
+  highlightNewNote = (a.type !== "photo");
   markRead([a]);
   updateBell();
   closeNotif();
@@ -1614,6 +1667,15 @@ function drawDetailNotes() {
     text.appendChild(by);
     li.appendChild(text);
 
+    // 한줄평 알림으로 열었으면 가장 최근 글을 강조하고 화면에 보이게 함
+    if (highlightNewNote && i === notes.length - 1) {
+      li.classList.add("note-new");
+      highlightNewNote = false;
+      setTimeout(function () {
+        li.scrollIntoView({ block: "nearest" });
+      }, 0);
+    }
+
     if (user !== "" && n.by === user) {
       const editBtn = document.createElement("button");
       editBtn.type = "button";
@@ -1730,6 +1792,7 @@ function saveNote() {
 
 // 상세창 닫기
 function closeDetail() {
+  highlightNewNote = false;
   document.getElementById("detailModal").classList.add("hidden");
   if (window.cloud) {
     window.cloud.stopNotes();

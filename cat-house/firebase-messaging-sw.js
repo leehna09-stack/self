@@ -8,6 +8,9 @@ self.addEventListener("activate", function (event) {
   event.waitUntil(self.clients.claim());
 });
 
+// 크롬이 "앱 설치"를 안내하려면 서비스 워커에 fetch 처리기가 있어야 함 (요청은 그대로 통과시킴)
+self.addEventListener("fetch", function () {});
+
 // 푸시 메시지가 도착하면 알림 표시
 self.addEventListener("push", function (event) {
   let payload = {};
@@ -36,8 +39,11 @@ self.addEventListener("notificationclick", function (event) {
       for (let i = 0; i < list.length; i++) {
         const client = list[i];
         if (client.url.indexOf(self.registration.scope) === 0 && "navigate" in client) {
+          // 열려 있는 앱을 그 소식 주소로 이동 (이동이 안 되면 새 창으로 엶)
           return client.navigate(link).then(function (c) {
-            return c ? c.focus() : undefined;
+            return c ? c.focus() : self.clients.openWindow(link);
+          }).catch(function () {
+            return self.clients.openWindow(link);
           });
         }
       }
