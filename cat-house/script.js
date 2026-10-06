@@ -357,6 +357,52 @@ function refreshPush() {
   }
 }
 
+// ===== 앱 설치 안내 =====
+
+let installPrompt = null;
+
+// 이미 앱으로 열었는지 (홈 화면 앱이면 설치 버튼이 필요 없음)
+function isStandalone() {
+  return (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches) ||
+    window.navigator.standalone === true;
+}
+
+// 서비스 워커는 앱 설치 조건이라 알림을 켜기 전에도 미리 등록
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", function () {
+    navigator.serviceWorker.register("firebase-messaging-sw.js").catch(function (err) {
+      console.log("서비스 워커 등록 실패", err);
+    });
+  });
+}
+
+// 크롬이 설치할 수 있다고 알려 주면 설치 버튼을 보여줌
+window.addEventListener("beforeinstallprompt", function (e) {
+  e.preventDefault();
+  if (isStandalone()) {
+    return;
+  }
+  installPrompt = e;
+  document.getElementById("installBtn").hidden = false;
+});
+
+// 설치가 끝나면 버튼을 숨김
+window.addEventListener("appinstalled", function () {
+  installPrompt = null;
+  document.getElementById("installBtn").hidden = true;
+});
+
+// 설치 버튼을 누르면 크롬의 설치 창을 띄움
+function installApp() {
+  if (!installPrompt) {
+    return;
+  }
+  const e = installPrompt;
+  installPrompt = null;
+  document.getElementById("installBtn").hidden = true;
+  e.prompt();
+}
+
 // 알림을 눌러서 앱이 열렸으면 그 소식으로 이동 (주소에 date·place가 들어 있음)
 function openFromLink() {
   let params;

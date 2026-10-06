@@ -8,6 +8,9 @@ self.addEventListener("activate", function (event) {
   event.waitUntil(self.clients.claim());
 });
 
+// 크롬이 "앱 설치"를 안내하려면 서비스 워커에 fetch 처리기가 있어야 함 (요청은 그대로 통과시킴)
+self.addEventListener("fetch", function () {});
+
 // 푸시 메시지가 도착하면 알림 표시
 self.addEventListener("push", function (event) {
   let payload = {};
