@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Jua&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=20261010a">
+  <link rel="stylesheet" href="style.css?v=20261011a">
 </head>
 <body>
   <main class="app">
@@ -52,6 +52,7 @@
       <span id="syncStatus" aria-live="polite">연결 준비 중…</span>
       <span id="codeInfo"></span>
       <span id="userInfo"></span>
+      <button class="link-btn" id="adminBtn" onclick="openAdmin()" hidden>🛠 관리</button>
       <button class="link-btn" onclick="openUserModal()">사용자 바꾸기</button>
       <button class="link-btn" onclick="openCodeModal()">가족 코드 바꾸기</button>
     </div>
@@ -169,6 +170,21 @@
     </div>
   </div>
 
+  <div id="adminModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="adminTitle">
+    <div class="modal-box">
+      <div class="modal-title">
+        <h2 id="adminTitle">관리 메뉴</h2>
+        <button class="round-btn" onclick="closeAdmin()" aria-label="닫기">✕</button>
+      </div>
+      <h3>백업</h3>
+      <p class="hint">일정·사진·한줄평·날씨·소식 기록을 파일 하나로 내려받아요. 사진이 많으면 파일이 커서 시간이 걸릴 수 있어요.</p>
+      <div class="form-box">
+        <button type="button" id="backupBtn" onclick="downloadBackup()">💾 백업 내려받기</button>
+        <div class="hint" id="backupStatus" aria-live="polite"></div>
+      </div>
+    </div>
+  </div>
+
   <div id="userModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="userTitle">
     <div class="modal-box">
       <div class="modal-title">
@@ -190,7 +206,7 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
     import {
       getFirestore, collection, doc, onSnapshot, writeBatch, deleteDoc,
-      setDoc, updateDoc, query, where, documentId
+      setDoc, updateDoc, query, where, documentId, getDocs
     } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
 
     const firebaseConfig = {
@@ -432,6 +448,19 @@
         return setDoc(doc(db, "families", currentCode, "days", date), fields, { merge: true });
       },
 
+      // 가족 코드 아래의 모든 데이터를 한 번에 읽어서 돌려줌 (백업용)
+      exportAll: async function () {
+        const names = ["schedules", "photos", "jejuPhotos", "days", "notes", "activity"];
+        const result = {};
+        for (let i = 0; i < names.length; i++) {
+          const snap = await getDocs(collection(db, "families", currentCode, names[i]));
+          result[names[i]] = snap.docs.map(function (d) {
+            return { id: d.id, ...d.data() };
+          });
+        }
+        return result;
+      },
+
       // 그 날짜의 사진 삭제
       removePhoto: function (name, id) {
         return deleteDoc(doc(db, "families", currentCode, name, id));
@@ -482,6 +511,6 @@
     window.dispatchEvent(new Event("cloud-ready"));
   </script>
 
-  <script src="script.js?v=20261010a"></script>
+  <script src="script.js?v=20261011a"></script>
 </body>
 </html>

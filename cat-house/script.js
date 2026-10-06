@@ -154,6 +154,76 @@ function getUser() {
 function updateUserInfo() {
   const name = getUser();
   document.getElementById("userInfo").textContent = name === "" ? "" : "👤 " + name;
+  // 관리 메뉴는 한나로 접속했을 때만 보임
+  document.getElementById("adminBtn").hidden = (name !== ADMIN_USER);
+}
+
+// ===== 관리 메뉴 (한나만) =====
+
+const ADMIN_USER = "한나";
+
+// 관리 메뉴 열기
+function openAdmin() {
+  if (getUser() !== ADMIN_USER) {
+    return;
+  }
+  document.getElementById("backupStatus").textContent = "";
+  document.getElementById("adminModal").classList.remove("hidden");
+}
+
+// 관리 메뉴 닫기
+function closeAdmin() {
+  document.getElementById("adminModal").classList.add("hidden");
+}
+
+// 모든 데이터를 파일 하나로 내려받기
+function downloadBackup() {
+  if (getUser() !== ADMIN_USER) {
+    return;
+  }
+  if (!cloudConnected) {
+    alert("아직 가족 코드로 연결되지 않았어요. 잠시 후 다시 시도해 주세요.");
+    return;
+  }
+  const btn = document.getElementById("backupBtn");
+  const status = document.getElementById("backupStatus");
+  btn.disabled = true;
+  status.textContent = "데이터를 모으는 중이에요… 잠시만 기다려 주세요";
+
+  window.cloud.exportAll().then(function (data) {
+    const counts = [];
+    Object.keys(data).forEach(function (name) {
+      counts.push(name + " " + data[name].length + "개");
+    });
+    const backup = {
+      app: "cat-house",
+      exportedAt: new Date().toISOString(),
+      exportedBy: ADMIN_USER,
+      data: data
+    };
+    const blob = new Blob([JSON.stringify(backup)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    const today = new Date();
+    const stamp = today.getFullYear() + "-" +
+      String(today.getMonth() + 1).padStart(2, "0") + "-" +
+      String(today.getDate()).padStart(2, "0");
+    a.href = url;
+    a.download = "cat-house-backup-" + stamp + ".json";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(function () {
+      URL.revokeObjectURL(url);
+    }, 10000);
+    status.textContent = "✅ 내려받기 시작했어요 (" + counts.join(", ") + ")";
+  }).catch(function (err) {
+    console.log("백업 실패", err);
+    status.textContent = "⚠ 백업하지 못했어요. 인터넷 연결을 확인해 주세요." +
+      (err && err.code ? " (" + err.code + ")" : "");
+  }).then(function () {
+    btn.disabled = false;
+  });
 }
 
 // 사용자 선택창 열기
@@ -1767,6 +1837,7 @@ document.addEventListener("keydown", function (e) {
     closeDetail();
     closeManage();
     closeNotif();
+    closeAdmin();
     closeCodeModal();
     closeUserModal();
   }
