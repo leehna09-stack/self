@@ -17,7 +17,7 @@
 2. **웹 푸시 인증서 키**: Firebase 콘솔 → 프로젝트 설정(톱니바퀴) → 클라우드 메시징 → "웹 푸시 인증서" → 키 쌍 생성 → 나온 공개키를 `cat-house/index.html`의 `VAPID_KEY`에 넣기
 3. **Firestore 위치 확인**: Firebase 콘솔 → Firestore Database → 데이터 위치 확인 후 `functions/index.js`의 `REGION` 맞추기
 4. **규칙 게시**: `firestore.rules` 전체를 콘솔 → Firestore → 규칙에 붙여 넣고 게시
-5. **서버 기능 배포** (PC, Node 20 이상):
+5. **서버 기능 배포** (PC, Node 22 이상):
    ```
    npm install -g firebase-tools
    firebase login
