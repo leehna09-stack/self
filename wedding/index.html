@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light">
+<title>웨딩홀 비교</title>
+<style>
+:root {
+  --bg: #faf6f5;
+  --surface: #ffffff;
+  --text: #2a2123;
+  --muted: #6f6165;
+  --line: #eaded9;
+  --accent: #b5475f;
+  --accent-soft: #f7e6ea;
+  --radius: 14px;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0; background: var(--bg); color: var(--text);
+  font-family: -apple-system, "Noto Sans KR", "Malgun Gothic", sans-serif;
+  line-height: 1.5;
+}
+.wrap { max-width: 960px; margin: 0 auto; padding: 16px; }
+header { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 12px; }
+h1 { font-size: 20px; margin: 0; }
+button, input, textarea, select { font: inherit; color: inherit; }
+button { cursor: pointer; }
+.btn {
+  border: 1px solid var(--line); background: var(--surface);
+  padding: 8px 14px; border-radius: 10px; min-height: 40px;
+}
+.btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 700; }
+.btn.danger { color: #b91c1c; }
+
+.toolbar {
+  position: sticky; top: 0; z-index: 5; background: var(--bg);
+  padding: 8px 0 12px; display: grid; gap: 8px;
+}
+.sorts { display: flex; gap: 6px; flex-wrap: wrap; }
+.chip {
+  border: 1px solid var(--line); background: var(--surface);
+  border-radius: 999px; padding: 7px 14px; min-height: 38px;
+}
+.chip[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 700; }
+.filters { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+.filters input, .filters select {
+  width: 100%; padding: 8px 10px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); min-height: 40px;
+}
+.search { grid-column: 1 / -1; }
+.count { color: var(--muted); font-size: 13px; }
+
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; display: flex; flex-direction: column; }
+.photo { aspect-ratio: 4/3; background: var(--accent-soft); display: flex; align-items: center; justify-content: center; color: var(--muted); font-size: 13px; position: relative; }
+.photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.photo .n { position: absolute; right: 8px; bottom: 8px; background: rgba(0,0,0,.55); color: #fff; font-size: 12px; padding: 2px 8px; border-radius: 999px; }
+.body { padding: 12px 14px 14px; display: grid; gap: 4px; flex: 1; }
+.name { font-weight: 700; font-size: 17px; }
+.price { color: var(--accent); font-weight: 700; font-size: 18px; }
+.meta { color: var(--muted); font-size: 14px; }
+.memo { font-size: 14px; white-space: pre-wrap; word-break: break-word; margin-top: 4px; }
+.badge { display: inline-block; background: var(--accent-soft); color: var(--accent); border-radius: 6px; padding: 0 6px; font-size: 12px; font-weight: 700; margin-left: 6px; }
+.actions { display: flex; gap: 6px; padding: 0 14px 14px; }
+.actions .btn { flex: 1; min-height: 36px; padding: 4px 8px; }
+.empty { text-align: center; color: var(--muted); padding: 48px 0; }
+
+dialog { border: none; border-radius: var(--radius); padding: 0; width: min(520px, calc(100vw - 24px)); max-height: 92vh; }
+dialog::backdrop { background: rgba(0,0,0,.4); }
+form.edit { padding: 16px; display: grid; gap: 10px; }
+form.edit h2 { margin: 0; font-size: 18px; }
+label { display: grid; gap: 4px; font-size: 14px; color: var(--muted); }
+form.edit input, form.edit textarea {
+  padding: 9px 10px; border: 1px solid var(--line); border-radius: 10px; width: 100%; color: var(--text); background: #fff;
+}
+.row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.thumbs { display: flex; gap: 6px; flex-wrap: wrap; }
+.thumb { position: relative; width: 72px; height: 72px; }
+.thumb img { width: 100%; height: 100%; object-fit: cover; border-radius: 8px; }
+.thumb button { position: absolute; top: -6px; right: -6px; width: 22px; height: 22px; border-radius: 50%; border: none; background: #333; color: #fff; line-height: 1; }
+.foot { display: flex; gap: 8px; justify-content: flex-end; }
+.lightbox img { max-width: 100%; display: block; }
+@media (max-width: 480px) { .filters { grid-template-columns: 1fr 1fr; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>💍 웨딩홀 비교</h1>
+    <button class="btn primary" id="addBtn">+ 예식장 추가</button>
+  </header>
+
+  <div class="toolbar">
+    <div class="sorts" id="sorts" role="group" aria-label="정렬">
+      <button class="chip" data-sort="cheap">저렴한순</button>
+      <button class="chip" data-sort="expensive">고액순</button>
+      <button class="chip" data-sort="near">가까운순</button>
+      <button class="chip" data-sort="recent">최근등록순</button>
+    </div>
+    <div class="filters">
+      <input class="search" id="q" type="search" placeholder="예식장 이름·메모 검색">
+      <input id="maxPrice" type="number" min="0" inputmode="numeric" placeholder="최대 금액(만원)">
+      <input id="maxDist" type="number" min="0" step="0.1" inputmode="decimal" placeholder="최대 거리(km)">
+      <select id="liked"><option value="">전체</option><option value="1">⭐ 관심만</option></select>
+    </div>
+    <div class="count" id="count"></div>
+  </div>
+
+  <div class="grid" id="list"></div>
+</div>
+
+<dialog id="dlg">
+  <form class="edit" id="form" method="dialog">
+    <h2 id="dlgTitle">예식장 추가</h2>
+    <label>예식장 이름 *<input name="name" required maxlength="60"></label>
+    <div class="row">
+      <label>대관·식대 등 총 금액 (만원) *<input name="price" type="number" min="0" inputmode="numeric" required></label>
+      <label>내 위치에서 거리 (km)<input name="distance" type="number" min="0" step="0.1" inputmode="decimal"></label>
+    </div>
+    <label>주소·연락처<input name="addr" maxlength="120"></label>
+    <label>메모<textarea name="memo" rows="4" placeholder="보증인원, 식대, 주차, 홀 분위기 등"></textarea></label>
+    <label>사진 (여러 장 가능)<input id="files" type="file" accept="image/*" multiple></label>
+    <div class="thumbs" id="thumbs"></div>
+    <div class="foot">
+      <button type="button" class="btn" id="cancel">취소</button>
+      <button type="submit" class="btn primary">저장</button>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="lb" class="lightbox"><img id="lbImg" alt=""></dialog>
+
+<script>
+const KEY = 'wedding-halls-v1';
+const $ = id => document.getElementById(id);
+let halls = load();
+let sort = 'cheap';
+let editing = null;   // 수정 중인 id (없으면 신규)
+let draftPhotos = []; // 편집창의 사진 임시 목록
+
+function load() {
+  try { return JSON.parse(localStorage.getItem(KEY)) || []; } catch { return []; }
+}
+function save() {
+  try { localStorage.setItem(KEY, JSON.stringify(halls)); }
+  catch { alert('저장 공간이 부족합니다. 사진 수를 줄이거나 일부 예식장을 삭제해 주세요.'); }
+}
+const fmtPrice = m => m >= 10000 ? (m / 10000).toFixed(m % 10000 ? 1 : 0) + '억' : m.toLocaleString() + '만원';
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+function visible() {
+  const q = $('q').value.trim().toLowerCase();
+  const mp = parseFloat($('maxPrice').value);
+  const md = parseFloat($('maxDist').value);
+  const likedOnly = $('liked').value === '1';
+  let r = halls.filter(h =>
+    (!q || (h.name + ' ' + h.memo + ' ' + h.addr).toLowerCase().includes(q)) &&
+    (isNaN(mp) || h.price <= mp) &&
+    (isNaN(md) || (h.distance != null && h.distance <= md)) &&
+    (!likedOnly || h.liked));
+  // 거리 미입력 항목은 거리순에서 맨 뒤로
+  const d = h => h.distance == null ? Infinity : h.distance;
+  const by = {
+    cheap: (a, b) => a.price - b.price,
+    expensive: (a, b) => b.price - a.price,
+    near: (a, b) => d(a) - d(b) || a.price - b.price,
+    recent: (a, b) => b.created - a.created,
+  }[sort];
+  return r.sort(by);
+}
+
+function render() {
+  document.querySelectorAll('#sorts .chip').forEach(b => b.setAttribute('aria-pressed', b.dataset.sort === sort));
+  const r = visible();
+  const prices = halls.map(h => h.price);
+  const min = Math.min(...prices), max = Math.max(...prices);
+  $('count').textContent = halls.length ? `${r.length}곳 표시 (전체 ${halls.length}곳)` : '';
+  $('list').innerHTML = r.length ? r.map(h => `
+    <article class="card">
+      <div class="photo">${h.photos?.length
+        ? `<img src="${h.photos[0]}" alt="${esc(h.name)}" data-id="${h.id}" data-act="view" style="cursor:zoom-in">` + (h.photos.length > 1 ? `<span class="n">${h.photos.length}장</span>` : '')
+        : '사진 없음'}</div>
+      <div class="body">
+        <div class="name">${h.liked ? '⭐ ' : ''}${esc(h.name)}</div>
+        <div class="price">${fmtPrice(h.price)}${halls.length > 1 && h.price === min ? '<span class="badge">최저가</span>' : ''}${halls.length > 1 && h.price === max && max !== min ? '<span class="badge">최고가</span>' : ''}</div>
+        <div class="meta">${h.distance != null ? '📍 ' + h.distance + 'km' : '📍 거리 미입력'}${h.addr ? ' · ' + esc(h.addr) : ''}</div>
+        ${h.memo ? `<div class="memo">${esc(h.memo)}</div>` : ''}
+      </div>
+      <div class="actions">
+        <button class="btn" data-id="${h.id}" data-act="like">${h.liked ? '관심 해제' : '⭐ 관심'}</button>
+        <button class="btn" data-id="${h.id}" data-act="edit">수정</button>
+        <button class="btn danger" data-id="${h.id}" data-act="del">삭제</button>
+      </div>
+    </article>`).join('')
+    : `<div class="empty">${halls.length ? '조건에 맞는 예식장이 없어요.' : '아직 등록된 예식장이 없어요.<br>오른쪽 위 “+ 예식장 추가”로 시작하세요.'}</div>`;
+}
+
+// 사진을 가로 1000px 이하 JPEG로 줄여서 저장 공간을 아낀다
+function shrink(file) {
+  return new Promise((ok, fail) => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      const s = Math.min(1, 1000 / img.width);
+      const c = document.createElement('canvas');
+      c.width = Math.round(img.width * s); c.height = Math.round(img.height * s);
+      c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+      URL.revokeObjectURL(url);
+      ok(c.toDataURL('image/jpeg', 0.72));
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); fail(); };
+    img.src = url;
+  });
+}
+
+function drawThumbs() {
+  $('thumbs').innerHTML = draftPhotos.map((p, i) =>
+    `<div class="thumb"><img src="${p}" alt=""><button type="button" data-i="${i}" aria-label="사진 삭제">×</button></div>`).join('');
+}
+
+function openEditor(id) {
+  editing = id;
+  const h = halls.find(x => x.id === id);
+  const f = $('form');
+  f.reset();
+  $('dlgTitle').textContent = h ? '예식장 수정' : '예식장 추가';
+  f.name.value = h?.name ?? '';
+  f.price.value = h?.price ?? '';
+  f.distance.value = h?.distance ?? '';
+  f.addr.value = h?.addr ?? '';
+  f.memo.value = h?.memo ?? '';
+  draftPhotos = [...(h?.photos ?? [])];
+  drawThumbs();
+  $('dlg').showModal();
+}
+
+$('addBtn').onclick = () => openEditor(null);
+$('cancel').onclick = () => $('dlg').close();
+$('files').onchange = async e => {
+  for (const f of e.target.files) {
+    try { draftPhotos.push(await shrink(f)); } catch { alert(f.name + ' 파일을 읽을 수 없어요.'); }
+  }
+  e.target.value = '';
+  drawThumbs();
+};
+$('thumbs').onclick = e => {
+  const i = e.target.dataset.i;
+  if (i != null) { draftPhotos.splice(+i, 1); drawThumbs(); }
+};
+$('form').onsubmit = () => {
+  const f = $('form');
+  const data = {
+    name: f.name.value.trim(),
+    price: Math.round(Number(f.price.value)),
+    distance: f.distance.value === '' ? null : Number(f.distance.value),
+    addr: f.addr.value.trim(),
+    memo: f.memo.value.trim(),
+    photos: draftPhotos,
+  };
+  if (editing) Object.assign(halls.find(x => x.id === editing), data);
+  else halls.push({ id: String(Date.now()), created: Date.now(), liked: false, ...data });
+  save(); render();
+};
+
+$('list').onclick = e => {
+  const t = e.target.closest('[data-act]');
+  if (!t) return;
+  const h = halls.find(x => x.id === t.dataset.id);
+  if (t.dataset.act === 'edit') openEditor(h.id);
+  else if (t.dataset.act === 'like') { h.liked = !h.liked; save(); render(); }
+  else if (t.dataset.act === 'del') {
+    if (confirm(`“${h.name}”을(를) 삭제할까요?`)) { halls = halls.filter(x => x !== h); save(); render(); }
+  } else if (t.dataset.act === 'view') { $('lbImg').src = h.photos[0]; $('lb').showModal(); }
+};
+$('lb').onclick = () => $('lb').close();
+
+$('sorts').onclick = e => {
+  const s = e.target.dataset.sort;
+  if (s) { sort = s; render(); }
+};
+['q', 'maxPrice', 'maxDist', 'liked'].forEach(id => $(id).addEventListener('input', render));
+
+render();
+</script>
+</body>
+</html>
