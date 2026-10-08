@@ -47,21 +47,21 @@ body {
   letter-spacing: -0.01em;
 }
 .wrap { max-width: 560px; margin: 0 auto; padding: 12px 16px calc(96px + env(safe-area-inset-bottom)); }
-h1 { font-family: 'Gowun Dodum', 'Pretendard Variable', Pretendard, system-ui, sans-serif; font-size: 20px; font-weight: 700; letter-spacing: -0.02em; margin: 0; color: var(--primary); }
+h1 { font-family: 'Gowun Dodum', 'Pretendard Variable', Pretendard, system-ui, sans-serif; font-size: 18px; font-weight: 700; letter-spacing: -0.02em; margin: 0; color: var(--primary); white-space: nowrap; }
 h2 { font-size: 15px; font-weight: 700; margin: 0 0 8px; }
 h3 { font-size: 12px; margin: 0; color: var(--muted); font-weight: 500; }
 p { margin: 0; }
 .num { font-variant-numeric: tabular-nums; }
 
 /* 위쪽: 제목 + 누가 쓰는지 고르는 버튼 */
-.top { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
-.who { display: flex; gap: 4px; }
+.top { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0 8px; margin-bottom: 12px; }
+.who { display: flex; gap: 0; flex: none; }
 .who button, .tabs button {
   min-height: 40px; padding: 0 12px; border: 0; border-bottom: 3px solid transparent; border-radius: 0; background: transparent;
   font: inherit; color: var(--muted); cursor: pointer; touch-action: manipulation;
 }
 .who button[aria-selected="true"], .tabs button[aria-selected="true"] { color: var(--primary); font-weight: 700; border-bottom-color: var(--primary); }
-.who button { font-size: 17px; font-weight: 700; letter-spacing: -0.03em; }
+.who button { font-size: 17px; font-weight: 700; letter-spacing: -0.03em; padding: 0 9px; white-space: nowrap; }
 
 .card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px; margin-bottom: 12px; box-shadow: 0 1px 2px rgba(30,60,130,.07); }
 
@@ -94,8 +94,7 @@ p { margin: 0; }
 .empty { color: var(--muted); padding: 8px 0; }
 .empty.card { white-space: pre-line; padding: 24px 16px; text-align: center; line-height: 1.7; }
 .over { color: var(--red); font-weight: 700; margin: -6px 0 12px; }
-.catrow { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 10px; }
-.catrow .cats { margin-top: 0; }
+.ratiobtn { width: 28px; height: 36px; }
 .ratiobtn svg { stroke: var(--primary); }
 .donutwrap { position: relative; width: 190px; margin: 4px auto 14px; }
 .donut { display: block; width: 100%; }
@@ -114,7 +113,7 @@ p { margin: 0; }
 .dot.a { background: var(--primary); } .dot.b { background: var(--accent); }
 .legend .nm { font-weight: 700; }
 .legend .pct { margin-left: auto; font-weight: 700; }
-.cats { color: var(--muted); font-size: 11px; margin-top: 10px; }
+.cats { color: var(--muted); font-size: 11px; margin-top: 10px; text-align: center; }
 
 /* 코드 입력 / 사용자 선택 창 */
 .modal { position: fixed; inset: 0; z-index: 10; display: grid; place-items: center; padding: 16px; background: rgba(12,22,45,.6); }
@@ -128,7 +127,7 @@ p { margin: 0; }
 
 /* 달력 */
 .cal { padding: 12px 8px; }
-.cal .hint { padding: 0 8px; margin: 0 0 12px; font-size: 12px; font-weight: 700; }
+.cal .hint { padding: 0 8px; margin: 0 0 12px; font-size: 12px; font-weight: 700; text-align: center; }
 .calgrid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
 .calhead { text-align: center; font-size: 11px; color: var(--muted); padding: 4px 0; }
 .day {
@@ -157,9 +156,10 @@ input[type="date"], input[type="number"], input[type="text"] {
 .hint { color: var(--muted); font-size: 11px; margin: -6px 0 12px; }
 .seg { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .seg.three { grid-template-columns: 1fr 1fr 1fr; }
-.titlebox { display: flex; align-items: center; gap: 2px; }
-.bell { position: relative; width: 30px; height: 36px; }
-.nudge { width: 30px; height: 36px; }
+.titlebox { display: flex; align-items: center; gap: 0; white-space: nowrap; flex: none; }
+.titlebox h1 { margin-right: 4px; }
+.bell { position: relative; width: 28px; height: 36px; }
+.nudge { width: 28px; height: 36px; }
 .nudge svg { stroke: var(--accent); }
 .confirm-msg { font-size: 15px; font-weight: 700; line-height: 1.6; margin: 4px 0 8px; }
 .badge { position: absolute; top: -2px; right: -8px; min-width: 20px; height: 20px; padding: 0 5px; border-radius: 10px; background: var(--red); color: #fff; font-size: 11px; font-weight: 700; line-height: 20px; text-align: center; }
@@ -257,6 +257,9 @@ input[type="date"], input[type="number"], input[type="text"] {
       </button>
       <button type="button" class="icon-btn nudge" id="nudgeBtn" aria-label="상대에게 지출 입력요청 보내기">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4 20-7z"/></svg>
+      </button>
+      <button type="button" class="icon-btn ratiobtn" id="ratioBtn" aria-label="한나와 동일의 지출 비율 보기" title="지출 비율 보기">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"/><path d="M22 12A10 10 0 0 0 12 2v10z"/></svg>
       </button>
     </div>
     <!-- 지금 쓰는 사람 선택: 나중에 로그인으로 바뀌는 부분 -->
@@ -768,12 +771,7 @@ input[type="date"], input[type="number"], input[type="text"] {
     if (total > goal) {
       kids.push(h('p', { class: 'over num' }, '목표 ' + fmtGoal(goal) + '을 ' + fmtWon(total - goal) + ' 넘었어요'));
     }
-    // 한나/동일 비율은 항상 보이지 않고, 이 버튼을 누르면 도넛 차트 창으로 보여줘요
-    var rb = h('button', { type: 'button', class: 'icon-btn ratiobtn', 'aria-label': '한나와 동일의 지출 비율 보기', title: '지출 비율 보기', onclick: openRatio });
-    rb.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"/><path d="M22 12A10 10 0 0 0 12 2v10z"/></svg>';
-    kids.push(h('div', { class: 'catrow' },
-      h('p', { class: 'cats num' }, '식비 ' + fmtWon(s.cat['식비']) + ' · 생활용품 ' + fmtWon(s.cat['생활용품']) + ' · 기타 ' + fmtWon(s.cat['기타'])),
-      rb));
+    kids.push(h('p', { class: 'cats num' }, '식비 ' + fmtWon(s.cat['식비']) + ' · 생활용품 ' + fmtWon(s.cat['생활용품']) + ' · 기타 ' + fmtWon(s.cat['기타'])));
     box.replaceChildren.apply(box, kids);
   }
 
@@ -1136,6 +1134,7 @@ input[type="date"], input[type="number"], input[type="text"] {
     renderAll();
     if (!user) askUser();
     function startCloud() { window.cloud.start(onEntriesData, onGoalsData, onCloudStatus); syncPush(); }
+    $('#ratioBtn').addEventListener('click', openRatio);
     $('#ratioClose').addEventListener('click', function () { $('#ratioModal').hidden = true; });
     $('#installBtn').addEventListener('click', installApp);
     $('#installClose').addEventListener('click', function () { $('#installModal').hidden = true; });
