@@ -1,12 +1,12 @@
 {
-  "name": "우리 가계부",
-  "short_name": "가계부",
+  "name": "알뜰살뜰 가계부",
+  "short_name": "알뜰살뜰",
   "description": "두 사람이 함께 쓰는 가계부",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
-  "background_color": "#f6f5f3",
-  "theme_color": "#1c1917",
+  "background_color": "#f1f5fd",
+  "theme_color": "#2b68e0",
   "lang": "ko",
   "icons": [
     {

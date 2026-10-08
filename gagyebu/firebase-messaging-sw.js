@@ -10,7 +10,7 @@ self.addEventListener('push', function (event) {
   try { d = event.data ? event.data.json() : {}; } catch (e) {}
   var n = d.notification || {};
   var data = d.data || d;
-  var title = data.title || n.title || '우리 가계부';
+  var title = data.title || n.title || '알뜰살뜰 가계부';
   var body = data.body || n.body || '새 소식이 있어요.';
   event.waitUntil(self.registration.showNotification(title, {
     body: body,

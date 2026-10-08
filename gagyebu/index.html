@@ -4,13 +4,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="color-scheme" content="light">
-<meta name="theme-color" content="#1c1917">
+<meta name="theme-color" content="#2b68e0">
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="가계부">
-<title>우리 가계부</title>
+<meta name="apple-mobile-web-app-title" content="알뜰살뜰">
+<title>알뜰살뜰 가계부</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
@@ -22,14 +22,16 @@
 ============================================================= -->
 <style>
 :root {
-  --bg: #f6f5f3;        /* 화면 바탕 (따뜻한 연회색) */
+  --bg: #f1f5fd;        /* 화면 바탕 (아주 옅은 파랑 회색) */
   --surface: #ffffff;   /* 카드 바탕 (흰색) */
-  --text: #1c1917;      /* 기본 글자색 */
-  --muted: #57534e;     /* 보조 글자색 */
-  --line: #e7e5e4;      /* 구분선 */
-  --dark: #1c1917;      /* 한나 막대 / 주요 버튼 */
-  --mid: #78716c;       /* 동일 막대 / 입력칸 테두리 */
-  --red: #b91c1c;       /* 증가·삭제 강조에만 사용 */
+  --text: #131c2e;      /* 기본 글자색 */
+  --muted: #566178;     /* 보조 글자색 */
+  --line: #dde5f3;      /* 구분선 */
+  --primary: #2b68e0;   /* 대표색(파랑): 제목 / 주요 버튼 / 선택 표시 / 한나 */
+  --primary-soft: #cfe0fb; /* 대표색의 연한 버전 (진행바 배경 등) */
+  --accent: #0f9488;    /* 보조색(청록): 동일 / 푸시 아이콘 */
+  --mid: #7b869c;       /* 입력칸 테두리 */
+  --red: #d6403b;       /* 초과·삭제 강조에만 사용 */
   --green: #15803d;     /* 감소 강조에만 사용 */
   --radius: 16px;
 }
@@ -42,7 +44,7 @@ body {
   letter-spacing: -0.01em;
 }
 .wrap { max-width: 560px; margin: 0 auto; padding: 12px 16px calc(96px + env(safe-area-inset-bottom)); }
-h1 { font-size: 19px; font-weight: 700; letter-spacing: -0.03em; margin: 0; }
+h1 { font-size: 17px; font-weight: 700; letter-spacing: -0.03em; margin: 0; color: var(--primary); }
 h2 { font-size: 15px; font-weight: 700; margin: 0 0 8px; }
 h3 { font-size: 12px; margin: 0; color: var(--muted); font-weight: 500; }
 p { margin: 0; }
@@ -55,21 +57,22 @@ p { margin: 0; }
   min-height: 40px; padding: 0 12px; border: 0; border-bottom: 3px solid transparent; border-radius: 0; background: transparent;
   font: inherit; color: var(--muted); cursor: pointer; touch-action: manipulation;
 }
-.who button[aria-selected="true"], .tabs button[aria-selected="true"] { color: var(--text); font-weight: 700; border-bottom-color: var(--dark); }
+.who button[aria-selected="true"], .tabs button[aria-selected="true"] { color: var(--primary); font-weight: 700; border-bottom-color: var(--primary); }
+.who button { font-size: 17px; font-weight: 700; letter-spacing: -0.03em; }
 
-.card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px; margin-bottom: 12px; box-shadow: 0 1px 2px rgba(28,25,23,.05); }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px; margin-bottom: 12px; box-shadow: 0 1px 2px rgba(30,60,130,.07); }
 
 /* 버튼 공통 */
 .btn {
   min-height: 44px; padding: 0 16px; border-radius: 10px; border: 1px solid var(--mid);
   background: var(--surface); color: var(--text); font: inherit; font-weight: 600; cursor: pointer; touch-action: manipulation;
 }
-.btn.primary { background: var(--dark); border-color: var(--dark); color: #fff; }
+.btn.primary { background: var(--primary); border-color: var(--primary); color: #fff; }
 .btn:active { opacity: .8; }
 .btn:disabled { opacity: .45; cursor: not-allowed; }
 .link { min-height: 44px; padding: 0 12px; border: 0; background: transparent; font: inherit; font-weight: 600; color: var(--text); text-decoration: underline; cursor: pointer; touch-action: manipulation; }
 .link.danger { color: var(--red); }
-:focus-visible { outline: 3px solid var(--dark); outline-offset: 2px; }
+:focus-visible { outline: 3px solid var(--primary); outline-offset: 2px; }
 
 /* 월 이동 */
 .monthnav { display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 8px; }
@@ -87,25 +90,31 @@ p { margin: 0; }
 .sumgrid .label .link { min-height: 28px; padding: 0 2px; font-size: 11px; }
 .empty { color: var(--muted); padding: 8px 0; }
 .empty.card { white-space: pre-line; padding: 24px 16px; text-align: center; line-height: 1.7; }
-.bar { position: relative; display: flex; height: 40px; border-radius: 10px; overflow: hidden; background: var(--line); }
-.bar button { flex: 0 1 auto; min-width: 24px; height: 100%; margin: 0; padding: 0; border: 0; cursor: pointer; touch-action: manipulation; color: #fff; font: inherit; font-weight: 700; white-space: nowrap; overflow: hidden; }
-.seg-a { background: var(--dark); }
-.seg-b { background: var(--mid); }
-.bar button:focus-visible { outline: 3px solid #fff; outline-offset: -6px; }
-.reveal { margin: 8px 0 12px; min-height: 26px; color: var(--muted); font-size: 11px; }
-.reveal.on { color: var(--text); font-size: 15px; font-weight: 700; }
 .over { color: var(--red); font-weight: 700; margin: -6px 0 12px; }
+.catrow { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 10px; }
+.catrow .cats { margin-top: 0; }
+.ratiobtn svg { stroke: var(--primary); }
+.donutwrap { position: relative; width: 190px; margin: 4px auto 14px; }
+.donut { display: block; width: 100%; }
+.donut circle { fill: none; stroke-width: 6; }
+.donut .dn-bg { stroke: var(--line); }
+.donut .dn-a { stroke: var(--primary); }
+.donut .dn-b { stroke: var(--accent); }
+.donutcenter { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+.donutcenter .label { font-size: 11px; }
+.donutcenter .amt { font-size: 17px; font-weight: 700; }
+.legend .amt { margin-left: 12px; font-weight: 700; }
 .legend { list-style: none; margin: 0 0 10px; padding: 0; }
 .legend li { display: flex; align-items: center; gap: 8px; min-height: 40px; border-bottom: 1px solid var(--line); }
 .legend li:last-child { border-bottom: 0; }
 .dot { width: 12px; height: 12px; border-radius: 50%; flex: none; }
-.dot.a { background: var(--dark); } .dot.b { background: var(--mid); }
+.dot.a { background: var(--primary); } .dot.b { background: var(--accent); }
 .legend .nm { font-weight: 700; }
 .legend .pct { margin-left: auto; font-weight: 700; }
 .cats { color: var(--muted); font-size: 11px; margin-top: 10px; }
 
 /* 코드 입력 / 사용자 선택 창 */
-.modal { position: fixed; inset: 0; z-index: 10; display: grid; place-items: center; padding: 16px; background: rgba(28,25,23,.6); }
+.modal { position: fixed; inset: 0; z-index: 10; display: grid; place-items: center; padding: 16px; background: rgba(12,22,45,.6); }
 .modal-box { width: 100%; max-width: 400px; max-height: 92vh; overflow-y: auto; background: var(--surface); border-radius: var(--radius); padding: 16px; }
 .modal-box h2 { margin-bottom: 8px; }
 .modal-box .hint { margin: 0 0 14px; }
@@ -127,8 +136,8 @@ p { margin: 0; }
 .day:active { background: var(--bg); }
 .day .dn { font-size: 13px; line-height: 1.2; }
 .day .da { font-size: 11px; line-height: 1.2; color: var(--muted); white-space: nowrap; }
-.day.today { border: 2px solid var(--dark); padding: 5px 0 3px; font-weight: 700; }
-.day[aria-pressed="true"] { background: var(--dark); color: #fff; border-color: var(--dark); }
+.day.today { border: 2px solid var(--primary); padding: 5px 0 3px; font-weight: 700; }
+.day[aria-pressed="true"] { background: var(--primary); color: #fff; border-color: var(--primary); }
 .day .da.over { color: var(--red); font-weight: 700; }
 .day[aria-pressed="true"] .da { color: #fff; }
 .day[aria-pressed="true"] .da.over { color: #fca5a5; }
@@ -148,6 +157,7 @@ input[type="date"], input[type="number"], input[type="text"] {
 .titlebox { display: flex; align-items: center; gap: 2px; }
 .bell { position: relative; width: 30px; height: 36px; }
 .nudge { width: 30px; height: 36px; }
+.nudge svg { stroke: var(--accent); }
 .confirm-msg { font-size: 15px; font-weight: 700; line-height: 1.6; margin: 4px 0 8px; }
 .badge { position: absolute; top: -2px; right: -8px; min-width: 20px; height: 20px; padding: 0 5px; border-radius: 10px; background: var(--red); color: #fff; font-size: 11px; font-weight: 700; line-height: 20px; text-align: center; }
 .newlist { list-style: none; margin: 0; padding: 0; }
@@ -155,8 +165,8 @@ input[type="date"], input[type="number"], input[type="text"] {
 .newlist li:last-child { border-bottom: 0; }
 .newlist .nw { font-weight: 600; overflow-wrap: anywhere; }
 .newlist .nm2 { color: var(--muted); font-size: 11px; }
-.prog { height: 10px; border-radius: 5px; background: var(--line); overflow: hidden; margin: 0 0 6px; }
-.prog > div { height: 100%; background: var(--dark); }
+.prog { height: 10px; border-radius: 5px; background: var(--primary-soft); overflow: hidden; margin: 0 0 6px; }
+.prog > div { height: 100%; background: var(--primary); }
 .prog.over > div { background: var(--red); }
 .status { color: var(--muted); font-size: 11px; margin-bottom: 8px; }
 .seg > div { position: relative; }
@@ -165,8 +175,8 @@ input[type="date"], input[type="number"], input[type="text"] {
   display: flex; align-items: center; justify-content: center; min-height: 44px;
   border: 1px solid var(--mid); border-radius: 10px; background: var(--surface); pointer-events: none;
 }
-.seg input:checked + label { background: var(--dark); color: #fff; border-color: var(--dark); font-weight: 700; }
-.seg input:focus-visible + label { outline: 3px solid var(--dark); outline-offset: 2px; }
+.seg input:checked + label { background: var(--primary); color: #fff; border-color: var(--primary); font-weight: 700; }
+.seg input:focus-visible + label { outline: 3px solid var(--primary); outline-offset: 2px; }
 .actions { display: flex; gap: 8px; }
 .actions .primary { flex: 1; }
 
@@ -176,7 +186,7 @@ input[type="date"], input[type="number"], input[type="text"] {
 .tabs button { flex: 1; margin-bottom: -1px; }
 .dategroup { margin-top: 12px; }
 .dategroup h3 { display: flex; justify-content: space-between; padding: 0 4px 8px; }
-.items { list-style: none; margin: 0; padding: 0; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: 0 1px 2px rgba(28,25,23,.05); }
+.items { list-style: none; margin: 0; padding: 0; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: 0 1px 2px rgba(30,60,130,.07); }
 .item { padding: 6px 8px 6px 16px; border-bottom: 1px solid var(--line); }
 .item:last-child { border-bottom: 0; }
 .row { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
@@ -197,25 +207,26 @@ input[type="date"], input[type="number"], input[type="text"] {
   width: 100%; text-align: left; font: inherit; color: inherit; background: var(--surface);
   border: 1px solid var(--line); border-radius: 10px; padding: 12px; cursor: pointer; touch-action: manipulation;
 }
-.cmp button[aria-current="true"] { border: 2px solid var(--dark); padding: 11px; }
+.cmp button[aria-current="true"] { border: 2px solid var(--primary); padding: 11px; }
 .cmp .r1 { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 2px 8px; }
 .cmp .r1 > span { white-space: nowrap; }
 .cmp .r1 > span:last-child { margin-left: auto; }
 .cmp .mn { font-weight: 700; }
 .cmp .bartrack { height: 8px; border-radius: 4px; background: var(--line); margin: 8px 0 6px; overflow: hidden; }
-.cmp .barfill { height: 100%; background: var(--mid); }
+.cmp .barfill { height: 100%; background: var(--primary); opacity: .55; }
 .cmp .split { color: var(--muted); font-size: 11px; }
 .delta { font-size: 11px; font-weight: 700; }
 .delta.up { color: var(--red); } .delta.down { color: var(--green); } .delta.flat { color: var(--muted); }
 
-.foot { text-align: center; margin-top: 8px; }
+.foot { display: flex; flex-direction: column; align-items: flex-end; text-align: right; margin-top: 8px; }
+.foot-actions { display: flex; gap: 4px; }
 .foot p { color: var(--muted); font-size: 11px; margin-bottom: 8px; }
 
 /* 아래쪽에 잠깐 뜨는 알림 */
 #toast {
   position: fixed; left: 16px; right: 16px; bottom: calc(16px + env(safe-area-inset-bottom));
   max-width: 528px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: 12px;
-  background: var(--dark); color: #fff; padding: 10px 14px; border-radius: 10px; min-height: 48px;
+  background: var(--text); color: #fff; padding: 10px 14px; border-radius: 10px; min-height: 48px;
 }
 #toast button { min-height: 44px; padding: 0 8px; border: 0; background: transparent; color: #fff; font: inherit; font-weight: 700; text-decoration: underline; cursor: pointer; }
 #toast button:focus-visible { outline-color: #fff; }
@@ -234,7 +245,7 @@ input[type="date"], input[type="number"], input[type="text"] {
 
   <header class="top">
     <div class="titlebox">
-      <h1>우리 가계부</h1>
+      <h1>알뜰살뜰 가계부</h1>
       <button type="button" class="icon-btn bell" id="bellBtn" aria-label="새 소식">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>
         <span class="badge" id="bellBadge" hidden></span>
@@ -286,10 +297,15 @@ input[type="date"], input[type="number"], input[type="text"] {
 
   <footer class="foot">
     <p class="status" id="pushStatus"></p>
-    <button type="button" class="btn primary" id="installBtn" hidden>앱으로 설치하기</button>
     <p class="status" id="status"></p>
-    <p>기록은 두 사람이 함께 쓰는 인터넷 저장소에 저장돼요. 가끔 백업해 두세요.</p>
-    <button type="button" class="btn" id="exportBtn">엑셀(CSV)로 백업 내려받기</button>
+    <div class="foot-actions">
+      <button type="button" class="icon-btn" id="installBtn" hidden aria-label="앱으로 설치하기" title="앱으로 설치하기">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><path d="M3 6h18"/><path d="m10 11 4.5 2.5L10 16z"/></svg>
+      </button>
+      <button type="button" class="icon-btn" id="exportBtn" aria-label="엑셀(CSV)로 백업 내려받기" title="엑셀(CSV)로 백업 내려받기">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>
+      </button>
+    </div>
   </footer>
 </div>
 
@@ -331,6 +347,15 @@ input[type="date"], input[type="number"], input[type="text"] {
         </div>
       </form>
       </div>
+</div>
+
+<!-- 한나/동일 지출 비율 (도넛 차트) -->
+<div id="ratioModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="ratioTitle" hidden>
+  <div class="modal-box">
+    <h2 id="ratioTitle"></h2>
+    <div id="ratioBody"></div>
+    <button type="button" class="btn" id="ratioClose">닫기</button>
+  </div>
 </div>
 
 <!-- 앱 설치 방법 -->
@@ -600,8 +625,7 @@ input[type="date"], input[type="number"], input[type="text"] {
     renderSummary();
   }
   function onCloudStatus(status, errorCode) {
-    $('#status').textContent = status === 'online' ? '인터넷 저장소 연결됨'
-      : status === 'syncing' ? '동기화 중이에요…'
+    $('#status').textContent = status !== 'error' ? ''     // 정상일 때는 아무것도 안 보이고, 문제가 있을 때만 알려줘요
       : errorCode === 'permission-denied' ? '⚠ 저장소 권한이 없어서 이 폰에만 저장돼요 (Firebase 규칙 확인 필요)'
       : '⚠ 연결 오류 (' + (errorCode || '알 수 없음') + ') — 이 폰에만 저장돼요';
   }
@@ -734,33 +758,50 @@ input[type="date"], input[type="number"], input[type="text"] {
       return;
     }
 
-    var hp = Math.round(by['한나'] / total * 100), dp = 100 - hp;
-    var pct = { '한나': hp, '동일': dp };
-
-    // 막대를 누르면 그 사람의 금액이 아래에 나타나요. 같은 막대를 다시 누르면 사라져요.
-    var reveal = h('p', { class: 'reveal', 'aria-live': 'polite' }, '막대를 누르면 금액이 보여요.');
-    var shownWho = null;
-    function toggleAmount(p) {
-      shownWho = (shownWho === p) ? null : p;
-      reveal.textContent = shownWho ? shownWho + ' ' + fmtWon(by[shownWho]) : '막대를 누르면 금액이 보여요.';
-      reveal.className = 'reveal' + (shownWho ? ' on' : '');
-    }
-    function seg(p, cls) {
-      return h('button', {
-        type: 'button', class: cls, style: 'width:' + (by[p] / total * 100) + '%',
-        'aria-label': p + ' ' + pct[p] + '%, 누르면 금액 보기', onclick: function () { toggleAmount(p); }
-      }, p);
-    }
-
     if (total > goal) {
       kids.push(h('p', { class: 'over num' }, '목표 ' + fmtGoal(goal) + '을 ' + fmtWon(total - goal) + ' 넘었어요'));
     }
-    kids.push(
-      h('div', { class: 'bar' }, seg('한나', 'seg-a'), seg('동일', 'seg-b')),
-      reveal,
-      h('p', { class: 'cats num' }, '식비 ' + fmtWon(s.cat['식비']) + ' · 생활용품 ' + fmtWon(s.cat['생활용품']) + ' · 기타 ' + fmtWon(s.cat['기타']))
-    );
+    // 한나/동일 비율은 항상 보이지 않고, 이 버튼을 누르면 도넛 차트 창으로 보여줘요
+    var rb = h('button', { type: 'button', class: 'icon-btn ratiobtn', 'aria-label': '한나와 동일의 지출 비율 보기', title: '지출 비율 보기', onclick: openRatio });
+    rb.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"/><path d="M22 12A10 10 0 0 0 12 2v10z"/></svg>';
+    kids.push(h('div', { class: 'catrow' },
+      h('p', { class: 'cats num' }, '식비 ' + fmtWon(s.cat['식비']) + ' · 생활용품 ' + fmtWon(s.cat['생활용품']) + ' · 기타 ' + fmtWon(s.cat['기타'])),
+      rb));
     box.replaceChildren.apply(box, kids);
+  }
+
+  // 한나/동일 지출 비율 도넛 차트 (팝업)
+  function openRatio() {
+    var st = monthStats(month), total = st.total, by = st.by, body = $('#ratioBody');
+    $('#ratioTitle').textContent = fmtMonth(month) + ' 지출 비율';
+    if (!total) {
+      body.replaceChildren(h('p', { class: 'empty' }, '이 달에는 기록이 없어요.'));
+    } else {
+      var NS = 'http://www.w3.org/2000/svg';
+      var el = function (tag, attrs) { var n = document.createElementNS(NS, tag); Object.keys(attrs).forEach(function (k) { n.setAttribute(k, attrs[k]); }); return n; };
+      var hp = Math.round(by[PEOPLE[0]] / total * 100), pct = {};
+      pct[PEOPLE[0]] = hp; pct[PEOPLE[1]] = 100 - hp;
+      var svg = el('svg', { viewBox: '0 0 42 42', class: 'donut', role: 'img', 'aria-label': PEOPLE[0] + ' ' + pct[PEOPLE[0]] + '%, ' + PEOPLE[1] + ' ' + pct[PEOPLE[1]] + '%' });
+      svg.appendChild(el('circle', { cx: 21, cy: 21, r: 15.9155, class: 'dn-bg' }));
+      var acc = 0;
+      PEOPLE.forEach(function (p, i) {
+        var share = by[p] / total * 100;
+        if (share <= 0) return;
+        svg.appendChild(el('circle', { cx: 21, cy: 21, r: 15.9155, class: i ? 'dn-b' : 'dn-a', 'stroke-dasharray': share + ' ' + (100 - share), 'stroke-dashoffset': String(25 - acc) }));
+        acc += share;
+      });
+      body.replaceChildren(
+        h('div', { class: 'donutwrap' }, svg,
+          h('div', { class: 'donutcenter' }, h('span', { class: 'label' }, '이달 합계'), h('span', { class: 'amt num' }, fmtWon(total)))),
+        h('ul', { class: 'legend' }, PEOPLE.map(function (p, i) {
+          return h('li', null,
+            h('span', { class: 'dot ' + (i ? 'b' : 'a'), 'aria-hidden': 'true' }),
+            h('span', { class: 'nm' }, p),
+            h('span', { class: 'pct num' }, pct[p] + '%'),
+            h('span', { class: 'amt num' }, fmtWon(by[p])));
+        })));
+    }
+    $('#ratioModal').hidden = false;
   }
 
   function renderTabs() {
@@ -976,9 +1017,8 @@ input[type="date"], input[type="number"], input[type="text"] {
   // 알림은 기본으로 켜져요. 브라우저가 허용 창을 띄우려면 사용자가 화면을 한 번 눌러야 해서, 그 순간에 맞춰 요청해요.
   var askPending = false;
   function renderPushState() {
-    $('#pushStatus').textContent = !pushSupported()
-      ? '이 브라우저는 알림을 지원하지 않아요. 아이폰은 홈 화면에 추가한 앱에서만 돼요.'
-      : Notification.permission === 'denied' ? '알림이 차단돼 있어요. 브라우저(사이트) 설정에서 허용해 주세요.' : '';
+    $('#pushStatus').textContent = pushSupported() && Notification.permission === 'denied'
+      ? '알림이 차단돼 있어요. 브라우저(사이트) 설정에서 허용해 주세요.' : '';
   }
   function askOnce() {
     askPending = false;
@@ -1089,6 +1129,7 @@ input[type="date"], input[type="number"], input[type="text"] {
     renderAll();
     if (!user) askUser();
     function startCloud() { window.cloud.start(onEntriesData, onGoalsData, onCloudStatus); syncPush(); }
+    $('#ratioClose').addEventListener('click', function () { $('#ratioModal').hidden = true; });
     $('#installBtn').addEventListener('click', installApp);
     $('#installClose').addEventListener('click', function () { $('#installModal').hidden = true; });
     renderInstall();
