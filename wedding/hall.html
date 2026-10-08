@@ -1,0 +1,726 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light">
+<meta name="theme-color" content="#f2f2f7">
+<title>웨딩홀 비교</title>
+<style>
+:root {
+  --bg: #faf6f5;
+  --surface: #ffffff;
+  --text: #2a2123;
+  --muted: #6f6165;
+  --line: #eaded9;
+  --accent: #b5475f;
+  --accent-soft: #f7e6ea;
+  --radius: 14px;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0; background: var(--bg); color: var(--text);
+  font-family: Roboto, "Noto Sans KR", "Noto Sans CJK KR", "Malgun Gothic", sans-serif;
+  font-size: 15px; line-height: 1.5; letter-spacing: -0.01em;
+  -webkit-font-smoothing: antialiased;
+}
+.wrap { max-width: 960px; margin: 0 auto; padding: 16px; }
+header { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
+.hbtns { display: flex; gap: 8px; }
+h1 { font-size: 24px; font-weight: 700; letter-spacing: -0.02em; margin: 0; }
+button, input, textarea, select { font: inherit; color: inherit; }
+button { cursor: pointer; }
+a.btn { text-decoration: none; color: inherit; }
+.btn {
+  border: 1px solid var(--line); background: var(--surface);
+  padding: 8px 14px; border-radius: 10px; min-height: 44px; font-size: 15px;
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  transition: background-color .15s, border-color .15s, box-shadow .15s;
+}
+@media (hover: hover) { .btn:hover:not(:disabled) { border-color: var(--accent); background: #fdf7f8; } .btn.primary:hover:not(:disabled) { background: #9f3a50; } }
+.btn:disabled { opacity: .6; cursor: default; }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 700; }
+.btn.danger { color: #b91c1c; }
+
+.toolbar { background: var(--bg); padding: 8px 0 12px; display: grid; gap: 8px; }
+@media (min-width: 768px) { .toolbar { position: sticky; top: 0; z-index: 5; } }
+.sortsel { width: 100%; padding: 8px 10px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); min-height: 44px; font-weight: 600; }
+.filters { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+.filters input, .filters select {
+  width: 100%; padding: 8px 10px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); min-height: 44px; font-size: 16px;
+}
+.searchrow { display: grid; grid-template-columns: 8fr minmax(156px, 2fr); gap: 8px; }
+.searchrow input { width: 100%; min-width: 0; font-size: 16px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); min-height: 44px; }
+.searchrow .sortsel { min-width: 0; font-size: 16px; padding: 8px 6px; }
+.originrow { display: grid; grid-template-columns: 1fr auto; gap: 8px; }
+.originrow select { width: 100%; min-width: 0; padding: 8px 10px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); min-height: 44px; font-size: 16px; }
+.hint { font-size: 13px; color: var(--muted); }
+.hint.err { color: #b91c1c; }
+.count { color: var(--muted); font-size: 13px; }
+
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; display: flex; flex-direction: column; }
+.photo { aspect-ratio: 4/3; background: var(--accent-soft); display: flex; align-items: center; justify-content: center; color: var(--muted); font-size: 13px; position: relative; }
+.photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.photo .n { position: absolute; right: 8px; bottom: 8px; background: rgba(0,0,0,.55); color: #fff; font-size: 12px; padding: 2px 8px; border-radius: 999px; }
+.body { padding: 12px 14px 14px; display: grid; gap: 4px; flex: 1; align-content: start; }
+.name { font-weight: 600; font-size: 17px; letter-spacing: -0.02em; }
+.price { color: var(--accent); font-weight: 700; font-size: 20px; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+.meta { color: var(--muted); font-size: 14px; }
+.ex { margin: 2px 0; padding-left: 18px; font-size: 13px; color: var(--muted); }
+.memo { font-size: 14px; white-space: pre-wrap; word-break: break-word; margin-top: 4px; }
+.badge { display: inline-block; background: var(--accent-soft); color: var(--accent); border-radius: 6px; padding: 0 6px; font-size: 13px; font-weight: 700; margin-left: 6px; }
+.actions { display: flex; flex-wrap: wrap; gap: 6px; padding: 0 14px 14px; }
+.actions .btn { flex: 1 1 40%; padding: 4px 8px; }
+.empty { text-align: center; color: var(--muted); padding: 48px 0; }
+
+dialog { border: none; border-radius: var(--radius); padding: 0; width: min(520px, calc(100vw - 24px)); max-height: 92vh; }
+dialog::backdrop { background: rgba(0,0,0,.4); }
+form.edit, .edit { padding: 16px; display: grid; gap: 10px; }
+.edit h2 { margin: 0; font-size: 18px; }
+label { display: grid; gap: 4px; font-size: 14px; color: var(--muted); }
+.edit input, .edit textarea {
+  font-size: 16px; padding: 9px 10px; border: 1px solid var(--line); border-radius: 10px; width: 100%; color: var(--text); background: #fff;
+}
+.row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.sub { font-size: 14px; color: var(--muted); }
+.exrow { display: grid; grid-template-columns: 1fr 120px 44px; gap: 6px; margin-top: 6px; }
+.exrow .x { border: 1px solid var(--line); background: #fff; border-radius: 10px; min-height: 44px; }
+.thumbs { display: flex; gap: 6px; flex-wrap: wrap; }
+.thumb { position: relative; width: 72px; height: 72px; }
+.thumb img { width: 100%; height: 100%; object-fit: cover; border-radius: 8px; }
+.thumb button { position: absolute; top: -8px; right: -8px; width: 32px; height: 32px; border-radius: 50%; border: none; background: #333; color: #fff; line-height: 1; }
+.foot { display: flex; gap: 8px; justify-content: flex-end; }
+.lightbox img { max-width: 100%; display: block; }
+
+.orow { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 10px 0; border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+.orow .meta { font-size: 13px; }
+.oact { display: flex; gap: 6px; flex-wrap: wrap; }
+.oact .btn { padding: 2px 12px; font-size: 14px; }
+
+#cmp { width: min(960px, calc(100vw - 24px)); }
+.tblwrap { overflow-x: auto; }
+table { border-collapse: collapse; min-width: 100%; }
+th, td { border: 1px solid var(--line); padding: 8px; vertical-align: top; font-size: 14px; min-width: 150px; text-align: left; word-break: break-word; }
+th.rl { position: sticky; left: 0; background: #fbf3f1; min-width: 84px; z-index: 1; }
+td.best { background: var(--accent-soft); font-weight: 700; color: var(--accent); }
+td img { width: 100%; max-height: 110px; object-fit: cover; border-radius: 8px; display: block; }
+@media (max-width: 480px) { .filters { grid-template-columns: 1fr 1fr; } }
+
+/* 드롭다운: 기본 화살표 대신 안쪽으로 들여 그린 화살표 */
+select, .filters select, .originrow select, .searchrow select.sortsel {
+  -webkit-appearance: none; appearance: none;
+  padding-right: 40px;
+  background-color: var(--surface);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236f6165' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 14px center; background-size: 16px;
+}
+
+/* 접근성·상호작용 */
+[hidden] { display: none !important; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+.i { width: 1.15em; height: 1.15em; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; vertical-align: -.2em; flex: none; }
+.i.on { fill: currentColor; }
+h1 .i { color: var(--accent); width: 1.2em; height: 1.2em; }
+.namerow { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
+.starbtn { flex: none; width: 44px; height: 44px; margin: -6px -8px -6px 0; display: inline-flex; align-items: center; justify-content: center; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); color: var(--text); transition: background-color .15s, border-color .15s, color .15s; }
+.starbtn .i { width: 22px; height: 22px; }
+.starbtn.on { border-color: #f59e0b; background: #fffbeb; color: #b45309; }
+.starbtn.on .i { fill: #fbbf24; }
+@media (hover: hover) { .starbtn:hover { border-color: #f59e0b; } }
+.actions .btn.wide { flex-basis: 100%; }
+.hint .i { margin-right: 2px; }
+.hint.ok .i { color: #15803d; }
+.photobtn { border: 0; padding: 0; background: none; width: 100%; height: 100%; cursor: zoom-in; display: block; }
+.card { box-shadow: 0 1px 2px rgba(42, 33, 35, .06); transition: box-shadow .2s; }
+@media (hover: hover) { .card:hover { box-shadow: 0 6px 18px rgba(42, 33, 35, .1); } }
+.empty .btn { margin-top: 12px; }
+td { font-variant-numeric: tabular-nums; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; scroll-behavior: auto !important; } }
+</style>
+<style>
+/* iOS Light 톤 (index.html과 통일) */
+:root { --bg:#f2f2f7; --text:#1c1c1e; --muted:#8a8a8e; --line:rgba(60,60,67,.14); --accent:#ff2d55; --accent-soft:#fff0f3; --radius:22px; }
+body { font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Apple SD Gothic Neo","Noto Sans KR",Roboto,"Malgun Gothic",sans-serif; }
+h1 { font-size:30px; font-weight:800; letter-spacing:-.035em; }
+.card { border:0; box-shadow:0 1px 2px rgba(0,0,0,.05),0 10px 28px rgba(60,60,90,.07); }
+.btn { border:0; box-shadow:0 1px 2px rgba(0,0,0,.08),inset 0 0 0 .5px rgba(60,60,67,.15); font-weight:600; border-radius:12px; }
+@media (hover:hover){ .btn:hover:not(:disabled){ background:#fff; filter:brightness(1.04); } .btn.primary:hover:not(:disabled){ background:linear-gradient(180deg,#ff6f8e,#ff2d55); } }
+.btn:active:not(:disabled){ transform:scale(.97); }
+.btn.primary { background:linear-gradient(180deg,#ff6f8e,#ff2d55); border:0; box-shadow:inset 0 1px 0 rgba(255,255,255,.45),inset 0 -2px 0 rgba(0,0,0,.12),0 6px 14px rgba(255,45,85,.32); text-shadow:0 1px 1px rgba(0,0,0,.18); }
+.starbtn.on { border-color:#f59e0b; }
+.sortsel,.filters input,.filters select,.searchrow input,.originrow select { border:0; box-shadow:inset 0 0 0 .5px rgba(60,60,67,.18); }
+dialog { border-radius:28px; }
+.photo .n { backdrop-filter:blur(6px); }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <symbol id="i-gem" viewBox="0 0 24 24"><path d="M6 3h12l4 6-10 13L2 9Z"/><path d="M11 3 8 9l4 13 4-13-3-6M2 9h20"/></symbol>
+  <symbol id="i-table" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18M15 3v18"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-pin" viewBox="0 0 24 24"><path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></symbol>
+  <symbol id="i-star" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></symbol>
+  <symbol id="i-nav" viewBox="0 0 24 24"><polygon points="3 11 22 2 13 21 11 13 3 11"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></symbol>
+  <symbol id="i-alert" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></symbol>
+  <symbol id="i-wallet" viewBox="0 0 24 24"><path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1"/><path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4"/></symbol>
+</svg>
+<main class="wrap">
+  <header>
+    <h1><svg class="i" aria-hidden="true"><use href="#i-gem"/></svg> 웨딩홀 비교</h1>
+    <div class="hbtns">
+      <a class="btn" href="index.html">← 로드맵</a>
+      <button class="btn" id="cmpBtn"><svg class="i" aria-hidden="true"><use href="#i-table"/></svg> 비교표</button>
+      <button class="btn primary" id="addBtn"><svg class="i" aria-hidden="true"><use href="#i-plus"/></svg> 예식장 추가</button>
+    </div>
+  </header>
+
+  <div class="toolbar">
+    <div class="searchrow">
+      <input id="q" type="search" aria-label="예식장 검색" placeholder="예식장 이름·메모 검색">
+      <select id="sort" class="sortsel" aria-label="정렬">
+        <option value="cheap">저가순</option>
+        <option value="expensive">고가순</option>
+        <option value="recent">최근등록순</option>
+        <option value="far">거리먼순</option>
+        <option value="near">거리가까운순</option>
+      </select>
+    </div>
+    <div class="filters">
+      <input id="maxPrice" aria-label="최대 총액(만원)" type="number" min="0" inputmode="numeric" placeholder="최대 총액(만원)">
+      <input id="maxDist" aria-label="최대 거리(km)" type="number" min="0" step="0.1" inputmode="decimal" placeholder="최대 거리(km)">
+      <select id="liked" aria-label="관심 필터"><option value="">전체</option><option value="1">관심만</option></select>
+    </div>
+    <div class="originrow">
+      <select id="origin" aria-label="기준 위치"></select>
+      <button class="btn" id="originBtn"><svg class="i" aria-hidden="true"><use href="#i-pin"/></svg> 위치 관리</button>
+    </div>
+    <div class="count" id="count" aria-live="polite"></div>
+  </div>
+
+  <div class="grid" id="list"></div>
+</main>
+
+<dialog id="dlg" aria-labelledby="dlgTitle">
+  <form class="edit" id="form">
+    <h2 id="dlgTitle">예식장 추가</h2>
+    <label>예식장 이름 *<input name="name" required maxlength="60"></label>
+    <label>주소 또는 네이버지도 링크 *<input name="addr" required maxlength="300" placeholder="입력하면 기준 위치에서의 거리가 자동 계산돼요"></label>
+    <div class="hint" id="distHint" aria-live="polite"></div>
+    <div class="row">
+      <label>대관료 (만원) *<input name="price" type="number" min="0" step="any" inputmode="decimal" required></label>
+      <label>식대 1인 (만원)<input name="meal" type="number" min="0" step="any" inputmode="decimal"></label>
+    </div>
+    <label>보증인원 (명)<input name="guests" type="number" min="0" inputmode="numeric"></label>
+    <div class="hint" id="totalHint" aria-live="polite"></div>
+    <div>
+      <div class="sub">월별·요일별 대관료 (선택)</div>
+      <div id="extras"></div>
+      <button type="button" class="btn" id="addEx" style="margin-top:6px">+ 요금 추가</button>
+    </div>
+    <label>메모<textarea name="memo" rows="4" placeholder="주차, 홀 분위기, 연회장 등"></textarea></label>
+    <label>사진 (여러 장 가능)<input id="files" type="file" accept="image/*" multiple></label>
+    <div class="thumbs" id="thumbs"></div>
+    <div class="foot">
+      <button type="button" class="btn" id="cancel">취소</button>
+      <button type="submit" class="btn primary" id="saveBtn">저장</button>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="odlg" aria-labelledby="oh">
+  <div class="edit">
+    <h2 id="oh">기준 위치 관리</h2>
+    <div class="hint">“기본으로 설정”한 위치가 앱을 열 때 기준이 되고, 위치를 바꾸면 거리가까운순으로 자동 정렬돼요.</div>
+    <div id="olist"></div>
+    <label>카카오 REST API 키 (선택 · 주소 인식률↑)
+      <input id="kkey" placeholder="developers.kakao.com에서 발급한 REST API 키" autocomplete="off">
+    </label>
+    <div class="hint">키가 없으면 무료 OpenStreetMap 검색을 쓰는데, 국내 상세주소·건물명은 못 찾는 경우가 많아요. 키는 이 브라우저에만 저장돼요.</div>
+    <form id="oform" style="display:grid;gap:8px;margin-top:6px">
+      <div class="sub" id="oTitle">새 위치 추가</div>
+      <input name="oname" required maxlength="20" placeholder="이름 (예: 회사, 부모님 댁)">
+      <input name="oaddr" required maxlength="300" placeholder="주소 또는 네이버지도 링크">
+      <div class="hint" id="oHint" aria-live="polite"></div>
+      <div class="foot">
+        <button type="button" class="btn" id="oclose">닫기</button>
+        <button type="button" class="btn" id="oCancelEdit" hidden>수정 취소</button>
+        <button type="submit" class="btn primary" id="oadd">추가</button>
+      </div>
+    </form>
+  </div>
+</dialog>
+
+<dialog id="cmp" aria-labelledby="ch">
+  <div class="edit">
+    <h2 id="ch">관심 예식장 비교</h2>
+    <div id="cmpBody"></div>
+    <div class="foot"><button type="button" class="btn" id="cmpClose">닫기</button></div>
+  </div>
+</dialog>
+
+<dialog id="lb" class="lightbox" aria-label="사진 크게 보기"><img id="lbImg" alt=""></dialog>
+
+<script>
+const KEY = 'wedding-halls-v1';
+const OKEY = 'wedding-origins-v1';
+const $ = id => document.getElementById(id);
+const icon = (n, cls = '') => `<svg class="i ${cls}" aria-hidden="true"><use href="#i-${n}"/></svg>`;
+const DEFAULT_ORIGIN = { id: 'home', name: '집', addr: '경기 군포시 송부로96번길 12 B동 (15885)', lat: 37.3157307, lon: 126.9237265 };
+
+let halls = load();
+let O = loadOrigins();
+let cur = O.defId;      // 현재 기준 위치 id
+let sort = 'cheap';
+let editing = null;     // 수정 중인 id (없으면 신규)
+let draftPhotos = [];   // 편집창의 사진 임시 목록
+let draftExtras = [];   // 편집창의 월별·요일별 요금 임시 목록
+let draftGeo = null;    // 주소 입력 시 미리 찾은 좌표 {addr, geo}
+let warnedAddr = null;  // 좌표를 못 찾아 한 번 경고한 주소
+let busy = '';          // 거리 계산 진행 상태 문구
+
+function load() {
+  try { return JSON.parse(localStorage.getItem(KEY)) || []; } catch { return []; }
+}
+function save() {
+  try { localStorage.setItem(KEY, JSON.stringify(halls)); }
+  catch { alert('저장 공간이 부족합니다. 사진 수를 줄이거나 일부 예식장을 삭제해 주세요.'); }
+}
+function loadOrigins() {
+  try {
+    const o = JSON.parse(localStorage.getItem(OKEY));
+    if (o?.list?.length) return { list: o.list, defId: o.list.some(x => x.id === o.defId) ? o.defId : o.list[0].id };
+  } catch {}
+  return { list: [DEFAULT_ORIGIN], defId: DEFAULT_ORIGIN.id };
+}
+const saveO = () => { try { localStorage.setItem(OKEY, JSON.stringify(O)); } catch {} };
+const curOrigin = () => O.list.find(o => o.id === cur) || O.list[0];
+
+const fmtPrice = m => { m = Math.round(m); return m >= 10000 ? (m / 10000).toFixed(m % 10000 ? 1 : 0) + '억' : m.toLocaleString() + '만원'; };
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const isUrl = s => /^https?:/i.test(s || '');
+// 총액 = 대관료 + 식대 × 보증인원
+const total = (h, base = h.price) => base + (h.meal && h.guests ? h.meal * h.guests : 0);
+// 현재 기준 위치에서의 거리(km). 옛 수동 입력값은 기본 위치(집)에서만 사용
+function distFor(h) {
+  const d = h.dists?.[cur];
+  if (d) return d.km;
+  return h.lat == null && h.distance != null && cur === 'home' ? h.distance : null;
+}
+
+// ───────── 주소 → 좌표 → 거리 ─────────
+const inKorea = (lat, lon) => lat > 33 && lat < 39 && lon > 124 && lon < 132;
+function coordsFromLink(text) {
+  let u; try { u = new URL(text); } catch { return undefined; }   // undefined = 링크 아님
+  const q = u.searchParams, c = (q.get('c') || '').split(',').map(Number);
+  let lat = +(q.get('lat') || q.get('y')), lon = +(q.get('lng') || q.get('x'));
+  if (c.length >= 2 && c[0] && c[1]) {
+    if (Math.abs(c[0]) > 1000) { // 새 네이버지도는 웹 메르카토르 좌표
+      lon = c[0] / 6378137 * 180 / Math.PI;
+      lat = (2 * Math.atan(Math.exp(c[1] / 6378137)) - Math.PI / 2) * 180 / Math.PI;
+    } else { lon = c[0]; lat = c[1]; }
+  }
+  return inKorea(lat, lon) ? { lat, lon } : null;                 // null = 링크지만 좌표 없음
+}
+let lastNom = 0; // Nominatim은 초당 1회 제한
+async function nominatim(q) {
+  const wait = lastNom + 1100 - Date.now();
+  if (wait > 0) await new Promise(r => setTimeout(r, wait));
+  lastNom = Date.now();
+  const r = await fetch('https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=kr&q=' + encodeURIComponent(q));
+  return r.json();
+}
+const kakaoKey = () => { try { return localStorage.getItem('wedding-kakao-key') || ''; } catch { return ''; } };
+async function geocode(text) {
+  const link = coordsFromLink(text);
+  if (link) return link;
+  if (link === null) throw new Error('이 링크에는 위치 정보가 없어요. 주소를 입력해 주세요.');
+  const key = kakaoKey();
+  if (key) {
+    for (const api of ['address', 'keyword']) {
+      let r;
+      try { r = await fetch(`https://dapi.kakao.com/v2/local/search/${api}.json?size=1&query=${encodeURIComponent(text)}`, { headers: { Authorization: 'KakaoAK ' + key } }); }
+      catch { throw new Error('카카오 주소 검색에 연결하지 못했어요.'); }
+      if (r.status === 401 || r.status === 403) throw new Error('카카오 REST API 키를 확인해 주세요. (위치 관리에서 수정)');
+      const d = (await r.json()).documents?.[0];
+      if (d) return { lat: +d.y, lon: +d.x };
+    }
+  }
+  const road = text.replace(/\(.*?\)/g, '').match(/^(.*?(?:로|길)\s?\d+(?:-\d+)?)/);
+  for (const q of [...new Set([text, road && road[1]])].filter(Boolean)) {
+    try {
+      const j = await nominatim(q);
+      if (j[0]) return { lat: +j[0].lat, lon: +j[0].lon };
+    } catch { throw new Error('주소 검색 서비스에 연결하지 못했어요. 잠시 후 다시 시도해 주세요.'); }
+  }
+  throw new Error('주소를 찾지 못했어요. 도로명주소로 다시 입력해 주세요.');
+}
+function straightKm(a, b) {
+  const t = x => x * Math.PI / 180, dLat = t(b.lat - a.lat), dLon = t(b.lon - a.lon);
+  const h = Math.sin(dLat / 2) ** 2 + Math.cos(t(a.lat)) * Math.cos(t(b.lat)) * Math.sin(dLon / 2) ** 2;
+  return 12742 * Math.asin(Math.sqrt(h));
+}
+async function distanceKm(from, to) {
+  try { // 자동차 도로 기준
+    const r = await fetch(`https://router.project-osrm.org/route/v1/driving/${from.lon},${from.lat};${to.lon},${to.lat}?overview=false`);
+    const j = await r.json();
+    if (j.routes?.[0]) return { km: Math.round(j.routes[0].distance / 100) / 10, k: '도로' };
+  } catch {}
+  return { km: Math.round(straightKm(from, to) * 10) / 10, k: '직선' };
+}
+
+// 현재 기준 위치에 대해 거리가 없는 예식장을 차례로 계산 (옛 데이터는 주소로 좌표도 찾음)
+let job = 0;
+async function ensureDistances() {
+  const my = ++job, oid = cur, org = curOrigin();
+  const todo = halls.filter(h => (h.lat == null && isUrl(h.addr) === false && h.addr && !h.geoFail) || (h.lat != null && !h.dists?.[oid]));
+  let n = 0;
+  for (const h of todo) {
+    if (my !== job) return;
+    busy = `거리 계산 중 (${++n}/${todo.length})`; render();
+    try {
+      if (h.lat == null) { const g = await geocode(h.addr); h.lat = g.lat; h.lon = g.lon; }
+      (h.dists ??= {})[oid] = await distanceKm(org, h);
+    } catch { if (h.lat == null) h.geoFail = true; }
+    save();
+  }
+  if (my === job) { busy = ''; render(); }
+}
+
+// ───────── 목록 ─────────
+function visible() {
+  const q = $('q').value.trim().toLowerCase();
+  const mp = parseFloat($('maxPrice').value);
+  const md = parseFloat($('maxDist').value);
+  const likedOnly = $('liked').value === '1';
+  let r = halls.filter(h => {
+    const d = distFor(h);
+    return (!q || (h.name + ' ' + h.memo + ' ' + h.addr).toLowerCase().includes(q)) &&
+      (isNaN(mp) || total(h) <= mp) &&
+      (isNaN(md) || (d != null && d <= md)) &&
+      (!likedOnly || h.liked);
+  });
+  // 거리 미확인 항목은 거리순(가까운순·먼순 모두)에서 맨 뒤로
+  const near = h => distFor(h) ?? Infinity;
+  const far = h => distFor(h) ?? -1;
+  const by = {
+    cheap: (a, b) => total(a) - total(b),
+    expensive: (a, b) => total(b) - total(a),
+    near: (a, b) => near(a) - near(b) || total(a) - total(b),
+    far: (a, b) => far(b) - far(a) || total(a) - total(b),
+    recent: (a, b) => b.created - a.created,
+  }[sort];
+  return r.sort(by);
+}
+
+function dirUrl(h) {
+  if (h.lat == null) return isUrl(h.addr) ? h.addr : 'https://map.naver.com/p/search/' + encodeURIComponent(h.addr || h.name);
+  const o = curOrigin(), nm = s => encodeURIComponent(s.replace(/,/g, ' '));
+  return `https://map.naver.com/p/directions/${o.lon},${o.lat},${nm(o.name)}/${h.lon},${h.lat},${nm(h.name)}/-/car`;
+}
+function distText(h) {
+  const d = h.dists?.[cur], km = distFor(h);
+  const pin = icon('pin') + ' ';
+  if (km != null) return `${pin}${esc(curOrigin().name)}에서 ${km}km${d?.k === '직선' ? ' (직선)' : ''}`;
+  return pin + (h.lat != null || (h.addr && !h.geoFail && !isUrl(h.addr)) ? '거리 계산 중…' : '거리 미확인');
+}
+
+function render() {
+  const r = visible();
+  const totals = halls.map(h => total(h));
+  const min = Math.min(...totals), max = Math.max(...totals);
+  $('count').textContent = (halls.length ? `${r.length}곳 표시 (전체 ${halls.length}곳)` : '') + (busy ? ` · ${busy}` : '');
+  $('list').innerHTML = r.length ? r.map(h => {
+    const t = total(h);
+    return `
+    <article class="card">
+      <div class="photo">${h.photos?.length
+        ? `<button class="photobtn" data-id="${h.id}" data-act="view" aria-label="${esc(h.name)} 사진 크게 보기"><img src="${h.photos[0]}" alt=""></button>` + (h.photos.length > 1 ? `<span class="n">${h.photos.length}장</span>` : '')
+        : '사진 없음'}</div>
+      <div class="body">
+        <div class="namerow">
+          <div class="name">${esc(h.name)}</div>
+          <button class="starbtn${h.liked ? ' on' : ''}" data-id="${h.id}" data-act="like" aria-pressed="${!!h.liked}" aria-label="관심">${icon('star', h.liked ? 'on' : '')}</button>
+        </div>
+        <div class="price">${fmtPrice(t)}${halls.length > 1 && t === min ? '<span class="badge">최저가</span>' : ''}${halls.length > 1 && t === max && max !== min ? '<span class="badge">최고가</span>' : ''}</div>
+        ${h.meal && h.guests ? `<div class="meta">대관료 ${fmtPrice(h.price)} + 식대 ${h.meal}만×${h.guests}명</div>` : ''}
+        ${h.extras?.length ? `<ul class="ex">${h.extras.map(e => `<li>${esc(e.label)}: ${fmtPrice(total(h, e.price))}</li>`).join('')}</ul>` : ''}
+        <div class="meta">${distText(h)}</div>
+        ${h.addr ? `<div class="meta">${isUrl(h.addr) ? `<a href="${esc(h.addr)}" target="_blank" rel="noopener">지도 링크</a>` : esc(h.addr)}</div>` : ''}
+        ${h.memo ? `<div class="memo">${esc(h.memo)}</div>` : ''}
+      </div>
+      <div class="actions">
+        <a class="btn wide" href="${esc(dirUrl(h))}" target="_blank" rel="noopener">${icon('nav')} 길찾기</a>
+        <button class="btn" data-id="${h.id}" data-act="edit">수정</button>
+        <button class="btn danger" data-id="${h.id}" data-act="del">삭제</button>
+      </div>
+    </article>`;
+  }).join('')
+    : `<div class="empty">${halls.length ? '조건에 맞는 예식장이 없어요.' : '아직 등록된 예식장이 없어요.<br><button class="btn primary" data-act="add">' + icon('plus') + ' 예식장 추가</button>'}</div>`;
+}
+
+// ───────── 기준 위치 ─────────
+function renderOrigins() {
+  $('origin').innerHTML = O.list.map(o =>
+    `<option value="${esc(o.id)}"${o.id === cur ? ' selected' : ''}>${esc(o.name)}${o.id === O.defId ? ' ★기본' : ''}</option>`).join('');
+  $('olist').innerHTML = O.list.map(o => `
+    <div class="orow">
+      <div><b>${esc(o.name)}</b>${o.id === O.defId ? ' <span class="badge">기본</span>' : ''}${o.id === cur ? ' <span class="badge">사용 중</span>' : ''}
+        <div class="meta">${esc(o.addr)}</div></div>
+      <div class="oact">
+        <button class="btn" data-oid="${esc(o.id)}" data-oact="use">선택</button>
+        <button class="btn" data-oid="${esc(o.id)}" data-oact="edit">수정</button>
+        ${o.id === O.defId ? '' : `<button class="btn" data-oid="${esc(o.id)}" data-oact="def">기본으로 설정</button>`}
+        ${O.list.length > 1 ? `<button class="btn danger" data-oid="${esc(o.id)}" data-oact="del">삭제</button>` : ''}
+      </div>
+    </div>`).join('');
+}
+// 위치를 바꾸면 가까운순으로 정렬해서 보여준다
+function setOrigin(id) {
+  cur = id; sort = 'near'; $('sort').value = 'near';
+  renderOrigins(); render(); ensureDistances();
+}
+
+// ───────── 사진 / 편집창 ─────────
+// 사진을 가로 1000px 이하 JPEG로 줄여서 저장 공간을 아낀다
+function shrink(file) {
+  return new Promise((ok, fail) => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      const s = Math.min(1, 1000 / img.width);
+      const c = document.createElement('canvas');
+      c.width = Math.round(img.width * s); c.height = Math.round(img.height * s);
+      c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+      URL.revokeObjectURL(url);
+      ok(c.toDataURL('image/jpeg', 0.72));
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); fail(); };
+    img.src = url;
+  });
+}
+
+function drawThumbs() {
+  $('thumbs').innerHTML = draftPhotos.map((p, i) =>
+    `<div class="thumb"><img src="${p}" alt=""><button type="button" data-i="${i}" aria-label="사진 삭제">×</button></div>`).join('');
+}
+function drawExtras() {
+  $('extras').innerHTML = draftExtras.map((e, i) => `
+    <div class="exrow">
+      <input data-i="${i}" data-k="label" value="${esc(e.label)}" placeholder="예: 토요일 12시 / 10월 / 평일" maxlength="40">
+      <input data-i="${i}" data-k="price" type="number" min="0" step="any" inputmode="decimal" value="${esc(e.price)}" placeholder="대관료(만원)">
+      <button type="button" class="x" data-del="${i}" aria-label="삭제">×</button>
+    </div>`).join('');
+}
+function updateTotal() {
+  const f = $('form'), price = parseFloat(f.price.value);
+  if (isNaN(price)) { $('totalHint').textContent = ''; return; }
+  const t = total({ price, meal: parseFloat(f.meal.value) || 0, guests: parseInt(f.guests.value) || 0 });
+  $('totalHint').innerHTML = `${icon('wallet')} 총 예상 ${fmtPrice(t)} (대관료 + 식대×보증인원)`;
+}
+function setHint(el, msg, err, ok) {
+  el.innerHTML = (err ? icon('alert') + ' ' : ok ? icon('check') + ' ' : '') + esc(msg);
+  el.className = 'hint' + (err ? ' err' : ok ? ' ok' : '');
+}
+
+function openEditor(id) {
+  editing = id;
+  const h = halls.find(x => x.id === id);
+  const f = $('form');
+  f.reset();
+  $('dlgTitle').textContent = h ? '예식장 수정' : '예식장 추가';
+  f.name.value = h?.name ?? '';
+  f.addr.value = h?.addr ?? '';
+  f.price.value = h?.price ?? '';
+  f.meal.value = h?.meal ?? '';
+  f.guests.value = h?.guests ?? '';
+  f.memo.value = h?.memo ?? '';
+  draftPhotos = [...(h?.photos ?? [])];
+  draftExtras = (h?.extras ?? []).map(e => ({ ...e }));
+  draftGeo = null; warnedAddr = null;
+  setHint($('distHint'), '');
+  drawThumbs(); drawExtras(); updateTotal();
+  $('dlg').showModal();
+}
+
+// 주소를 입력하고 칸을 벗어나면 거리를 미리 보여준다
+async function previewDistance() {
+  const addr = $('form').addr.value.trim(), hint = $('distHint');
+  if (!addr) { setHint(hint, ''); return; }
+  setHint(hint, '거리 계산 중…');
+  try {
+    const geo = await geocode(addr);
+    draftGeo = { addr, geo };
+    const d = await distanceKm(curOrigin(), geo);
+    if ($('form').addr.value.trim() === addr)
+      setHint(hint, `${curOrigin().name}에서 ${d.km}km (${d.k === '직선' ? '직선거리' : '도로 기준'})`, false, true);
+  } catch (e) { setHint(hint, e.message, true); }
+}
+
+$('addBtn').onclick = () => openEditor(null);
+$('cancel').onclick = () => $('dlg').close();
+$('form').addr.onchange = previewDistance;
+['price', 'meal', 'guests'].forEach(n => $('form')[n].addEventListener('input', updateTotal));
+$('addEx').onclick = () => { draftExtras.push({ label: '', price: '' }); drawExtras(); };
+$('extras').oninput = e => { const { i, k } = e.target.dataset; if (i != null) draftExtras[+i][k] = e.target.value; };
+$('extras').onclick = e => { const i = e.target.dataset.del; if (i != null) { draftExtras.splice(+i, 1); drawExtras(); } };
+$('files').onchange = async e => {
+  for (const f of e.target.files) {
+    try { draftPhotos.push(await shrink(f)); } catch { alert(f.name + ' 파일을 읽을 수 없어요.'); }
+  }
+  e.target.value = '';
+  drawThumbs();
+};
+$('thumbs').onclick = e => {
+  const i = e.target.dataset.i;
+  if (i != null) { draftPhotos.splice(+i, 1); drawThumbs(); }
+};
+
+$('form').onsubmit = async e => {
+  e.preventDefault();
+  const f = $('form'), btn = $('saveBtn'), addr = f.addr.value.trim();
+  const old = halls.find(x => x.id === editing);
+  btn.disabled = true;
+  try {
+    // 좌표: 주소가 그대로면 기존 값, 아니면 미리 찾은 값, 없으면 새로 검색
+    let geo = null;
+    const keep = old && old.addr === addr && old.lat != null;
+    if (keep) geo = { lat: old.lat, lon: old.lon };
+    else if (draftGeo?.addr === addr) geo = draftGeo.geo;
+    else if (warnedAddr !== addr) {
+      setHint($('distHint'), '주소로 위치를 찾는 중…');
+      try { geo = await geocode(addr); }
+      catch (err) {
+        warnedAddr = addr;
+        setHint($('distHint'), err.message + ' 그대로 저장하려면 저장을 다시 눌러 주세요(거리는 표시되지 않아요).', true);
+        return;
+      }
+    }
+    const data = {
+      name: f.name.value.trim(),
+      addr,
+      price: Number(f.price.value),
+      meal: f.meal.value === '' ? null : Number(f.meal.value),
+      guests: f.guests.value === '' ? null : Math.round(Number(f.guests.value)),
+      extras: draftExtras.filter(x => x.label.trim() && x.price !== '' && !isNaN(x.price)).map(x => ({ label: x.label.trim(), price: Number(x.price) })),
+      memo: f.memo.value.trim(),
+      photos: draftPhotos,
+      lat: geo?.lat ?? null, lon: geo?.lon ?? null,
+      dists: keep ? old.dists ?? {} : {},
+      geoFail: !geo,
+      distance: null,
+    };
+    if (geo && !data.dists[cur]) data.dists[cur] = await distanceKm(curOrigin(), geo);
+    if (old) Object.assign(old, data);
+    else halls.push({ id: String(Date.now()), created: Date.now(), liked: false, ...data });
+    save(); render();
+    $('dlg').close();
+    ensureDistances();
+  } finally { btn.disabled = false; }
+};
+
+$('list').onclick = e => {
+  const t = e.target.closest('[data-act]');
+  if (!t) return;
+  if (t.dataset.act === 'add') return openEditor(null);
+  const h = halls.find(x => x.id === t.dataset.id);
+  if (t.dataset.act === 'edit') openEditor(h.id);
+  else if (t.dataset.act === 'like') { h.liked = !h.liked; save(); render(); }
+  else if (t.dataset.act === 'del') {
+    if (confirm(`“${h.name}”을(를) 삭제할까요?`)) { halls = halls.filter(x => x !== h); save(); render(); }
+  } else if (t.dataset.act === 'view') { $('lbImg').src = h.photos[0]; $('lb').showModal(); }
+};
+$('lb').onclick = () => $('lb').close();
+
+// ───────── 기준 위치 관리창 ─────────
+$('originBtn').onclick = () => { resetOForm(); $('kkey').value = kakaoKey(); setHint($('oHint'), ''); renderOrigins(); $('odlg').showModal(); };
+$('kkey').onchange = e => { try { localStorage.setItem('wedding-kakao-key', e.target.value.trim()); } catch {} };
+$('oclose').onclick = () => $('odlg').close();
+$('origin').onchange = e => setOrigin(e.target.value);
+$('olist').onclick = e => {
+  const b = e.target.closest('[data-oact]');
+  if (!b) return;
+  const id = b.dataset.oid, o = O.list.find(x => x.id === id), act = b.dataset.oact;
+  if (act === 'use') { setOrigin(id); $('odlg').close(); }
+  else if (act === 'edit') {
+    const f = $('oform');
+    editingO = id; f.oname.value = o.name; f.oaddr.value = o.addr;
+    $('oTitle').textContent = `위치 수정 — ${o.name}`; $('oadd').textContent = '저장'; $('oCancelEdit').hidden = false;
+    setHint($('oHint'), ''); f.oname.focus();
+  }
+  else if (act === 'def') { O.defId = id; saveO(); setOrigin(id); }
+  else if (act === 'del' && confirm(`“${o.name}” 위치를 삭제할까요?`)) {
+    O.list = O.list.filter(x => x.id !== id);
+    if (O.defId === id) O.defId = O.list[0].id;
+    saveO();
+    if (cur === id) setOrigin(O.defId); else renderOrigins();
+  }
+};
+let editingO = null; // 수정 중인 위치 id (없으면 신규 추가)
+function resetOForm() {
+  editingO = null; $('oform').reset();
+  $('oTitle').textContent = '새 위치 추가'; $('oadd').textContent = '추가'; $('oCancelEdit').hidden = true;
+}
+$('oCancelEdit').onclick = () => { resetOForm(); setHint($('oHint'), ''); };
+$('oform').onsubmit = async e => {
+  e.preventDefault();
+  const f = $('oform'), btn = $('oadd'), name = f.oname.value.trim(), addr = f.oaddr.value.trim();
+  const old = O.list.find(x => x.id === editingO);
+  btn.disabled = true; setHint($('oHint'), '위치를 찾는 중…');
+  try {
+    if (old) {
+      const moved = old.addr !== addr;
+      if (moved) { const g = await geocode(addr); old.lat = g.lat; old.lon = g.lon; halls.forEach(h => { if (h.dists) delete h.dists[old.id]; }); save(); }
+      old.name = name; old.addr = addr; saveO(); resetOForm();
+      setHint($('oHint'), `“${name}” 수정됨`, false, true);
+      if (cur === old.id) setOrigin(old.id); else renderOrigins();
+    } else {
+      const g = await geocode(addr);
+      const o = { id: 'o' + Date.now(), name, addr, lat: g.lat, lon: g.lon };
+      O.list.push(o); saveO(); f.reset();
+      setHint($('oHint'), `“${o.name}” 추가됨 — 지금부터 이 위치 기준이에요.`, false, true);
+      setOrigin(o.id);
+    }
+  } catch (err) { setHint($('oHint'), err.message, true); }
+  finally { btn.disabled = false; }
+};
+
+// ───────── 비교표 ─────────
+$('cmpBtn').onclick = () => {
+  const L = halls.filter(h => h.liked).sort((a, b) => total(a) - total(b));
+  $('cmpBody').innerHTML = L.length < 2
+    ? '<div class="empty">비교하려면 “관심” 표시한 예식장이 2곳 이상 필요해요.</div>'
+    : (() => {
+      const best = (vals, fn) => { const v = vals.filter(x => x != null); return v.length > 1 ? fn(...v) : null; };
+      const totals = L.map(h => total(h)), dists = L.map(distFor);
+      const bt = best(totals, Math.min), bd = best(dists, Math.min);
+      const row = (label, cell) => `<tr><th class="rl">${label}</th>${L.map(cell).join('')}</tr>`;
+      return `<div class="tblwrap"><table>
+        <tr><th class="rl"></th>${L.map(h => `<th>${esc(h.name)}</th>`).join('')}</tr>
+        ${row('사진', h => `<td>${h.photos?.[0] ? `<img src="${h.photos[0]}" alt="">` : '-'}</td>`)}
+        ${row('총액', h => `<td class="${total(h) === bt ? 'best' : ''}">${fmtPrice(total(h))}</td>`)}
+        ${row('대관료', h => `<td>${fmtPrice(h.price)}</td>`)}
+        ${row('식대 1인', h => `<td>${h.meal ? h.meal + '만원' : '-'}</td>`)}
+        ${row('보증인원', h => `<td>${h.guests ? h.guests + '명' : '-'}</td>`)}
+        ${row('요금표', h => `<td>${h.extras?.length ? h.extras.map(x => `${esc(x.label)}: ${fmtPrice(total(h, x.price))}`).join('<br>') : '-'}</td>`)}
+        ${row('거리', h => { const d = distFor(h); return `<td class="${d != null && d === bd ? 'best' : ''}">${d != null ? d + 'km' : '-'}</td>`; })}
+        ${row('주소', h => `<td>${isUrl(h.addr) ? `<a href="${esc(h.addr)}" target="_blank" rel="noopener">지도 링크</a>` : esc(h.addr || '-')}</td>`)}
+        ${row('메모', h => `<td>${esc(h.memo || '-')}</td>`)}
+      </table></div><div class="hint" style="margin-top:6px">거리는 “${esc(curOrigin().name)}” 기준 · 강조 표시는 최저 총액/가장 가까운 곳</div>`;
+    })();
+  $('cmp').showModal();
+};
+$('cmpClose').onclick = () => $('cmp').close();
+
+$('sort').onchange = e => { sort = e.target.value; render(); };
+['q', 'maxPrice', 'maxDist', 'liked'].forEach(id => $(id).addEventListener('input', render));
+
+$('sort').value = sort;
+renderOrigins();
+render();
+ensureDistances();
+</script>
+</body>
+</html>
