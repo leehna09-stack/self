@@ -10,8 +10,7 @@
   <filter id="blur6"><feGaussianBlur stdDeviation="6"/></filter>
   <filter id="sh"><feDropShadow dx="0" dy="12" stdDeviation="10" flood-color="#a8284e" flood-opacity=".35"/></filter>
 </defs>
-<rect width="512" height="512" fill="url(#bg)"/>
-<circle cx="120" cy="90" r="120" fill="#fff" opacity=".45" filter="url(#blur14)"/>
+<rect width="512" height="512" fill="#ffe0d3"/>
 <g transform="translate(256 266) scale(1.1) translate(-250 -270)"><ellipse cx="256" cy="436" rx="170" ry="26" fill="#b0324f" opacity=".35" filter="url(#blur14)"/>
 <!-- coin entering slot -->
 <g filter="url(#sh)"><ellipse cx="262" cy="150" rx="44" ry="50" fill="url(#gold)" transform="rotate(14 262 150)"/>

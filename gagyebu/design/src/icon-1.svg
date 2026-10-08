@@ -17,10 +17,7 @@
     <ellipse cx="0" cy="-3" rx="94" ry="29" fill="none" stroke="#c98310" stroke-opacity=".5" stroke-width="3"/>
   </g>
 </defs>
-<rect width="512" height="512" fill="url(#bg)"/>
-<rect width="512" height="512" fill="url(#vig)"/>
-<ellipse cx="190" cy="40" rx="330" ry="190" fill="url(#gloss)" opacity=".7"/>
-<circle cx="400" cy="120" r="70" fill="#9fd0ff" opacity=".28" filter="url(#blur18)"/>
+<rect width="512" height="512" fill="#2f6bff"/>
 <g transform="translate(256 262) scale(1.22) translate(-256 -300)"><ellipse cx="256" cy="418" rx="150" ry="30" fill="#0a1252" opacity=".55" filter="url(#blur18)"/>
 <g filter="url(#sh)">
   <use href="#coin" transform="translate(256 346)"/>

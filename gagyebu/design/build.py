@@ -10,9 +10,8 @@ html0 = (ROOT / 'index.html').read_text(encoding='utf-8')
 common = (SRC / 'common.css').read_text(encoding='utf-8')
 
 THEMES = {
-    1: dict(name='Glass Blue', scheme='light', theme='#2f6bff', bgc='#edf2fc'),
-    2: dict(name='Clay Rose', scheme='light', theme='#e8587a', bgc='#fbf0ea'),
-    3: dict(name='Midnight Neon', scheme='dark', theme='#0c0e24', bgc='#080a1c'),
+    1: dict(name='Soft Blue', scheme='light', theme='#2563eb', bgc='#ffffff'),
+    2: dict(name='Clay Rose', scheme='light', theme='#d6406a', bgc='#ffffff'),
 }
 
 def sub1(s, old, new):

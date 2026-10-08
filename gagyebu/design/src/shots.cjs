@@ -10,7 +10,7 @@ const srv = http.createServer((q, r) => {
 (async () => {
   const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' });
   const out = path.join(__dirname, 'shots'); fs.mkdirSync(out, { recursive: true });
-  for (const n of [1, 2, 3]) {
+  for (const n of [1, 2]) {
     const ctx = await b.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true });
     await ctx.addInitScript(() => {
       try {

@@ -1,24 +1,21 @@
-/* 시안 1 · Glass Blue — 투명 유리 + 푸른 그라데이션 (iOS 17 라이트 느낌) */
+/* 시안 1 · Soft Blue — 흰 배경 + 단색 파랑, 그림자로만 입체감 (그라데이션 없음) */
 :root {
-  --bg: #edf2fc;
-  --bg-image: radial-gradient(60% 38% at 6% 0%, rgba(110,170,255,.5), transparent 70%), radial-gradient(52% 34% at 100% 16%, rgba(185,150,255,.4), transparent 70%), radial-gradient(60% 40% at 0% 100%, rgba(100,225,212,.32), transparent 70%);
-  --surface: rgba(255,255,255,.74); --text: #0f182c; --muted: #5a6783; --line: rgba(30,50,110,.1);
-  --primary: #2f6bff; --primary-soft: #d6e3ff; --accent: #12b5a4; --mid: #9aa6c0; --red: #e5484d; --green: #12945a; --radius: 26px;
-  --card-border: rgba(255,255,255,.95); --blur: blur(18px) saturate(160%);
-  --shadow-card: inset 0 1px 0 rgba(255,255,255,.95), 0 12px 30px rgba(40,70,160,.12), 0 2px 6px rgba(40,70,160,.06);
-  --shadow-pop: 0 20px 44px rgba(30,50,120,.24), 0 2px 8px rgba(30,50,120,.1), inset 0 1px 0 rgba(255,255,255,.9);
-  --grad: linear-gradient(160deg,#6eaaff 0%,#2f6bff 55%,#2b45e0 100%);
-  --hero: linear-gradient(150deg,#6eaaff 0%,#2f6bff 46%,#3b3fd9 100%);
-  --shadow-hero: 0 24px 44px -10px rgba(47,107,255,.55), inset 0 1.5px 0 rgba(255,255,255,.5);
-  --glow-a: rgba(47,107,255,.36); --glow-b: rgba(18,181,164,.36);
-  --seg-bg: rgba(60,80,140,.11); --seg-thumb: #fff; --seg-shadow: 0 2px 7px rgba(30,50,100,.2), 0 0 0 .5px rgba(30,50,100,.06);
-  --cell: rgba(255,255,255,.72); --cell-shadow: inset 0 1px 0 #fff, 0 4px 10px rgba(40,70,160,.09);
-  --field: rgba(60,80,140,.07); --field-shadow: inset 0 2px 4px rgba(30,50,110,.08); --focus: rgba(47,107,255,.2);
-  --btn-bg: rgba(255,255,255,.92); --btn2-shadow: inset 0 1px 0 #fff, 0 5px 12px rgba(40,70,160,.13);
-  --btn-shadow: inset 0 1.5px 0 rgba(255,255,255,.5), inset 0 -3px 6px rgba(0,0,50,.24), 0 11px 20px var(--glow-a);
-  --chip-a: linear-gradient(160deg,#82b8ff,#2f6bff 60%,#2b45e0); --chip-b: linear-gradient(160deg,#76ecdc,#12b5a4 60%,#0b8f86);
-  --chip-shadow: rgba(40,60,130,.28);
-  --grad-bell: linear-gradient(160deg,#ffcb78,#ff8a3d 60%,#ee5f2a); --grad-nudge: var(--chip-a); --grad-ratio: linear-gradient(160deg,#cbaaff,#8b5cf6 60%,#6a3bd8);
-  --scrim: rgba(14,22,50,.36); --sheet: rgba(250,252,255,.9); --grabber: rgba(60,80,120,.28);
-  --tab-bg: rgba(255,255,255,.74); --track: rgba(60,80,140,.13); --fab-ring: rgba(237,242,252,.95); --toast-bg: rgba(20,28,52,.9);
+  --bg: #ffffff; --bg-image: none;
+  --surface: #ffffff; --text: #0f182c; --muted: #55627e; --line: #e6ebf5;
+  --primary: #2563eb; --primary-soft: #dbe7ff; --accent: #0f9e8e; --mid: #8f9bb5; --red: #d93a40; --green: #11804f; --radius: 24px;
+  --card-border: #e6ebf5; --blur: none;
+  --shadow-card: 0 1px 2px rgba(30,60,130,.06), 0 8px 22px rgba(30,60,130,.09);
+  --shadow-pop: 0 -2px 4px rgba(30,60,130,.05), 0 12px 32px rgba(30,60,130,.2);
+  --grad: #2563eb; --hero: #2563eb;
+  --shadow-hero: 0 16px 28px -8px rgba(37,99,235,.5), inset 0 2px 0 rgba(255,255,255,.35), inset 0 -4px 8px rgba(0,0,60,.18);
+  --glow-a: rgba(37,99,235,.3); --glow-b: rgba(15,158,142,.3);
+  --seg-bg: #eef2f9; --seg-thumb: #ffffff; --seg-shadow: 0 2px 6px rgba(30,50,100,.18), 0 0 0 .5px rgba(30,50,100,.06);
+  --cell: #f4f7fc; --cell-shadow: inset 0 1px 0 #fff, 0 2px 5px rgba(40,70,160,.1);
+  --field: #f2f5fb; --field-shadow: inset 0 2px 3px rgba(30,50,110,.09); --focus: rgba(37,99,235,.2);
+  --btn-bg: #ffffff; --btn2-shadow: 0 0 0 1px #dfe6f3, 0 3px 8px rgba(40,70,160,.1);
+  --btn-shadow: inset 0 2px 0 rgba(255,255,255,.38), inset 0 -4px 6px rgba(0,0,60,.2), 0 8px 14px var(--glow-a);
+  --chip-a: #2563eb; --chip-b: #0f9e8e; --chip-shadow: rgba(40,60,130,.28);
+  --grad-bell: #f08a24; --grad-nudge: #2563eb; --grad-ratio: #7c4ddb;
+  --scrim: rgba(14,22,50,.4); --sheet: #ffffff; --grabber: #cfd6e6;
+  --tab-bg: #ffffff; --track: #e6ebf5; --fab-ring: #ffffff; --toast-bg: #1b2438;
 }

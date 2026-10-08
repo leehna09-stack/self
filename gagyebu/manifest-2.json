@@ -5,8 +5,8 @@
   "start_url": "./design-2.html",
   "scope": "./",
   "display": "standalone",
-  "background_color": "#fbf0ea",
-  "theme_color": "#e8587a",
+  "background_color": "#ffffff",
+  "theme_color": "#d6406a",
   "lang": "ko",
   "icons": [
     {
