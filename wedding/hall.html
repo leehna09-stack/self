@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="color-scheme" content="light">
+<meta name="theme-color" content="#f2f2f7">
 <title>웨딩홀 비교</title>
 <style>
 :root {
@@ -137,6 +138,21 @@ h1 .i { color: var(--accent); width: 1.2em; height: 1.2em; }
 .empty .btn { margin-top: 12px; }
 td { font-variant-numeric: tabular-nums; }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; scroll-behavior: auto !important; } }
+</style>
+<style>
+/* iOS Light 톤 (index.html과 통일) */
+:root { --bg:#f2f2f7; --text:#1c1c1e; --muted:#8a8a8e; --line:rgba(60,60,67,.14); --accent:#ff2d55; --accent-soft:#fff0f3; --radius:22px; }
+body { font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Apple SD Gothic Neo","Noto Sans KR",Roboto,"Malgun Gothic",sans-serif; }
+h1 { font-size:30px; font-weight:800; letter-spacing:-.035em; }
+.card { border:0; box-shadow:0 1px 2px rgba(0,0,0,.05),0 10px 28px rgba(60,60,90,.07); }
+.btn { border:0; box-shadow:0 1px 2px rgba(0,0,0,.08),inset 0 0 0 .5px rgba(60,60,67,.15); font-weight:600; border-radius:12px; }
+@media (hover:hover){ .btn:hover:not(:disabled){ background:#fff; filter:brightness(1.04); } .btn.primary:hover:not(:disabled){ background:linear-gradient(180deg,#ff6f8e,#ff2d55); } }
+.btn:active:not(:disabled){ transform:scale(.97); }
+.btn.primary { background:linear-gradient(180deg,#ff6f8e,#ff2d55); border:0; box-shadow:inset 0 1px 0 rgba(255,255,255,.45),inset 0 -2px 0 rgba(0,0,0,.12),0 6px 14px rgba(255,45,85,.32); text-shadow:0 1px 1px rgba(0,0,0,.18); }
+.starbtn.on { border-color:#f59e0b; }
+.sortsel,.filters input,.filters select,.searchrow input,.originrow select { border:0; box-shadow:inset 0 0 0 .5px rgba(60,60,67,.18); }
+dialog { border-radius:28px; }
+.photo .n { backdrop-filter:blur(6px); }
 </style>
 </head>
 <body>
