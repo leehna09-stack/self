@@ -4,12 +4,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="color-scheme" content="light">
-<meta name="theme-color" content="#2b68e0">
+<meta name="theme-color" content="#2563eb">
 <link rel="manifest" href="manifest.json">
-<link rel="icon" href="icon-192.png">
-<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="icon" href="icons/d1-192.png">
+<link rel="apple-touch-icon" href="icons/d1-180.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="알뜰살뜰">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>알뜰살뜰 가계부</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -239,6 +240,220 @@ input[type="date"], input[type="number"], input[type="text"] {
 #toast button:focus-visible { outline-color: #fff; }
 
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; scroll-behavior: auto !important; } }
+/* ===== 시안 1: Soft Blue ===== */
+/* 시안 1 · Soft Blue — 흰 배경 + 단색 파랑, 그림자로만 입체감 (그라데이션 없음) */
+:root {
+  --bg: #ffffff; --bg-image: none;
+  --surface: #ffffff; --text: #0f182c; --muted: #55627e; --line: #e6ebf5;
+  --primary: #2563eb; --primary-soft: #dbe7ff; --accent: #0f9e8e; --mid: #8f9bb5; --red: #d93a40; --green: #11804f; --radius: 24px;
+  --card-border: #e6ebf5; --blur: none;
+  --shadow-card: 0 1px 2px rgba(30,60,130,.06), 0 8px 22px rgba(30,60,130,.09);
+  --shadow-pop: 0 -2px 4px rgba(30,60,130,.05), 0 12px 32px rgba(30,60,130,.2);
+  --grad: #2563eb; --hero: #2563eb;
+  --shadow-hero: 0 16px 28px -8px rgba(37,99,235,.5), inset 0 2px 0 rgba(255,255,255,.35), inset 0 -4px 8px rgba(0,0,60,.18);
+  --glow-a: rgba(37,99,235,.3); --glow-b: rgba(15,158,142,.3);
+  --seg-bg: #eef2f9; --seg-thumb: #ffffff; --seg-shadow: 0 2px 6px rgba(30,50,100,.18), 0 0 0 .5px rgba(30,50,100,.06);
+  --cell: #f4f7fc; --cell-shadow: inset 0 1px 0 #fff, 0 2px 5px rgba(40,70,160,.1);
+  --field: #f2f5fb; --field-shadow: inset 0 2px 3px rgba(30,50,110,.09); --focus: rgba(37,99,235,.2);
+  --btn-bg: #ffffff; --btn2-shadow: 0 0 0 1px #dfe6f3, 0 3px 8px rgba(40,70,160,.1);
+  --btn-shadow: inset 0 2px 0 rgba(255,255,255,.38), inset 0 -4px 6px rgba(0,0,60,.2), 0 8px 14px var(--glow-a);
+  --chip-a: #2563eb; --chip-b: #0f9e8e; --chip-shadow: rgba(40,60,130,.28);
+  --grad-bell: #f08a24; --grad-nudge: #2563eb; --grad-ratio: #7c4ddb;
+  --scrim: rgba(14,22,50,.4); --sheet: #ffffff; --grabber: #cfd6e6;
+  --tab-bg: #ffffff; --track: #e6ebf5; --fab-ring: #ffffff; --toast-bg: #1b2438;
+}
+
+/* ============================================================
+  [시안 공통] iOS 앱 스타일 고도화
+  - 색·그림자 값은 시안별 파일(theme-N.css)의 :root 변수에서 가져와요.
+============================================================= */
+html { background: var(--bg); scroll-behavior: smooth; }
+body {
+  background: var(--bg);
+  font-size: 14px; -webkit-font-smoothing: antialiased; letter-spacing: -0.015em; min-height: 100vh;
+  -webkit-tap-highlight-color: transparent;
+}
+.wrap { padding: calc(14px + env(safe-area-inset-top)) 16px calc(124px + env(safe-area-inset-bottom)); }
+button { -webkit-tap-highlight-color: transparent; }
+
+/* 위쪽: 사용자 전환(세그먼트) + 아이콘 버튼 + 큰 제목 */
+.top { display: block; margin-bottom: 14px; }
+.navrow { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 18px; }
+.navicons { display: flex; gap: 10px; }
+.hero-title { display: flex; align-items: center; gap: 14px; }
+.brand { width: 62px; height: 62px; border-radius: 22.5%; flex: none; box-shadow: 0 12px 22px var(--glow-a), 0 0 0 1px rgba(255,255,255,.28) inset; }
+.eyebrow { font-size: 12px; font-weight: 600; color: var(--muted); margin-bottom: 2px; letter-spacing: 0; }
+h1 { font-family: "Pretendard Variable", Pretendard, system-ui, sans-serif; font-size: 28px; font-weight: 800; letter-spacing: -0.04em; line-height: 1.15; color: var(--text); white-space: nowrap; }
+
+.who, .tabs { display: flex; gap: 2px; padding: 3px; background: var(--seg-bg); border-radius: 13px; border-bottom: 0; margin-bottom: 0; }
+.who button, .tabs button {
+  flex: 1; min-height: 34px; padding: 0 16px; margin: 0; border: 0; border-radius: 10px; background: transparent;
+  font-size: 14px; font-weight: 600; letter-spacing: -0.02em; color: var(--muted); transition: background-color .2s, color .2s, box-shadow .2s;
+}
+.who button[aria-selected="true"], .tabs button[aria-selected="true"] {
+  background: var(--seg-thumb); color: var(--text); font-weight: 700; border-bottom-color: transparent; box-shadow: var(--seg-shadow);
+}
+.tabs { margin: 0 0 6px; }
+
+/* 입체 아이콘 버튼 (알림·요청·비율) */
+.navicons .icon-btn {
+  position: relative; width: 42px; height: 42px; border-radius: 15px; color: #fff;
+  box-shadow: inset 0 1.5px 0 rgba(255,255,255,.6), inset 0 -3px 5px rgba(0,0,0,.2), 0 8px 14px var(--chip-shadow);
+  transition: transform .15s;
+}
+.navicons .icon-btn:active { opacity: 1; transform: translateY(1px) scale(.94); }
+.navicons .icon-btn svg { width: 20px; height: 20px; stroke: #fff; stroke-width: 2.1; filter: drop-shadow(0 1px 1px rgba(0,0,0,.25)); }
+.navicons .bell { background: var(--grad-bell); }
+.navicons .nudge { background: var(--grad-nudge); }
+.navicons .ratiobtn { background: var(--grad-ratio); }
+.navicons .badge { top: -5px; right: -5px; border: 2px solid var(--bg); box-shadow: 0 2px 6px rgba(214,64,59,.5); }
+
+/* 카드 */
+.card {
+  background: var(--surface); border: 1px solid var(--card-border); border-radius: var(--radius); padding: 16px; margin-bottom: 14px;
+  box-shadow: var(--shadow-card); 
+}
+@keyframes rise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+main > .card, main > section { animation: rise .55s cubic-bezier(.2,.8,.25,1) both; }
+main > :nth-child(2) { animation-delay: .06s; } main > :nth-child(3) { animation-delay: .12s; } main > :nth-child(4) { animation-delay: .18s; }
+
+/* 히어로(이달 합계) */
+#sec-home { background: var(--hero); color: #fff; border: 0; box-shadow: var(--shadow-hero); position: relative; overflow: hidden; padding: 12px 18px 20px; }
+#sec-home > * { position: relative; z-index: 1; }
+#sec-home .icon-btn svg { stroke: #fff; }
+#sec-home h2 { color: #fff; font-size: 16px; font-weight: 700; margin: 0; }
+#sec-home .monthnav { margin-bottom: 10px; }
+#sec-home .label, #sec-home .sumgrid .sep, #sec-home .goalamt, #sec-home .empty, #sec-home .cats { color: rgba(255,255,255,.84); }
+#sec-home .link { color: #fff; text-decoration-color: rgba(255,255,255,.6); font-weight: 600; }
+#sec-home .sumgrid { column-gap: 10px; }
+#sec-home .big { font-size: 27px; font-weight: 800; letter-spacing: -0.04em; margin-bottom: 14px; text-shadow: 0 2px 10px rgba(0,0,0,.18); }
+#sec-home .big.goalamt { font-size: 17px; font-weight: 700; align-self: end; margin-bottom: 15px; text-shadow: none; }
+#sec-home .big.sep { font-size: 18px; font-weight: 500; align-self: end; margin-bottom: 14px; }
+#sec-home .over { display: inline-block; margin: 12px 0 0; padding: 7px 12px; border-radius: 12px; background: rgba(0,0,0,.22); color: #fff; font-weight: 700; box-shadow: inset 0 1px 0 rgba(255,255,255,.25); }
+#sec-home .cats { margin-top: 12px; font-size: 12px; }
+#sec-home .empty { padding: 4px 0 0; }
+.prog { height: 14px; border-radius: 99px; background: rgba(0,0,0,.2); box-shadow: inset 0 3px 5px rgba(0,0,0,.28); margin-bottom: 4px; padding: 2px; }
+.prog > div { border-radius: 99px; background: #fff; box-shadow: 0 2px 6px rgba(0,0,0,.18), inset 0 -2px 2px rgba(0,0,0,.08); transition: width .6s cubic-bezier(.2,.8,.25,1); }
+.prog.over > div { background: #ffd0cc; box-shadow: 0 2px 6px rgba(0,0,0,.18); }
+
+.monthnav { gap: 6px; }
+.monthnav .icon-btn { width: 44px; height: 44px; border-radius: 50%; background: rgba(255,255,255,.22); box-shadow: inset 0 1px 0 rgba(255,255,255,.4); }
+.monthnav .icon-btn svg { width: 18px; height: 18px; stroke-width: 2.4; }
+.monthnav h2 { min-width: 124px; text-align: center; }
+
+/* 달력 */
+.cal { padding: 16px 10px 12px; }
+.cal .hint { color: var(--muted); font-weight: 600; font-size: 12px; margin-bottom: 14px; }
+.calgrid { gap: 6px; }
+.calhead { font-weight: 700; font-size: 11px; padding: 2px 0 6px; }
+.calhead:nth-child(1) { color: var(--red); } .calhead:nth-child(7) { color: var(--primary); }
+.day { min-height: 56px; border: 0; border-radius: 15px; background: var(--cell); box-shadow: var(--cell-shadow); transition: transform .15s, box-shadow .15s; }
+.day:active { transform: scale(.92); background: var(--cell); }
+.day .dn { font-weight: 600; font-size: 14px; }
+.day .da { color: var(--muted); font-weight: 600; font-size: 10.5px; }
+.day .da.over { color: var(--red); }
+.day.today { border: 0; padding: 6px 0 4px; background: var(--grad); color: #fff; box-shadow: var(--btn-shadow); }
+.day.today .dn { font-weight: 800; }
+.day.today .da, .day.today .da.over { color: rgba(255,255,255,.92); }
+.daypad { min-height: 56px; }
+
+/* 내역 */
+.listhead { margin: 20px 4px 10px; }
+.listhead h2 { font-size: 20px; font-weight: 800; letter-spacing: -0.03em; }
+.dategroup { margin-top: 14px; }
+.dategroup h3 { padding: 0 6px 8px; font-size: 12px; font-weight: 700; color: var(--muted); }
+.items { border: 1px solid var(--card-border); border-radius: 22px; background: var(--surface); box-shadow: var(--shadow-card);  }
+.item, .item.who-a, .item.who-b { padding: 11px 8px 11px 12px; background: transparent; border-bottom: 1px solid var(--line); }
+.item:last-child { border-bottom: 0; }
+.item .row { justify-content: flex-start; gap: 12px; }
+.item .main { flex: 1; }
+.item .memo { font-weight: 700; font-size: 14px; }
+.item .meta { font-size: 11.5px; }
+.item .amt { font-weight: 800; font-size: 14.5px; letter-spacing: -0.03em; }
+.cico { width: 40px; height: 40px; border-radius: 14px; display: grid; place-items: center; flex: none; }
+.cico.ca { background: var(--chip-a); box-shadow: inset 0 1.5px 0 rgba(255,255,255,.55), inset 0 -3px 5px rgba(0,0,0,.18), 0 6px 12px var(--glow-a); }
+.cico.cb { background: var(--chip-b); box-shadow: inset 0 1.5px 0 rgba(255,255,255,.55), inset 0 -3px 5px rgba(0,0,0,.18), 0 6px 12px var(--glow-b); }
+.cico svg { width: 20px; height: 20px; stroke: #fff; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; filter: drop-shadow(0 1px 1px rgba(0,0,0,.22)); }
+.cico svg circle { fill: #fff; stroke: none; }
+.act { border-radius: 10px; }
+.act svg { width: 17px; height: 17px; opacity: .7; }
+
+/* 월별 비교 */
+.cmp li + li { margin-top: 10px; }
+.cmp button { border: 0; border-radius: 18px; background: var(--cell); box-shadow: var(--cell-shadow); padding: 14px; transition: transform .15s; }
+.cmp button:active { transform: scale(.985); }
+.cmp button[aria-current="true"] { border: 0; padding: 14px; box-shadow: 0 0 0 2px var(--primary), var(--cell-shadow); }
+.cmp .mn { font-weight: 800; font-size: 15px; }
+.cmp .bartrack { height: 10px; border-radius: 99px; background: var(--track); box-shadow: inset 0 2px 3px rgba(0,0,0,.14); margin: 10px 0 8px; }
+.cmp .barfill { opacity: 1; border-radius: 99px; background: var(--grad); box-shadow: 0 0 10px var(--glow-a), inset 0 1.5px 0 rgba(255,255,255,.55); }
+#sec-cmp h2 { font-size: 20px; font-weight: 800; letter-spacing: -0.03em; margin-bottom: 12px; }
+
+/* 하단 도구 */
+.foot-actions .icon-btn { width: 46px; height: 46px; border-radius: 16px; background: var(--cell); box-shadow: var(--cell-shadow); }
+.foot-actions .icon-btn svg { width: 20px; height: 20px; }
+
+/* 버튼·입력칸 */
+.btn { min-height: 50px; border: 0; border-radius: 16px; background: var(--btn-bg); color: var(--text); font-weight: 700; font-size: 15px; box-shadow: var(--btn2-shadow); transition: transform .15s; }
+.btn.primary { background: var(--grad); color: #fff; box-shadow: var(--btn-shadow); text-shadow: 0 1px 1px rgba(0,0,0,.18); }
+.btn:active { opacity: 1; transform: translateY(1px) scale(.985); }
+input[type="date"], input[type="number"], input[type="text"] {
+  height: 50px; padding: 0 14px; border: 1.5px solid transparent; border-radius: 15px; background: var(--field); box-shadow: var(--field-shadow); color: var(--text); font-size: 16px; transition: border-color .2s, box-shadow .2s;
+}
+input::placeholder { color: var(--muted); opacity: .7; }
+input:focus, input:focus-visible { outline: 0; border-color: var(--primary); box-shadow: 0 0 0 4px var(--focus); }
+.field > label, .field > legend { font-size: 12px; font-weight: 700; color: var(--muted); margin-bottom: 7px; }
+.seg label { min-height: 48px; border: 0; border-radius: 15px; background: var(--field); box-shadow: var(--field-shadow); color: var(--muted); font-weight: 600; transition: background-color .2s, color .2s; }
+.seg input:checked + label { background: var(--grad); color: #fff; font-weight: 700; box-shadow: var(--btn-shadow); }
+.modal-box h2 { font-size: 20px; font-weight: 800; letter-spacing: -0.03em; margin-bottom: 10px; }
+.confirm-msg { font-size: 16px; }
+.link { text-underline-offset: 3px; }
+
+/* 아래에서 올라오는 시트(팝업) */
+@keyframes sheet { from { transform: translateY(100%); } to { transform: none; } }
+@keyframes fade { from { opacity: 0; } to { opacity: 1; } }
+.modal { place-items: end center; padding: 0; background: var(--scrim); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); animation: fade .25s both; }
+.modal-box {
+  max-width: 560px; max-height: 92vh; border-radius: 30px 30px 0 0; padding: 10px 20px calc(22px + env(safe-area-inset-bottom));
+  background: var(--sheet); box-shadow: 0 -18px 50px rgba(0,0,0,.28), inset 0 1px 0 rgba(255,255,255,.5);
+  
+  animation: sheet .42s cubic-bezier(.2,.9,.25,1) both;
+}
+.modal-box::before { content: ""; display: block; width: 42px; height: 5px; border-radius: 3px; background: var(--grabber); margin: 0 auto 16px; }
+.donut { filter: drop-shadow(0 8px 10px var(--glow-a)); }
+.donut circle { stroke-width: 7; }
+.dot { box-shadow: inset 0 1.5px 1px rgba(255,255,255,.65), 0 3px 5px rgba(0,0,0,.2); }
+.legend li { border-bottom-color: var(--line); }
+
+/* 알림(토스트) */
+#toast { z-index: 30; bottom: calc(98px + env(safe-area-inset-bottom)); border-radius: 18px; background: var(--toast-bg); color: #fff;  box-shadow: 0 14px 30px rgba(0,0,0,.28); font-weight: 600; }
+
+/* 상단 미니 제목(스크롤하면 나타남) */
+.mininav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 4; display: flex; align-items: center; justify-content: center; gap: 8px;
+  height: calc(46px + env(safe-area-inset-top)); padding-top: env(safe-area-inset-top); font-weight: 800; font-size: 15px; letter-spacing: -0.03em;
+  background: var(--tab-bg); 
+  border-bottom: 1px solid var(--line); opacity: 0; transform: translateY(-10px); pointer-events: none; transition: opacity .25s, transform .25s;
+}
+.mininav.show { opacity: 1; transform: none; }
+.mininav img { width: 22px; height: 22px; border-radius: 22%; }
+
+/* 하단 탭바(떠 있는 유리 막대) */
+.tabbar {
+  position: fixed; left: 50%; bottom: calc(12px + env(safe-area-inset-bottom)); transform: translateX(-50%); z-index: 5;
+  width: min(calc(100% - 28px), 420px); height: 68px; display: flex; align-items: center; justify-content: space-around; padding: 0 6px;
+  border-radius: 32px; background: var(--tab-bg); border: 1px solid var(--card-border); box-shadow: var(--shadow-pop);
+  
+}
+.tabbar button { flex: 1; min-height: 56px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; border: 0; background: none; color: var(--muted); font: 700 10.5px/1 "Pretendard Variable", Pretendard, system-ui, sans-serif; letter-spacing: -0.01em; cursor: pointer; touch-action: manipulation; transition: color .2s, transform .15s; }
+.tabbar button:active { transform: scale(.9); }
+.tabbar svg { width: 24px; height: 24px; stroke: currentColor; fill: none; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
+.tabbar button.on { color: var(--primary); }
+.tabbar button.on svg { filter: drop-shadow(0 4px 6px var(--glow-a)); }
+.tabbar .fab { flex: none; width: 60px; height: 60px; min-height: 60px; margin: -30px 6px 0; border-radius: 50%; background: var(--grad); color: #fff; box-shadow: var(--btn-shadow), 0 0 0 6px var(--fab-ring); }
+.tabbar .fab svg { width: 28px; height: 28px; stroke: #fff; stroke-width: 2.6; filter: drop-shadow(0 2px 2px rgba(0,0,0,.25)); }
+
+@media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } html { scroll-behavior: auto; } }
+
 </style>
 </head>
 
@@ -251,26 +466,30 @@ input[type="date"], input[type="number"], input[type="text"] {
 <div class="wrap">
 
   <header class="top">
-    <div class="titlebox">
-      <h1>알뜰살뜰 가계부</h1>
-      <button type="button" class="icon-btn bell" id="bellBtn" aria-label="새 소식">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>
-        <span class="badge" id="bellBadge" hidden></span>
-      </button>
-      <button type="button" class="icon-btn nudge" id="nudgeBtn" aria-label="상대에게 지출 입력요청 보내기">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4 20-7z"/></svg>
-      </button>
-      <button type="button" class="icon-btn ratiobtn" id="ratioBtn" aria-label="한나와 동일의 지출 비율 보기" title="지출 비율 보기">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"/><path d="M22 12A10 10 0 0 0 12 2v10z"/></svg>
-      </button>
+    <div class="navrow">
+      <div class="who" id="who" role="tablist" aria-label="지금 쓰는 사람"></div>
+      <div class="navicons">
+        <button type="button" class="icon-btn bell" id="bellBtn" aria-label="새 소식">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>
+          <span class="badge" id="bellBadge" hidden></span>
+        </button>
+        <button type="button" class="icon-btn nudge" id="nudgeBtn" aria-label="상대에게 지출 입력요청 보내기">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4 20-7z"/></svg>
+        </button>
+        <button type="button" class="icon-btn ratiobtn" id="ratioBtn" aria-label="한나와 동일의 지출 비율 보기" title="지출 비율 보기">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"/><path d="M22 12A10 10 0 0 0 12 2v10z"/></svg>
+        </button>
+      </div>
     </div>
-    <!-- 지금 쓰는 사람 선택: 나중에 로그인으로 바뀌는 부분 -->
-    <div class="who" id="who" role="tablist" aria-label="지금 쓰는 사람"></div>
+    <div class="hero-title">
+      <img class="brand" src="icons/d1-192.png" alt="" width="62" height="62">
+      <div><p class="eyebrow">우리 둘의 살림 기록</p><h1>알뜰살뜰 가계부</h1></div>
+    </div>
   </header>
 
   <main>
     <!-- 이달 합계 · 비율 · 차액 -->
-    <section class="card" aria-labelledby="monthTitle">
+    <section class="card" id="sec-home" aria-labelledby="monthTitle">
       <div class="monthnav">
         <button type="button" class="icon-btn" id="prevMonth" aria-label="이전 달">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg>
@@ -284,13 +503,13 @@ input[type="date"], input[type="number"], input[type="text"] {
     </section>
 
     <!-- 달력: 날짜별 합계가 보이고, 날짜를 누르면 그날 내역만 조회 -->
-    <section class="card cal" aria-label="달력">
+    <section class="card cal" id="sec-cal" aria-label="달력">
       <p class="hint">날짜를 누르면 해당일의 지출을 입력할 수 있어요.</p>
       <div class="calgrid" id="calendar"></div>
     </section>
 
     <!-- 이달 내역 -->
-    <section aria-labelledby="listTitle">
+    <section id="sec-list" aria-labelledby="listTitle">
       <div class="listhead">
         <h2 id="listTitle" style="margin:0"></h2>
       </div>
@@ -299,7 +518,7 @@ input[type="date"], input[type="number"], input[type="text"] {
     </section>
 
     <!-- 월간 비교 -->
-    <section class="card" style="margin-top:12px" aria-labelledby="cmpTitle">
+    <section class="card" id="sec-cmp" aria-labelledby="cmpTitle">
       <h2 id="cmpTitle">월별 비교</h2>
       <ul class="cmp" id="compare"></ul>
     </section>
@@ -476,6 +695,39 @@ input[type="date"], input[type="number"], input[type="text"] {
 </script>
 
 <!-- 알림 영역: 저장했어요 / 삭제했어요 같은 메시지가 여기에 떠요 -->
+<!-- 위쪽 미니 제목 + 아래쪽 탭바 (iOS 앱 느낌) -->
+<div class="mininav" id="miniNav" aria-hidden="true"><img src="icons/d1-192.png" alt="">알뜰살뜰 가계부</div>
+<nav class="tabbar" aria-label="화면 이동">
+  <button type="button" data-go="sec-home" class="on"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10v9.5a1 1 0 0 0 1 1H10v-5h4v5h3.5a1 1 0 0 0 1-1V10"/></svg>홈</button>
+  <button type="button" data-go="sec-cal"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15.5" rx="3"/><path d="M8 3v4M16 3v4M3.5 10h17"/></svg>달력</button>
+  <button type="button" class="fab" id="fabAdd" aria-label="오늘 지출 입력"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>
+  <button type="button" data-go="sec-list"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 6h12M8 12h12M8 18h12"/><circle cx="4" cy="6" r="1"/><circle cx="4" cy="12" r="1"/><circle cx="4" cy="18" r="1"/></svg>내역</button>
+  <button type="button" data-go="sec-cmp"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 20V11M12 20V5M19 20v-7"/></svg>비교</button>
+</nav>
+<script>
+(function () {
+  var bar = document.querySelector('.tabbar'), mini = document.getElementById('miniNav');
+  var btns = [].slice.call(bar.querySelectorAll('[data-go]'));
+  var reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  function go(id) {
+    var el = document.getElementById(id); if (!el) return;
+    var y = id === 'sec-home' ? 0 : el.getBoundingClientRect().top + window.scrollY - 58;
+    window.scrollTo({ top: y, behavior: reduce ? 'auto' : 'smooth' });
+  }
+  btns.forEach(function (b) { b.addEventListener('click', function () { go(b.getAttribute('data-go')); }); });
+  document.getElementById('fabAdd').addEventListener('click', function () {
+    var d = document.querySelector('.day.today') || document.querySelector('.day'); if (d) d.click();
+  });
+  function onScroll() {
+    var line = window.innerHeight * 0.4, cur = btns[0];
+    btns.forEach(function (b) { var el = document.getElementById(b.getAttribute('data-go')); if (el && el.getBoundingClientRect().top <= line) cur = b; });
+    btns.forEach(function (b) { b.classList.toggle('on', b === cur); });
+    mini.classList.toggle('show', window.scrollY > 70);
+  }
+  window.addEventListener('scroll', onScroll, { passive: true }); window.addEventListener('resize', onScroll); window.addEventListener('load', onScroll); setTimeout(onScroll, 600); onScroll();
+})();
+</script>
+
 <div id="toast" role="status" aria-live="polite" hidden></div>
 
 <!-- ============================================================
@@ -824,6 +1076,18 @@ input[type="date"], input[type="number"], input[type="text"] {
     }));
   }
 
+  // 내역 줄 앞의 입체 아이콘(분류별 그림 + 사람별 색)
+  var CAT_SVG = {
+    '식비': '<path d="M7 3v8M5 3v4a2 2 0 0 0 4 0V3M7 11v10M17 3c-2 1.5-3 4-3 7h3v11"/>',
+    '생활용품': '<path d="M5 8h14l-1.2 11a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/>',
+    '기타': '<circle cx="6" cy="12" r="1.7"/><circle cx="12" cy="12" r="1.7"/><circle cx="18" cy="12" r="1.7"/>'
+  };
+  function catIcon(e) {
+    var s = h('span', { class: 'cico ' + (e.who === PEOPLE[0] ? 'ca' : 'cb'), 'aria-hidden': 'true' });
+    s.innerHTML = '<svg viewBox="0 0 24 24">' + (CAT_SVG[e.cat] || CAT_SVG['기타']) + '</svg>';
+    return s;
+  }
+
   function renderList() {
     var s = monthStats(month);
     var items = s.list.filter(function (e) {
@@ -851,6 +1115,7 @@ input[type="date"], input[type="number"], input[type="text"] {
           var name = e.memo || '메모 없음';
           return h('li', { class: 'item ' + (e.who === PEOPLE[0] ? 'who-a' : 'who-b') },
             h('div', { class: 'row' },
+              catIcon(e),
               h('div', { class: 'main' }, h('p', { class: 'memo' }, e.memo || '(메모 없음)'), h('p', { class: 'meta' }, e.who + ' · ' + e.cat)),
               h('div', { class: 'right' },
                 h('p', { class: 'amt num' }, fmtWon(e.amount)),
@@ -1065,7 +1330,10 @@ input[type="date"], input[type="number"], input[type="text"] {
       return;
     }
     var ios = /iphone|ipad|ipod/i.test(navigator.userAgent);
-    $('#installMsg').textContent = ios
+    var inapp = /KAKAOTALK|NAVER|Instagram|FBAN|FBAV|Line\/|DaumApps|; wv\)/i.test(navigator.userAgent);
+    $('#installMsg').textContent = inapp
+      ? '카카오톡·네이버 같은 앱 안에서는 설치할 수 없어요. 오른쪽 위 메뉴에서 "다른 브라우저로 열기"를 눌러 크롬(아이폰은 Safari)에서 다시 열어 주세요.'
+      : ios
       ? 'Safari 아래쪽의 공유 버튼(네모에 화살표)을 누르고 "홈 화면에 추가"를 선택해 주세요. 홈 화면에 생긴 아이콘으로 열면 앱처럼 실행돼요.'
       : '브라우저 메뉴(⋮)에서 "앱 설치" 또는 "홈 화면에 추가"를 선택해 주세요. 이미 설치했다면 홈 화면의 아이콘으로 열어 주세요.';
     $('#installModal').hidden = false;
