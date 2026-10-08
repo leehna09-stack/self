@@ -2,6 +2,9 @@
 self.addEventListener('install', function () { self.skipWaiting(); });
 self.addEventListener('activate', function (e) { e.waitUntil(self.clients.claim()); });
 
+// 설치 가능한 앱 조건을 맞추기 위한 빈 처리기예요. 아무것도 저장하지 않고 항상 인터넷에서 받아요.
+self.addEventListener('fetch', function () {});
+
 self.addEventListener('push', function (event) {
   var d = {};
   try { d = event.data ? event.data.json() : {}; } catch (e) {}

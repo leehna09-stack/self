@@ -116,7 +116,7 @@ p { margin: 0; }
 
 /* 달력 */
 .cal { padding: 12px 8px; }
-.cal h2, .cal .hint { padding: 0 8px; }
+.cal .hint { padding: 0 8px; margin: 0 0 12px; font-size: 12px; font-weight: 700; }
 .calgrid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
 .calhead { text-align: center; font-size: 11px; color: var(--muted); padding: 4px 0; }
 .day {
@@ -145,11 +145,11 @@ input[type="date"], input[type="number"], input[type="text"] {
 .hint { color: var(--muted); font-size: 11px; margin: -6px 0 12px; }
 .seg { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .seg.three { grid-template-columns: 1fr 1fr 1fr; }
-.notify { display: flex; flex-direction: column; gap: 8px; margin: 8px 0 16px; }
-.notify .btn { width: 100%; }
-.titlebox { display: flex; align-items: center; gap: 10px; }
-.bell { position: relative; width: 44px; height: 44px; }
-.badge { position: absolute; top: -6px; right: -6px; min-width: 20px; height: 20px; padding: 0 5px; border-radius: 10px; background: var(--red); color: #fff; font-size: 11px; font-weight: 700; line-height: 20px; text-align: center; }
+.titlebox { display: flex; align-items: center; gap: 2px; }
+.bell { position: relative; width: 30px; height: 36px; }
+.nudge { width: 30px; height: 36px; }
+.confirm-msg { font-size: 15px; font-weight: 700; line-height: 1.6; margin: 4px 0 8px; }
+.badge { position: absolute; top: -2px; right: -8px; min-width: 20px; height: 20px; padding: 0 5px; border-radius: 10px; background: var(--red); color: #fff; font-size: 11px; font-weight: 700; line-height: 20px; text-align: center; }
 .newlist { list-style: none; margin: 0; padding: 0; }
 .newlist li { padding: 10px 0; border-bottom: 1px solid var(--line); }
 .newlist li:last-child { border-bottom: 0; }
@@ -239,6 +239,9 @@ input[type="date"], input[type="number"], input[type="text"] {
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>
         <span class="badge" id="bellBadge" hidden></span>
       </button>
+      <button type="button" class="icon-btn nudge" id="nudgeBtn" aria-label="상대에게 지출 입력요청 보내기">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4 20-7z"/></svg>
+      </button>
     </div>
     <!-- 지금 쓰는 사람 선택: 나중에 로그인으로 바뀌는 부분 -->
     <div class="who" id="who" role="tablist" aria-label="지금 쓰는 사람"></div>
@@ -260,9 +263,8 @@ input[type="date"], input[type="number"], input[type="text"] {
     </section>
 
     <!-- 달력: 날짜별 합계가 보이고, 날짜를 누르면 그날 내역만 조회 -->
-    <section class="card cal" aria-labelledby="calTitle">
-      <h2 id="calTitle">달력</h2>
-      <p class="hint">날짜를 누르면 그날 지출을 입력할 수 있어요.</p>
+    <section class="card cal" aria-label="달력">
+      <p class="hint">날짜를 누르면 해당일의 지출을 입력할 수 있어요.</p>
       <div class="calgrid" id="calendar"></div>
     </section>
 
@@ -283,11 +285,8 @@ input[type="date"], input[type="number"], input[type="text"] {
   </main>
 
   <footer class="foot">
-    <div class="notify">
-      <button type="button" class="btn" id="pushBtn">폰 알림 켜기</button>
-      <button type="button" class="btn" id="nudgeBtn">상대에게 입력 알림 보내기</button>
-      <p class="status" id="pushStatus"></p>
-    </div>
+    <p class="status" id="pushStatus"></p>
+    <button type="button" class="btn primary" id="installBtn" hidden>앱으로 설치하기</button>
     <p class="status" id="status"></p>
     <p>기록은 두 사람이 함께 쓰는 인터넷 저장소에 저장돼요. 가끔 백업해 두세요.</p>
     <button type="button" class="btn" id="exportBtn">엑셀(CSV)로 백업 내려받기</button>
@@ -332,6 +331,24 @@ input[type="date"], input[type="number"], input[type="text"] {
         </div>
       </form>
       </div>
+</div>
+
+<!-- 앱 설치 방법 -->
+<div id="installModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="installTitle" hidden>
+  <div class="modal-box">
+    <h2 id="installTitle">앱으로 설치하기</h2>
+    <p class="confirm-msg" id="installMsg"></p>
+    <button type="button" class="btn primary" id="installClose">확인</button>
+  </div>
+</div>
+
+<!-- 입력 요청 보내기 확인 -->
+<div id="nudgeModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="nudgeMsg" hidden>
+  <div class="modal-box">
+    <p class="confirm-msg" id="nudgeMsg"></p>
+    <button type="button" class="btn primary" id="nudgeOk">확인</button>
+    <button type="button" class="btn" id="nudgeCancel">취소</button>
+  </div>
 </div>
 
 <!-- 목표금액 수정 -->
@@ -956,29 +973,56 @@ input[type="date"], input[type="number"], input[type="text"] {
         return window.cloud.saveToken(token, user);
       });
   }
+  // 알림은 기본으로 켜져요. 브라우저가 허용 창을 띄우려면 사용자가 화면을 한 번 눌러야 해서, 그 순간에 맞춰 요청해요.
+  var askPending = false;
   function renderPushState() {
-    var on = pushSupported() && Notification.permission === 'granted';
-    $('#nudgeBtn').textContent = user ? otherPerson() + '님에게 입력 알림 보내기' : '상대에게 입력 알림 보내기';
-    $('#pushBtn').textContent = on ? '폰 알림 켜짐 (다시 등록)' : '폰 알림 켜기';
     $('#pushStatus').textContent = !pushSupported()
       ? '이 브라우저는 알림을 지원하지 않아요. 아이폰은 홈 화면에 추가한 앱에서만 돼요.'
-      : Notification.permission === 'denied' ? '알림이 차단돼 있어요. 브라우저 설정에서 허용해 주세요.'
-      : on ? '이 폰은 ' + user + ' 이름으로 알림을 받아요.' : '켜면 상대가 지출을 입력할 때 폰으로 알려줘요.';
+      : Notification.permission === 'denied' ? '알림이 차단돼 있어요. 브라우저(사이트) 설정에서 허용해 주세요.' : '';
   }
-  function enablePush() {
-    if (!user) { askUser(); return; }
-    if (!pushSupported()) { renderPushState(); return; }
-    if (!window.cloud) { showToast('아직 연결 중이에요. 잠시 후 다시 눌러 주세요.'); return; }
+  function askOnce() {
+    askPending = false;
+    if (!user || !pushSupported() || !window.cloud || Notification.permission !== 'default') return;
     Notification.requestPermission().then(function (perm) {
       renderPushState();
-      if (perm !== 'granted') { showToast('알림을 허용하지 않았어요.'); return; }
-      return registerPush().then(function () { renderPushState(); showToast('폰 알림을 켰어요.'); });
-    }).catch(function (err) { cloudFail(err); });
+      if (perm !== 'granted') return;
+      return registerPush().then(function () { showToast('상대가 지출을 입력하면 폰으로 알려드려요.'); });
+    }).catch(cloudFail);
   }
-  // 알림이 이미 허용된 기기는 열 때마다 토큰/이름을 새로 맞춰 둬요 (사용자를 바꿨을 때도)
+  // 열 때마다, 그리고 사용자를 바꿨을 때 이 폰의 알림 등록(토큰·이름)을 맞춰 둬요
   function syncPush() {
     renderPushState();
-    if (pushSupported() && Notification.permission === 'granted' && user && window.cloud) registerPush().catch(function () {});
+    if (!user || !pushSupported() || !window.cloud) return;
+    if (Notification.permission === 'granted') registerPush().catch(function () {});
+    else if (Notification.permission === 'default' && !askPending) {
+      askPending = true;
+      document.addEventListener('click', askOnce, { once: true });
+    }
+  }
+  // 앱 설치: 안드로이드 크롬은 설치 창을 바로 띄우고, 그 외(아이폰 등)는 방법을 안내해요
+  var deferredInstall = null;
+  function isStandalone() { return (window.matchMedia && matchMedia('(display-mode: standalone)').matches) || navigator.standalone === true; }
+  function renderInstall() { $('#installBtn').hidden = isStandalone(); }
+  window.addEventListener('beforeinstallprompt', function (e) { e.preventDefault(); deferredInstall = e; });
+  window.addEventListener('appinstalled', function () { deferredInstall = null; renderInstall(); showToast('앱이 설치됐어요. 홈 화면에서 열어 주세요.'); });
+  function installApp() {
+    if (deferredInstall) {
+      var ev = deferredInstall; deferredInstall = null;
+      ev.prompt();
+      return;
+    }
+    var ios = /iphone|ipad|ipod/i.test(navigator.userAgent);
+    $('#installMsg').textContent = ios
+      ? 'Safari 아래쪽의 공유 버튼(네모에 화살표)을 누르고 "홈 화면에 추가"를 선택해 주세요. 홈 화면에 생긴 아이콘으로 열면 앱처럼 실행돼요.'
+      : '브라우저 메뉴(⋮)에서 "앱 설치" 또는 "홈 화면에 추가"를 선택해 주세요. 이미 설치했다면 홈 화면의 아이콘으로 열어 주세요.';
+    $('#installModal').hidden = false;
+  }
+
+  function openNudge() {
+    if (!user) { askUser(); return; }
+    $('#nudgeMsg').textContent = otherPerson() + '님께 지출 입력요청을 보내시겠어요?';
+    $('#nudgeModal').hidden = false;
+    $('#nudgeOk').focus();
   }
   function sendNudge() {
     if (!user) { askUser(); return; }
@@ -1045,8 +1089,13 @@ input[type="date"], input[type="number"], input[type="text"] {
     renderAll();
     if (!user) askUser();
     function startCloud() { window.cloud.start(onEntriesData, onGoalsData, onCloudStatus); syncPush(); }
-    $('#pushBtn').addEventListener('click', enablePush);
-    $('#nudgeBtn').addEventListener('click', sendNudge);
+    $('#installBtn').addEventListener('click', installApp);
+    $('#installClose').addEventListener('click', function () { $('#installModal').hidden = true; });
+    renderInstall();
+    if ('serviceWorker' in navigator) navigator.serviceWorker.register('firebase-messaging-sw.js').catch(function () {});
+    $('#nudgeBtn').addEventListener('click', openNudge);
+    $('#nudgeOk').addEventListener('click', function () { $('#nudgeModal').hidden = true; sendNudge(); });
+    $('#nudgeCancel').addEventListener('click', function () { $('#nudgeModal').hidden = true; });
     renderPushState();
     if (window.cloud) startCloud(); else window.addEventListener('cloudready', startCloud);
   }
