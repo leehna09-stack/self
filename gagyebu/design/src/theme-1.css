@@ -1,0 +1,24 @@
+/* 시안 1 · Glass Blue — 투명 유리 + 푸른 그라데이션 (iOS 17 라이트 느낌) */
+:root {
+  --bg: #edf2fc;
+  --bg-image: radial-gradient(60% 38% at 6% 0%, rgba(110,170,255,.5), transparent 70%), radial-gradient(52% 34% at 100% 16%, rgba(185,150,255,.4), transparent 70%), radial-gradient(60% 40% at 0% 100%, rgba(100,225,212,.32), transparent 70%);
+  --surface: rgba(255,255,255,.74); --text: #0f182c; --muted: #5a6783; --line: rgba(30,50,110,.1);
+  --primary: #2f6bff; --primary-soft: #d6e3ff; --accent: #12b5a4; --mid: #9aa6c0; --red: #e5484d; --green: #12945a; --radius: 26px;
+  --card-border: rgba(255,255,255,.95); --blur: blur(18px) saturate(160%);
+  --shadow-card: inset 0 1px 0 rgba(255,255,255,.95), 0 12px 30px rgba(40,70,160,.12), 0 2px 6px rgba(40,70,160,.06);
+  --shadow-pop: 0 20px 44px rgba(30,50,120,.24), 0 2px 8px rgba(30,50,120,.1), inset 0 1px 0 rgba(255,255,255,.9);
+  --grad: linear-gradient(160deg,#6eaaff 0%,#2f6bff 55%,#2b45e0 100%);
+  --hero: linear-gradient(150deg,#6eaaff 0%,#2f6bff 46%,#3b3fd9 100%);
+  --shadow-hero: 0 24px 44px -10px rgba(47,107,255,.55), inset 0 1.5px 0 rgba(255,255,255,.5);
+  --glow-a: rgba(47,107,255,.36); --glow-b: rgba(18,181,164,.36);
+  --seg-bg: rgba(60,80,140,.11); --seg-thumb: #fff; --seg-shadow: 0 2px 7px rgba(30,50,100,.2), 0 0 0 .5px rgba(30,50,100,.06);
+  --cell: rgba(255,255,255,.72); --cell-shadow: inset 0 1px 0 #fff, 0 4px 10px rgba(40,70,160,.09);
+  --field: rgba(60,80,140,.07); --field-shadow: inset 0 2px 4px rgba(30,50,110,.08); --focus: rgba(47,107,255,.2);
+  --btn-bg: rgba(255,255,255,.92); --btn2-shadow: inset 0 1px 0 #fff, 0 5px 12px rgba(40,70,160,.13);
+  --btn-shadow: inset 0 1.5px 0 rgba(255,255,255,.5), inset 0 -3px 6px rgba(0,0,50,.24), 0 11px 20px var(--glow-a);
+  --chip-a: linear-gradient(160deg,#82b8ff,#2f6bff 60%,#2b45e0); --chip-b: linear-gradient(160deg,#76ecdc,#12b5a4 60%,#0b8f86);
+  --chip-shadow: rgba(40,60,130,.28);
+  --grad-bell: linear-gradient(160deg,#ffcb78,#ff8a3d 60%,#ee5f2a); --grad-nudge: var(--chip-a); --grad-ratio: linear-gradient(160deg,#cbaaff,#8b5cf6 60%,#6a3bd8);
+  --scrim: rgba(14,22,50,.36); --sheet: rgba(250,252,255,.9); --grabber: rgba(60,80,120,.28);
+  --tab-bg: rgba(255,255,255,.74); --track: rgba(60,80,140,.13); --fab-ring: rgba(237,242,252,.95); --toast-bg: rgba(20,28,52,.9);
+}

@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+<defs>
+  <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7cc0ff"/><stop offset=".5" stop-color="#2f6bff"/><stop offset="1" stop-color="#2230c4"/></linearGradient>
+  <radialGradient id="vig" cx=".5" cy=".5" r=".75"><stop offset=".6" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#0a1252" stop-opacity=".45"/></radialGradient>
+  <linearGradient id="gloss" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".55"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>
+  <linearGradient id="side" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#9a5a06"/><stop offset=".22" stop-color="#f3b52b"/><stop offset=".5" stop-color="#ffe083"/><stop offset=".78" stop-color="#e29a16"/><stop offset="1" stop-color="#7e4504"/></linearGradient>
+  <linearGradient id="face" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff2b0"/><stop offset=".5" stop-color="#ffcf4a"/><stop offset="1" stop-color="#e79a12"/></linearGradient>
+  <linearGradient id="rim" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fffbe0"/><stop offset="1" stop-color="#d98c0c"/></linearGradient>
+  <filter id="blur18" x="-50%" y="-100%" width="200%" height="300%"><feGaussianBlur stdDeviation="18"/></filter>
+  <filter id="blur4"><feGaussianBlur stdDeviation="4"/></filter>
+  <filter id="sh"><feDropShadow dx="0" dy="10" stdDeviation="9" flood-color="#0a1252" flood-opacity=".45"/></filter>
+  <g id="coin">
+    <rect x="-128" y="0" width="256" height="34" fill="url(#side)"/>
+    <ellipse cx="0" cy="34" rx="128" ry="44" fill="url(#side)"/>
+    <ellipse cx="0" cy="0" rx="128" ry="44" fill="url(#rim)"/>
+    <ellipse cx="0" cy="-3" rx="116" ry="38" fill="url(#face)"/>
+    <ellipse cx="0" cy="-3" rx="94" ry="29" fill="none" stroke="#c98310" stroke-opacity=".5" stroke-width="3"/>
+  </g>
+</defs>
+<rect width="512" height="512" fill="url(#bg)"/>
+<rect width="512" height="512" fill="url(#vig)"/>
+<ellipse cx="190" cy="40" rx="330" ry="190" fill="url(#gloss)" opacity=".7"/>
+<circle cx="400" cy="120" r="70" fill="#9fd0ff" opacity=".28" filter="url(#blur18)"/>
+<g transform="translate(256 262) scale(1.22) translate(-256 -300)"><ellipse cx="256" cy="418" rx="150" ry="30" fill="#0a1252" opacity=".55" filter="url(#blur18)"/>
+<g filter="url(#sh)">
+  <use href="#coin" transform="translate(256 346)"/>
+  <use href="#coin" transform="translate(256 306)"/>
+  <use href="#coin" transform="translate(256 266)"/>
+</g>
+<g transform="translate(256 263) scale(1 .36)" stroke-linecap="round" stroke-linejoin="round" fill="none">
+  <g stroke="#fff6c8" stroke-width="15" transform="translate(-3 -4)" opacity=".9"><path d="M-62 -52 L-30 52 L0 -14 L30 52 L62 -52"/><path d="M-82 -14 H82 M-82 18 H82"/></g>
+  <g stroke="#b9730a" stroke-width="15"><path d="M-62 -52 L-30 52 L0 -14 L30 52 L62 -52"/><path d="M-82 -14 H82 M-82 18 H82"/></g>
+</g>
+</g><g fill="#fff" opacity=".95"><path d="M392 168 l7 20 20 7 -20 7 -7 20 -7 -20 -20 -7 20 -7z"/><path d="M118 214 l4 11 11 4 -11 4 -4 11 -4 -11 -11 -4 11 -4z" opacity=".8"/></g>
+<rect width="512" height="512" fill="none"/>
+</svg>

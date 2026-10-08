@@ -1,0 +1,39 @@
+{
+  "name": "알뜰살뜰 가계부",
+  "short_name": "알뜰살뜰",
+  "description": "두 사람이 함께 쓰는 가계부",
+  "start_url": "./design-1.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#edf2fc",
+  "theme_color": "#2f6bff",
+  "lang": "ko",
+  "icons": [
+    {
+      "src": "icons/d1-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/d1-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "icons/d1-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/d1-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "id": "./design-1.html",
+  "orientation": "portrait"
+}

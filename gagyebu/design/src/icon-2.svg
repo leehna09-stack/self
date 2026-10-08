@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+<defs>
+  <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff0e4"/><stop offset=".55" stop-color="#ffd2c0"/><stop offset="1" stop-color="#ffb3b0"/></linearGradient>
+  <radialGradient id="body" cx=".32" cy=".25" r=".95"><stop offset="0" stop-color="#ffc3d0"/><stop offset=".45" stop-color="#ff86a3"/><stop offset="1" stop-color="#e0446a"/></radialGradient>
+  <radialGradient id="snout" cx=".35" cy=".3" r=".9"><stop offset="0" stop-color="#ffd0da"/><stop offset=".6" stop-color="#ff8fa9"/><stop offset="1" stop-color="#e5557a"/></radialGradient>
+  <radialGradient id="ear" cx=".4" cy=".3" r=".9"><stop offset="0" stop-color="#ffb0c2"/><stop offset="1" stop-color="#d63d65"/></radialGradient>
+  <linearGradient id="leg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f26a8c"/><stop offset="1" stop-color="#c8365d"/></linearGradient>
+  <radialGradient id="gold" cx=".35" cy=".3" r=".9"><stop offset="0" stop-color="#fff4b8"/><stop offset=".55" stop-color="#ffcb45"/><stop offset="1" stop-color="#e0900f"/></radialGradient>
+  <filter id="blur14" x="-50%" y="-100%" width="200%" height="300%"><feGaussianBlur stdDeviation="14"/></filter>
+  <filter id="blur6"><feGaussianBlur stdDeviation="6"/></filter>
+  <filter id="sh"><feDropShadow dx="0" dy="12" stdDeviation="10" flood-color="#a8284e" flood-opacity=".35"/></filter>
+</defs>
+<rect width="512" height="512" fill="url(#bg)"/>
+<circle cx="120" cy="90" r="120" fill="#fff" opacity=".45" filter="url(#blur14)"/>
+<g transform="translate(256 266) scale(1.1) translate(-250 -270)"><ellipse cx="256" cy="436" rx="170" ry="26" fill="#b0324f" opacity=".35" filter="url(#blur14)"/>
+<!-- coin entering slot -->
+<g filter="url(#sh)"><ellipse cx="262" cy="150" rx="44" ry="50" fill="url(#gold)" transform="rotate(14 262 150)"/>
+<ellipse cx="262" cy="150" rx="31" ry="36" fill="none" stroke="#c98310" stroke-opacity=".55" stroke-width="5" transform="rotate(14 262 150)"/>
+<ellipse cx="250" cy="130" rx="12" ry="18" fill="#fff" opacity=".6" transform="rotate(14 262 150)"/></g>
+<g filter="url(#sh)">
+  <!-- legs -->
+  <rect x="160" y="352" width="58" height="66" rx="24" fill="url(#leg)"/>
+  <rect x="290" y="352" width="58" height="66" rx="24" fill="url(#leg)"/>
+  <!-- tail -->
+  <path d="M110 276 q-40 -6 -34 -40 q8 -26 34 -12" fill="none" stroke="#e5557a" stroke-width="15" stroke-linecap="round"/>
+  <!-- ears -->
+  <path d="M170 196 q-6 -64 40 -76 q16 36 6 84z" fill="url(#ear)"/>
+  <path d="M312 188 q-2 -62 48 -64 q6 40 -14 86z" fill="url(#ear)"/>
+  <!-- body -->
+  <ellipse cx="248" cy="282" rx="156" ry="118" fill="url(#body)"/>
+  <!-- snout -->
+  <ellipse cx="392" cy="296" rx="46" ry="38" fill="url(#snout)"/>
+  <ellipse cx="380" cy="298" rx="8" ry="13" fill="#a8284e" opacity=".85"/>
+  <ellipse cx="407" cy="298" rx="8" ry="13" fill="#a8284e" opacity=".85"/>
+</g>
+<!-- slot -->
+<rect x="212" y="196" width="80" height="15" rx="7.5" fill="#8f1f42" transform="rotate(5 252 203)"/>
+<rect x="214" y="199" width="76" height="6" rx="3" fill="#5c1129" opacity=".7" transform="rotate(5 252 203)"/>
+<!-- eye + cheek -->
+<circle cx="338" cy="262" r="13" fill="#4a1226"/><circle cx="342" cy="257" r="4.5" fill="#fff"/>
+<ellipse cx="322" cy="318" rx="26" ry="16" fill="#ff5f86" opacity=".55" filter="url(#blur6)"/>
+<!-- heart -->
+<path d="M214 292 c-18 -22 -52 0 -26 30 l26 24 26 -24 c26 -30 -8 -52 -26 -30z" fill="#ffd6e0" opacity=".55" transform="translate(-14 -10) scale(.9)"/>
+<!-- highlights -->
+<ellipse cx="190" cy="226" rx="78" ry="30" fill="#fff" opacity=".5" filter="url(#blur6)" transform="rotate(-18 190 226)"/>
+<ellipse cx="388" cy="282" rx="22" ry="9" fill="#fff" opacity=".55" filter="url(#blur6)"/>
+</g></svg>
