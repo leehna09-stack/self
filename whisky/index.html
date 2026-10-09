@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="color-scheme" content="dark">
-<meta name="theme-color" content="#1a110b">
+<meta name="color-scheme" content="light">
+<meta name="theme-color" content="#f6f1e6">
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="icon-180.png">
@@ -15,22 +15,28 @@
 <title>위스키 노트</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
 
+<link href="https://fonts.googleapis.com/css2?family=Gaegu:wght@400;700&display=swap" rel="stylesheet">
+
 <!-- ============================================================
   [1] 꾸미기(CSS) - 맨 위 :root 의 색 이름표만 바꿔도 분위기가 바뀌어요
 ============================================================= -->
 <style>
 :root {
-  --bg: #1a110b;          /* 바탕: 오크통 같은 짙은 갈색 */
-  --surface: #261a11;     /* 카드 */
-  --surface2: #312216;    /* 카드 위 입력칸 */
-  --text: #f6ebdc;
-  --muted: #b9a58d;
-  --line: #43301f;
-  --amber: #e8a33d;       /* 대표색: 위스키 호박색 */
-  --amber-soft: #e8a33d26;
-  --amber-deep: #b86f12;
-  --red: #e5645a;
-  --radius: 16px;
+  --bg: #f6f1e6;          /* 종이 바탕 */
+  --paper: #fffdf7;       /* 카드·입력칸 종이 */
+  --text: #3b2f23;        /* 잉크(따뜻한 짙은 갈색) */
+  --muted: #8a7a66;       /* 보조 글자 */
+  --line: #e6dcc6;        /* 줄/테두리 */
+  --dot: #e9dfc9;         /* 방안지 점 */
+  --amber: #e09a2b;       /* 대표색: 위스키 호박색 */
+  --amber-ink: #a0610a;   /* 글자로 쓸 진한 호박색 */
+  --amber-soft: #fbe9c6;
+  --mint: #cfe8df;  --mint-ink: #2f7a68;
+  --peach: #fbd9cf; --peach-ink: #b4533e;
+  --sky: #d9e6f5;   --sky-ink: #3f6aa0;
+  --red: #c9483d;
+  --hand: "Gaegu", "Nanum Pen Script", "Pretendard Variable", cursive;
+  --radius: 14px;
   --safe-b: env(safe-area-inset-bottom, 0px);
   --safe-t: env(safe-area-inset-top, 0px);
 }
@@ -38,94 +44,117 @@
 [hidden] { display: none !important; }
 html { -webkit-text-size-adjust: 100%; }
 body {
-  margin: 0; background: var(--bg); color: var(--text);
+  margin: 0; color: var(--text);
+  background-color: var(--bg);
+  background-image: radial-gradient(var(--dot) 1.1px, transparent 1.3px);
+  background-size: 22px 22px;
   font: 14px/1.55 "Pretendard Variable", Pretendard, -apple-system, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
   min-height: 100vh;
 }
 button { font: inherit; color: inherit; cursor: pointer; border: 0; background: none; }
 input, textarea, select { font: inherit; color: var(--text); }
-.app { max-width: 560px; margin: 0 auto; padding: calc(var(--safe-t) + 18px) 16px calc(90px + var(--safe-b)); }
+.app { max-width: 560px; margin: 0 auto; padding: calc(var(--safe-t) + 18px) 16px calc(96px + var(--safe-b)); }
+
+/* 아이콘 공통 */
+.ic { width: 1em; height: 1em; flex: none; stroke: currentColor; fill: none; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; vertical-align: -.14em; }
+.ic.sm { width: 14px; height: 14px; vertical-align: -2px; color: var(--amber-ink); }
 
 /* 상단 제목 */
-.top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
-.brand { display: flex; align-items: center; gap: 10px; }
-.brand svg { width: 34px; height: 34px; }
-.brand h1 { margin: 0; font-size: 21px; letter-spacing: -.02em; }
-.brand small { display: block; color: var(--muted); font-size: 12px; margin-top: -2px; }
+.top { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+.logo { width: 46px; height: 46px; border-radius: 14px; background: var(--amber-soft); color: var(--amber-ink); display: grid; place-items: center; font-size: 28px; transform: rotate(-4deg); box-shadow: 0 2px 0 #e9cf9a; }
+.top h1 { margin: 0; font: 700 29px/1 var(--hand); letter-spacing: -.01em; }
+.top small { display: block; color: var(--muted); font-size: 12.5px; margin-top: 3px; }
 
-/* 요약 카드 */
-.hero {
-  background: linear-gradient(135deg, #3a2412, #261a11 70%);
-  border: 1px solid var(--line); border-radius: 20px; padding: 18px; margin-bottom: 14px;
-  display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; text-align: center;
+/* 마스킹테이프 */
+.tape0::before, .tape1::before, .tape2::before, .hero::before {
+  content: ""; position: absolute; top: -9px; left: 22px; width: 54px; height: 18px; transform: rotate(-3deg);
+  background: #f3cf7a; opacity: .85; border-radius: 2px;
+  background-image: repeating-linear-gradient(90deg, transparent 0 6px, #ffffff40 6px 9px);
 }
-.hero b { display: block; font-size: 24px; color: var(--amber); letter-spacing: -.02em; }
-.hero span { font-size: 12px; color: var(--muted); }
+.tape1::before { background-color: #a9d6ca; left: auto; right: 26px; transform: rotate(2.5deg); }
+.tape2::before { background-color: #f4b6a6; left: 40%; transform: rotate(-1.5deg); }
+
+/* 오늘의 한 잔 요약 */
+.hero { position: relative; background: var(--paper); border: 1.5px dashed #d8c9a8; border-radius: 18px; padding: 20px 14px 14px; margin-bottom: 14px; }
+.hero::before { left: calc(50% - 30px); }
+.hero-t { text-align: center; font: 700 19px/1 var(--hand); color: var(--amber-ink); margin-bottom: 12px; }
+.hero-g { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; text-align: center; }
+.hero-g > div { display: flex; flex-direction: column; align-items: center; gap: 1px; }
+.hero-g .ic { font-size: 26px; color: var(--amber-ink); margin-bottom: 2px; }
+.hero-g b { font: 700 27px/1.1 var(--hand); }
+.hero-g span { font-size: 12px; color: var(--muted); }
+
+/* 장식 줄 */
+.orn { display: flex; align-items: center; gap: 10px; margin: 6px 0 12px; color: #c9b58a; font-size: 18px; }
+.orn::before, .orn::after { content: ""; flex: 1; border-top: 1.5px dotted #d8c9a8; }
+.orn .ic { stroke-width: 1.4; }
 
 /* 검색/필터 */
 .search {
-  width: 100%; padding: 12px 14px; border-radius: 12px; border: 1px solid var(--line);
-  background: var(--surface); outline: none;
+  width: 100%; padding: 12px 14px 12px 40px; border-radius: 12px; border: 1.5px solid var(--line);
+  background: var(--paper) no-repeat 13px center / 18px; outline: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238a7a66' stroke-width='2' stroke-linecap='round'%3E%3Ccircle cx='11' cy='11' r='6.5'/%3E%3Cpath d='m16 16 4 4'/%3E%3C/svg%3E");
 }
 .search:focus, .field:focus { border-color: var(--amber); }
 .filters { display: flex; gap: 6px; overflow-x: auto; padding: 10px 0 4px; scrollbar-width: none; }
 .filters::-webkit-scrollbar { display: none; }
 .chip {
-  flex: none; padding: 7px 12px; border-radius: 999px; border: 1px solid var(--line);
-  background: var(--surface); color: var(--muted); font-size: 13px; white-space: nowrap;
+  flex: none; padding: 7px 12px; border-radius: 999px; border: 1.5px solid var(--line);
+  background: var(--paper); color: var(--muted); font-size: 13px; white-space: nowrap;
 }
-.chip.on { background: var(--amber); border-color: var(--amber); color: #2a1904; font-weight: 700; }
-.sortrow { display: flex; justify-content: space-between; align-items: center; margin: 6px 2px 10px; color: var(--muted); font-size: 12px; }
-.sortrow select { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 4px 8px; }
+.chip.on { background: var(--amber); border-color: var(--amber); color: #3a2208; font-weight: 700; }
+.sortrow { display: flex; justify-content: space-between; align-items: center; margin: 6px 2px 12px; color: var(--muted); font-size: 12.5px; }
+.sortrow select { background: var(--paper); border: 1.5px solid var(--line); border-radius: 8px; padding: 4px 8px; }
 
-/* 기록 카드 */
+/* 기록 카드 (다이어리 메모) */
 .card {
-  display: block; width: 100%; text-align: left; background: var(--surface);
-  border: 1px solid var(--line); border-radius: var(--radius); padding: 14px; margin-bottom: 10px;
+  position: relative; display: flex; gap: 12px; width: 100%; text-align: left; background: var(--paper);
+  border: 1.5px solid var(--line); border-radius: var(--radius); padding: 16px 14px 14px; margin-bottom: 16px;
+  box-shadow: 0 2px 0 var(--line);
 }
-.card:active { transform: scale(.99); }
-.card .row1 { display: flex; justify-content: space-between; gap: 10px; align-items: flex-start; }
-.card h3 { margin: 0; font-size: 16px; letter-spacing: -.01em; }
-.card .meta { color: var(--muted); font-size: 12.5px; margin-top: 2px; }
-.card .date { color: var(--muted); font-size: 12px; white-space: nowrap; }
+.card:active { transform: translateY(1px); box-shadow: none; }
+.card:nth-child(even) { transform: rotate(.25deg); }
+.tile { width: 46px; height: 46px; border-radius: 13px; display: grid; place-items: center; font-size: 27px; flex: none; }
+.c1 { background: var(--amber-soft); color: var(--amber-ink); }
+.c2 { background: var(--mint); color: var(--mint-ink); }
+.c3 { background: var(--peach); color: var(--peach-ink); }
+.c4 { background: var(--sky); color: var(--sky-ink); }
+.cbody { flex: 1; min-width: 0; }
+.row1 { display: flex; justify-content: space-between; gap: 10px; align-items: flex-start; }
+.card h3 { margin: 0; font-size: 16px; letter-spacing: -.01em; overflow-wrap: anywhere; }
+.card .meta { color: var(--muted); font-size: 12.5px; margin-top: 3px; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; }
+.card .date { font: 700 15px/1.2 var(--hand); color: var(--amber-ink); white-space: nowrap; }
 .tags { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 9px; }
-.tag { padding: 3px 9px; border-radius: 999px; background: var(--amber-soft); color: var(--amber); font-size: 12px; }
-.memo { margin-top: 9px; color: #d9c7ae; font-size: 13px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-.stars { color: var(--amber); letter-spacing: 1px; font-size: 13px; }
-.stars i { font-style: normal; color: #5a4430; }
+.tag { padding: 3px 9px; border-radius: 999px; background: var(--amber-soft); color: var(--amber-ink); font-size: 12px; }
+.memo { margin-top: 9px; padding-top: 7px; border-top: 1.5px dotted var(--line); color: #5b4c3a; font-size: 13px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.gl { display: inline-flex; gap: 1px; }
+.gl .ic { width: 14px; height: 14px; color: var(--amber); }
+.gl .ic.off { color: #e3d7bd; }
 
-.empty { text-align: center; color: var(--muted); padding: 50px 10px; }
-.empty .big { font-size: 46px; margin-bottom: 8px; }
+.empty { text-align: center; color: var(--muted); padding: 34px 10px 20px; }
+.empty .ic { font-size: 64px; color: var(--amber); margin-bottom: 8px; }
+.empty b { color: var(--amber-ink); }
 
 /* 하단 탭 */
-.tabbar {
-  position: fixed; left: 0; right: 0; bottom: 0; z-index: 20;
-  background: #1a110bee; backdrop-filter: blur(14px); border-top: 1px solid var(--line);
-  padding-bottom: var(--safe-b);
-}
+.tabbar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 20; background: #fffdf7f2; backdrop-filter: blur(10px); border-top: 1.5px solid var(--line); padding-bottom: var(--safe-b); }
 .tabbar-in { max-width: 560px; margin: 0 auto; display: grid; grid-template-columns: repeat(4, 1fr); align-items: center; }
 .tab { padding: 9px 0 8px; color: var(--muted); font-size: 11px; display: flex; flex-direction: column; align-items: center; gap: 2px; }
-.tab svg { width: 22px; height: 22px; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
-.tab.on { color: var(--amber); }
-.tab.add .plus {
-  width: 46px; height: 46px; border-radius: 50%; margin-top: -20px; display: grid; place-items: center;
-  background: linear-gradient(145deg, #f2b552, #c87a14); box-shadow: 0 6px 18px #e8a33d44; color: #2a1904;
-}
-.tab.add .plus svg { stroke-width: 2.6; }
+.tab .ic { width: 24px; height: 24px; }
+.tab.on { color: var(--amber-ink); }
+.tab.add .plus { position: relative; width: 52px; height: 52px; border-radius: 50%; margin-top: -24px; display: grid; place-items: center; background: var(--amber); color: #3a2208; border: 3px solid var(--bg); box-shadow: 0 4px 0 #c47f17; font-size: 28px; }
+.tab.add .plus i { position: absolute; right: -2px; top: -2px; width: 18px; height: 18px; border-radius: 50%; background: #3a2208; color: #fff; font: 700 14px/17px sans-serif; font-style: normal; text-align: center; }
 
-/* 입력 화면(전체 덮개) */
-.sheet { position: fixed; inset: 0; z-index: 40; background: var(--bg); overflow-y: auto; }
+/* 입력 화면 */
+.sheet { position: fixed; inset: 0; z-index: 40; overflow-y: auto; background-color: var(--bg); background-image: radial-gradient(var(--dot) 1.1px, transparent 1.3px); background-size: 22px 22px; }
 .sheet-in { max-width: 560px; margin: 0 auto; padding: calc(var(--safe-t) + 14px) 16px calc(40px + var(--safe-b)); }
-.sheet-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
-.sheet-head h2 { margin: 0; font-size: 18px; }
+.sheet-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+.sheet-head h2 { margin: 0; font: 700 25px/1 var(--hand); display: flex; align-items: center; gap: 6px; }
+.sheet-head h2 .ic { color: var(--amber); font-size: 26px; }
 .link { color: var(--muted); padding: 6px 4px; font-size: 14px; }
-.link.danger { color: var(--red); }
-label.lb { display: block; margin: 16px 2px 6px; color: var(--muted); font-size: 12.5px; font-weight: 600; }
-.field {
-  width: 100%; padding: 13px 14px; border-radius: 12px; border: 1px solid var(--line);
-  background: var(--surface); outline: none; font-size: 16px;
-}
-textarea.field { min-height: 96px; resize: vertical; line-height: 1.5; }
+label.lb { display: flex; align-items: center; gap: 6px; margin: 18px 2px 6px; color: var(--amber-ink); font: 700 17px/1 var(--hand); }
+label.lb .ic { font-size: 19px; }
+.field { width: 100%; padding: 13px 14px; border-radius: 12px; border: 1.5px solid var(--line); background: var(--paper); outline: none; font-size: 16px; }
+textarea.field { min-height: 140px; resize: vertical; line-height: 28px; padding: 4px 14px 8px; background-image: repeating-linear-gradient(transparent, transparent 27px, #eadfc7 28px); background-attachment: local; }
 .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .unit { position: relative; }
 .unit .field { padding-right: 44px; }
@@ -133,68 +162,76 @@ textarea.field { min-height: 96px; resize: vertical; line-height: 1.5; }
 .quick { display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; }
 .quick .chip { padding: 5px 10px; font-size: 12px; }
 
-/* 자동완성 */
 .ac-wrap { position: relative; }
-.ac {
-  position: absolute; left: 0; right: 0; top: calc(100% + 4px); z-index: 10; max-height: 300px; overflow-y: auto;
-  background: #34241a; border: 1px solid var(--amber-deep); border-radius: 12px;
-  box-shadow: 0 14px 30px #000a;
-}
-.ac button { display: block; width: 100%; text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--line); }
+.ac { position: absolute; left: 0; right: 0; top: calc(100% + 4px); z-index: 10; max-height: 300px; overflow-y: auto; background: var(--paper); border: 1.5px solid var(--amber); border-radius: 12px; box-shadow: 0 12px 28px #5a3c1a30; }
+.ac button { display: flex; gap: 10px; align-items: center; width: 100%; text-align: left; padding: 10px 14px; border-bottom: 1px dotted var(--line); }
 .ac button:last-child { border-bottom: 0; }
 .ac button:active, .ac button.hi { background: var(--amber-soft); }
+.ac .ic { font-size: 22px; color: var(--amber-ink); }
 .ac b { display: block; font-weight: 600; }
 .ac small { color: var(--muted); font-size: 12px; }
-.ac mark { background: none; color: var(--amber); }
-.autonote { margin: 8px 2px 0; font-size: 12px; color: var(--amber); }
+.ac mark { background: none; color: var(--amber-ink); text-decoration: underline; text-decoration-color: var(--amber); }
+.autonote { margin: 8px 2px 0; font-size: 12.5px; color: var(--amber-ink); }
 
-/* 맛 선택 */
 .flavors { display: flex; flex-wrap: wrap; gap: 7px; }
 .flavors .chip { font-size: 14px; padding: 8px 12px; }
-.flavors .chip.pre:not(.on) { border-color: var(--amber-deep); }
+.flavors .chip.pre:not(.on) { border-color: var(--amber); border-style: dashed; }
 
-/* 별점 */
-.rate { display: flex; gap: 4px; }
-.rate button { font-size: 30px; line-height: 1; color: #5a4430; padding: 2px; }
+.rate { display: flex; gap: 6px; }
+.rate button { font-size: 34px; line-height: 1; color: #e3d7bd; padding: 2px; }
 .rate button.on { color: var(--amber); }
 
-.btn-main {
-  width: 100%; margin-top: 24px; padding: 15px; border-radius: 14px; font-weight: 700; font-size: 16px;
-  background: linear-gradient(145deg, #f2b552, #c87a14); color: #2a1904;
-}
-.btn-sub { width: 100%; margin-top: 10px; padding: 13px; border-radius: 14px; border: 1px solid var(--line); background: var(--surface); }
+.btn-main { width: 100%; margin-top: 26px; padding: 15px; border-radius: 14px; font-weight: 700; font-size: 16px; background: var(--amber); color: #3a2208; box-shadow: 0 4px 0 #c47f17; display: flex; align-items: center; justify-content: center; gap: 8px; }
+.btn-main:active { transform: translateY(3px); box-shadow: 0 1px 0 #c47f17; }
+.btn-main .ic { font-size: 22px; }
+.btn-sub { width: 100%; margin-top: 10px; padding: 13px; border-radius: 14px; border: 1.5px solid var(--line); background: var(--paper); display: flex; align-items: center; justify-content: center; gap: 8px; }
 
 /* 통계 */
-.box { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px; margin-bottom: 12px; }
-.box h3 { margin: 0 0 12px; font-size: 14px; color: var(--muted); font-weight: 600; }
-.bar { display: grid; grid-template-columns: 78px 1fr 30px; gap: 8px; align-items: center; margin: 7px 0; font-size: 13px; }
-.bar .tr { height: 10px; background: #3a291b; border-radius: 6px; overflow: hidden; }
-.bar .fi { height: 100%; background: linear-gradient(90deg, var(--amber-deep), var(--amber)); border-radius: 6px; }
+.box { position: relative; background: var(--paper); border: 1.5px solid var(--line); border-radius: var(--radius); padding: 18px 16px 14px; margin-bottom: 16px; box-shadow: 0 2px 0 var(--line); }
+.box h3 { margin: 0 0 10px; font: 700 19px/1.2 var(--hand); color: var(--amber-ink); display: flex; align-items: center; gap: 6px; }
+.box h3 .ic { font-size: 21px; }
+.bar { display: grid; grid-template-columns: 108px 1fr 26px; gap: 8px; align-items: center; margin: 8px 0; font-size: 13px; }
+.bar .tr { height: 12px; background: #f0e7d3; border-radius: 6px; overflow: hidden; }
+.bar .fi { height: 100%; background: var(--amber); border-radius: 6px; }
 .bar .n { text-align: right; color: var(--muted); }
-.kpis { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
-.kpi { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px; }
-.kpi span { font-size: 12px; color: var(--muted); }
-.kpi b { display: block; font-size: 22px; color: var(--amber); margin-top: 2px; }
-.fav { display: flex; justify-content: space-between; gap: 8px; padding: 8px 0; border-top: 1px solid var(--line); }
+.kpis { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
+.kpi { position: relative; background: var(--paper); border: 1.5px solid var(--line); border-radius: var(--radius); padding: 16px 14px 12px; box-shadow: 0 2px 0 var(--line); }
+.kpi span { font-size: 12px; color: var(--muted); display: flex; align-items: center; gap: 4px; }
+.kpi b { display: block; font: 700 25px/1.2 var(--hand); color: var(--amber-ink); margin-top: 2px; }
+.fav { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 9px 0; border-top: 1.5px dotted var(--line); }
 .fav:first-of-type { border-top: 0; }
+.fav span:first-child { display: flex; align-items: center; gap: 7px; min-width: 0; overflow-wrap: anywhere; }
+.fav .ic { color: var(--amber-ink); font-size: 18px; }
 
 .settings p { color: var(--muted); font-size: 13px; margin: 4px 2px 10px; }
-.toast {
-  position: fixed; left: 50%; bottom: calc(86px + var(--safe-b)); transform: translateX(-50%); z-index: 99;
-  background: #f6ebdc; color: #2a1904; padding: 10px 16px; border-radius: 999px; font-weight: 600; font-size: 13px;
-  box-shadow: 0 8px 24px #0008;
-}
+.toast { position: fixed; left: 50%; bottom: calc(92px + var(--safe-b)); transform: translateX(-50%); z-index: 99; background: #3b2f23; color: #fff8e8; padding: 10px 16px; border-radius: 999px; font-weight: 600; font-size: 13px; box-shadow: 0 8px 22px #3b2f2355; display: flex; align-items: center; gap: 6px; }
 </style>
 </head>
 
 <body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <!-- 록 글라스(얼음 위스키) -->
+  <symbol id="i-glass" viewBox="0 0 24 24"><path d="M4.6 4h14.8l-1.7 14.4a2.2 2.2 0 0 1-2.2 1.9H8.5a2.2 2.2 0 0 1-2.2-1.9z"/><path d="M5.9 10.6h12.2l-.6 7.8a1.5 1.5 0 0 1-1.5 1.4H8a1.5 1.5 0 0 1-1.5-1.4z" fill="currentColor" stroke="none"/><rect x="9.2" y="12.2" width="4.3" height="4.3" rx="1" fill="var(--paper)" stroke="none" opacity=".75" transform="rotate(8 11 14)"/></symbol>
+  <!-- 병 -->
+  <symbol id="i-bottle" viewBox="0 0 24 24"><path d="M10 2.6h4v3.2c0 .9.7 1.4 1.4 2.2.9 1 1.6 2.1 1.6 3.7V20a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2v-8.5c0-1.6.7-2.7 1.6-3.7.7-.8 1.4-1.3 1.4-2.2z"/><path d="M10 2.6h4"/><rect x="9" y="13.2" width="6" height="5.2" rx="1.2" fill="currentColor" stroke="none"/></symbol>
+  <!-- 테이스팅 글라스(튤립형) -->
+  <symbol id="i-dram" viewBox="0 0 24 24"><path d="M8.2 3h7.6c1.1 3.3 1.7 5.5 1.1 7.5-.6 2-2 3.2-3.9 3.6V19h2.8a.9.9 0 0 1 0 1.8H8.4a.9.9 0 0 1 0-1.8h2.8v-4.9c-1.9-.4-3.3-1.6-3.9-3.6C6.5 8.5 7.1 6.3 8.2 3z"/><path d="M7.2 9h9.6c-.3 2.3-1.5 3.6-3.4 4.2h-2.8C8.7 12.6 7.5 11.3 7.2 9z" fill="currentColor" stroke="none"/></symbol>
+  <symbol id="i-drop" viewBox="0 0 24 24"><path d="M12 3c3.1 4 5.2 6.6 5.2 9.6a5.2 5.2 0 0 1-10.4 0C6.8 9.6 8.9 7 12 3z"/></symbol>
+  <symbol id="i-book" viewBox="0 0 24 24"><path d="M6 3.5h11a2 2 0 0 1 2 2v14a1 1 0 0 1-1 1H7a2 2 0 0 1-2-2V4.5a1 1 0 0 1 1-1z"/><path d="M9 3.5v17M12 8h4M12 11.5h4"/></symbol>
+  <symbol id="i-chart" viewBox="0 0 24 24"><path d="M5 20V11M12 20V4M19 20v-6"/></symbol>
+  <symbol id="i-gear" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1 2.1"/></symbol>
+  <symbol id="i-cal" viewBox="0 0 24 24"><rect x="4" y="5.5" width="16" height="14.5" rx="2.5"/><path d="M4 10h16M8.5 3.5v4M15.5 3.5v4"/></symbol>
+  <symbol id="i-pen" viewBox="0 0 24 24"><path d="M5 19l1-4L16.5 4.5a2 2 0 0 1 2.8 2.8L8.8 17.8z"/><path d="M14.5 6.5l3 3"/></symbol>
+  <symbol id="i-flask" viewBox="0 0 24 24"><path d="M9 3h6M10 3v6l-4.6 8.2A2.2 2.2 0 0 0 7.3 20.5h9.4a2.2 2.2 0 0 0 1.9-3.3L14 9V3"/><path d="M7.4 15.5h9.2" /></symbol>
+  <symbol id="i-cheers" viewBox="0 0 24 24"><path d="M3.5 6.5l4-1.2 2.4 7.6a2.4 2.4 0 0 1-1.6 3l-.9.3a2.4 2.4 0 0 1-3-1.6z"/><path d="M20.5 6.5l-4-1.2-2.4 7.6a2.4 2.4 0 0 0 1.6 3l.9.3a2.4 2.4 0 0 0 3-1.6z"/><path d="M12 2.5v2M9.2 3.2l.7 1.4M14.8 3.2l-.7 1.4"/></symbol>
+</defs></svg>
 <div class="app" id="app"></div>
 
 <nav class="tabbar"><div class="tabbar-in">
-  <button class="tab" data-tab="list"><svg viewBox="0 0 24 24"><path d="M5 4h14v4l-2 12H7L5 8z"/><path d="M6 11h12"/></svg>기록</button>
-  <button class="tab" data-tab="stats"><svg viewBox="0 0 24 24"><path d="M5 20V10M12 20V4M19 20v-7"/></svg>통계</button>
-  <button class="tab add" data-tab="add"><span class="plus"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></span></button>
-  <button class="tab" data-tab="settings"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1 2.1"/></svg>설정</button>
+  <button class="tab" data-tab="list"><svg class="ic"><use href="#i-book"/></svg>다이어리</button>
+  <button class="tab" data-tab="stats"><svg class="ic"><use href="#i-chart"/></svg>취향</button>
+  <button class="tab add" data-tab="add" aria-label="한 잔 기록하기"><span class="plus"><svg class="ic"><use href="#i-glass"/></svg><i>+</i></span></button>
+  <button class="tab" data-tab="settings"><svg class="ic"><use href="#i-gear"/></svg>설정</button>
 </div></nav>
 <div id="sheetRoot"></div>
 <div id="toastRoot"></div>
@@ -340,11 +377,19 @@ let state = { tab: 'list', q: '', flavor: '', sort: 'new' };
 const today = () => { const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
 const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
 const fmtDate = s => { const [y, m, d] = (s || '').split('-'); return y ? `${y}.${+m}.${+d}` : ''; };
-const stars = n => `<span class="stars">${'★'.repeat(n)}<i>${'★'.repeat(5 - n)}</i></span>`;
+const ic = (id, cls = '') => `<svg class="ic ${cls}" aria-hidden="true"><use href="#${id}"/></svg>`;
+const stars = n => `<span class="gl" role="img" aria-label="${n}점">${[1, 2, 3, 4, 5].map(i => ic('i-glass', i <= n ? '' : 'off')).join('')}</span>`;
+/* 위스키 종류별 아이콘·색 */
+const TYPE_STYLE = {
+  '싱글몰트': ['i-dram', 'c1'], '블렌디드': ['i-bottle', 'c2'], '버번': ['i-glass', 'c3'], '테네시': ['i-glass', 'c3'],
+  '라이': ['i-glass', 'c3'], '아이리시': ['i-bottle', 'c4'], '재패니즈': ['i-dram', 'c4'], '기타·직접입력': ['i-glass', 'c1'],
+};
+const typeOfName = name => { const hit = DB.find(d => norm(d[0]) === norm(name)); return hit ? hit[2] : '기타·직접입력'; };
+const typeStyle = name => TYPE_STYLE[typeOfName(name)] || TYPE_STYLE['기타·직접입력'];
 const fmtNum = n => (Math.round(n * 10) / 10).toString();
 
 function toast(msg) {
-  const el = document.createElement('div'); el.className = 'toast'; el.textContent = msg;
+  const el = document.createElement('div'); el.className = 'toast'; el.innerHTML = ic('i-glass') + ' ' + esc(msg);
   $('#toastRoot').appendChild(el); setTimeout(() => el.remove(), 1800);
 }
 
@@ -391,7 +436,7 @@ const hl = (text, raw) => {
 /* ============================================================
   [4] 화면 그리기
 ============================================================= */
-const LOGO = `<svg viewBox="0 0 48 48"><defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f2b552"/><stop offset="1" stop-color="#b86f12"/></linearGradient></defs><rect width="48" height="48" rx="12" fill="#31221a"/><path d="M12 11h24l-2.4 25a3 3 0 0 1-3 2.7H17.4a3 3 0 0 1-3-2.7z" fill="none" stroke="#f6ebdc" stroke-width="2"/><path d="M13.4 22h21.2l-1 14a2 2 0 0 1-2 1.8H16.4a2 2 0 0 1-2-1.8z" fill="url(#g)"/><rect x="19" y="26" width="7" height="7" rx="1.5" fill="#f6ebdc" opacity=".35"/></svg>`;
+const LOGO = `<div class="logo">${ic('i-glass')}</div>`;
 
 function render() {
   document.querySelectorAll('.tab').forEach(t => t.classList.toggle('on', t.dataset.tab === state.tab));
@@ -401,7 +446,7 @@ function render() {
 }
 
 function header(sub) {
-  return `<div class="top"><div class="brand">${LOGO}<div><h1>위스키 노트</h1><small>${sub}</small></div></div></div>`;
+  return `<div class="top">${LOGO}<div><h1>위스키 노트</h1><small>${sub}</small></div></div>`;
 }
 
 function filtered() {
@@ -422,6 +467,8 @@ function filtered() {
   return arr.sort(by);
 }
 
+const ORN = () => `<div class="orn">${ic('i-glass')}${ic('i-bottle')}${ic('i-dram')}</div>`;
+
 function viewList() {
   const total = logs.length;
   const uniq = new Set(logs.map(l => norm(l.name))).size;
@@ -429,30 +476,36 @@ function viewList() {
   const avg = rated.length ? fmtNum(rated.reduce((s, l) => s + l.rating, 0) / rated.length) : '-';
   const arr = filtered();
   const chips = ['', ...FILTER_FLAVORS].map(f => `<button class="chip ${state.flavor === f ? 'on' : ''}" data-flavor="${esc(f)}">${f ? (FICON[f] || '🍎') + ' ' + f : '전체'}</button>`).join('');
-  const cards = arr.map(l => `
-    <button class="card" data-edit="${l.id}">
-      <div class="row1">
-        <div><h3>${esc(l.name)}</h3>
-        <div class="meta">${[l.ml ? l.ml + 'ml' : '', l.abv ? l.abv + '%' : ''].filter(Boolean).join(' · ')}${l.rating ? ' · ' : ''}${l.rating ? stars(l.rating) : ''}</div></div>
-        <div class="date">${fmtDate(l.date)}</div>
+  const cards = arr.map((l, i) => {
+    const [icon, color] = typeStyle(l.name);
+    return `
+    <button class="card tape${i % 3}" data-edit="${l.id}">
+      <span class="tile ${color}">${ic(icon)}</span>
+      <div class="cbody">
+        <div class="row1"><h3>${esc(l.name)}</h3><div class="date">${fmtDate(l.date)}</div></div>
+        <div class="meta">${l.ml ? `<span>${ic('i-bottle', 'sm')} ${l.ml}ml</span>` : ''}${l.abv ? `<span>${ic('i-drop', 'sm')} ${l.abv}%</span>` : ''}${l.rating ? stars(l.rating) : ''}</div>
+        ${(l.flavors || []).length ? `<div class="tags">${l.flavors.map(f => `<span class="tag">${FICON[f] || ''} ${esc(f)}</span>`).join('')}</div>` : ''}
+        ${l.memo ? `<div class="memo">${esc(l.memo)}</div>` : ''}
       </div>
-      ${(l.flavors || []).length ? `<div class="tags">${l.flavors.map(f => `<span class="tag">${FICON[f] || ''} ${esc(f)}</span>`).join('')}</div>` : ''}
-      ${l.memo ? `<div class="memo">${esc(l.memo)}</div>` : ''}
-    </button>`).join('');
+    </button>`;
+  }).join('');
   const empty = logs.length
-    ? `<div class="empty"><div class="big">🔍</div>조건에 맞는 기록이 없어요</div>`
-    : `<div class="empty"><div class="big">🥃</div>아직 기록이 없어요<br>가운데 <b style="color:var(--amber)">+</b> 버튼으로 첫 한 잔을 남겨보세요</div>`;
-  return header('우리가 마신 위스키 기록') + `
-    <div class="hero"><div><b>${total}</b><span>마신 기록</span></div><div><b>${uniq}</b><span>다른 위스키</span></div><div><b>${avg}</b><span>평균 별점</span></div></div>
+    ? `<div class="empty">${ic('i-flask')}<br>조건에 맞는 기록이 없어요</div>`
+    : `<div class="empty">${ic('i-cheers')}<br>다이어리가 아직 비어 있어요<br>아래 가운데 <b>잔 버튼</b>으로 첫 한 잔을 남겨보세요</div>`;
+  return header('우리가 마신 위스키 다이어리') + `
+    <div class="hero"><div class="hero-t">우리의 위스키 기록</div><div class="hero-g">
+      <div>${ic('i-glass')}<b>${total}</b><span>마신 기록</span></div>
+      <div>${ic('i-bottle')}<b>${uniq}</b><span>다른 위스키</span></div>
+      <div>${ic('i-dram')}<b>${avg}</b><span>평균 점수</span></div></div></div>
     <input class="search" id="q" placeholder="이름·메모·맛으로 검색 (초성 가능: ㅁㅋㄹ)" value="${esc(state.q)}" enterkeyhint="search">
     <div class="filters">${chips}</div>
     <div class="sortrow"><span>${arr.length}건</span>
-      <select id="sort">${[['new', '최신순'], ['old', '오래된순'], ['rate', '별점순'], ['abv', '도수 높은순'], ['name', '이름순']].map(([v, t]) => `<option value="${v}" ${state.sort === v ? 'selected' : ''}>${t}</option>`).join('')}</select></div>
-    ${arr.length ? cards : empty}`;
+      <select id="sort">${[['new', '최신순'], ['old', '오래된순'], ['rate', '점수순'], ['abv', '도수 높은순'], ['name', '이름순']].map(([v, t]) => `<option value="${v}" ${state.sort === v ? 'selected' : ''}>${t}</option>`).join('')}</select></div>
+    ${arr.length ? cards + ORN() : empty}`;
 }
 
 function viewStats() {
-  if (!logs.length) return header('통계') + `<div class="empty"><div class="big">📊</div>기록이 쌓이면 취향 통계가 보여요</div>`;
+  if (!logs.length) return header('내 취향 노트') + `<div class="empty">${ic('i-dram')}<br>기록이 쌓이면 취향 통계가 보여요</div>`;
   const cnt = {};
   logs.forEach(l => (l.flavors || []).forEach(f => cnt[f] = (cnt[f] || 0) + 1));
   const top = Object.entries(cnt).sort((a, b) => b[1] - a[1]).slice(0, 7);
@@ -466,35 +519,35 @@ function viewStats() {
   const mc = months.map(m => [m, logs.filter(l => (l.date || '').startsWith(m)).length]);
   const mMax = Math.max(1, ...mc.map(x => x[1]));
   /* 종류별 */
-  const typeOf = l => { const hit = DB.find(d => norm(d[0]) === norm(l.name)); return hit ? hit[2] : '기타·직접입력'; };
-  const tc = {}; logs.forEach(l => { const t = typeOf(l); tc[t] = (tc[t] || 0) + 1; });
+  const tc = {}; logs.forEach(l => { const t = typeOfName(l.name); tc[t] = (tc[t] || 0) + 1; });
   const tEntries = Object.entries(tc).sort((a, b) => b[1] - a[1]);
   const tMax = tEntries[0][1];
   /* 최애 */
   const favs = logs.filter(l => l.rating >= 4).sort((a, b) => b.rating - a.rating || (b.date || '').localeCompare(a.date || '')).slice(0, 5);
-  const bar = (label, n, max) => `<div class="bar"><span>${label}</span><div class="tr"><div class="fi" style="width:${Math.max(4, n / max * 100)}%"></div></div><span class="n">${n}</span></div>`;
-  return header('내 취향 통계') + `
-    <div class="kpis"><div class="kpi"><span>평균 도수</span><b>${avgAbv}${avgAbv === '-' ? '' : '%'}</b></div>
-    <div class="kpi"><span>가장 많이 고른 맛</span><b>${top.length ? (FICON[top[0][0]] || '') + ' ' + esc(top[0][0]) : '-'}</b></div></div>
-    <div class="box"><h3>자주 고른 맛 TOP</h3>${top.length ? top.map(([f, n]) => bar((FICON[f] || '') + ' ' + esc(f), n, topMax)).join('') : '<span style="color:var(--muted)">맛 특징을 선택하면 집계돼요</span>'}</div>
-    <div class="box"><h3>최근 6개월 마신 횟수</h3>${mc.map(([m, n]) => bar(m.slice(2).replace('-', '.'), n, mMax)).join('')}</div>
-    <div class="box"><h3>종류별</h3>${tEntries.map(([t, n]) => bar(esc(t), n, tMax)).join('')}</div>
-    <div class="box"><h3>⭐ 별 4개 이상 최애 위스키</h3>${favs.length ? favs.map(l => `<div class="fav"><span>${esc(l.name)}</span>${stars(l.rating)}</div>`).join('') : '<span style="color:var(--muted)">별점 4개 이상을 주면 여기에 모여요</span>'}</div>`;
+  const bar = (label, n, max) => `<div class="bar"><span>${label}</span><div class="tr"><div class="fi" style="width:${n ? Math.max(4, n / max * 100) : 0}%"></div></div><span class="n">${n}</span></div>`;
+  return header('내 취향 노트') + `
+    <div class="kpis"><div class="kpi tape0"><span>${ic('i-drop', 'sm')} 평균 도수</span><b>${avgAbv}${avgAbv === '-' ? '' : '%'}</b></div>
+    <div class="kpi tape1"><span>${ic('i-dram', 'sm')} 많이 고른 맛</span><b>${top.length ? (FICON[top[0][0]] || '') + ' ' + esc(top[0][0]) : '-'}</b></div></div>
+    <div class="box"><h3>${ic('i-dram')} 자주 고른 맛 TOP</h3>${top.length ? top.map(([f, n]) => bar((FICON[f] || '') + ' ' + esc(f), n, topMax)).join('') : '<span style="color:var(--muted)">맛 특징을 선택하면 집계돼요</span>'}</div>
+    <div class="box"><h3>${ic('i-cal')} 최근 6개월 마신 횟수</h3>${mc.map(([m, n]) => bar(m.slice(2).replace('-', '.'), n, mMax)).join('')}</div>
+    <div class="box"><h3>${ic('i-bottle')} 종류별</h3>${tEntries.map(([t, n]) => bar(esc(t), n, tMax)).join('')}</div>
+    <div class="box"><h3>${ic('i-glass')} 4점 이상 최애 위스키</h3>${favs.length ? favs.map(l => `<div class="fav"><span>${ic(typeStyle(l.name)[0])}${esc(l.name)}</span>${stars(l.rating)}</div>`).join('') : '<span style="color:var(--muted)">4점 이상을 주면 여기에 모여요</span>'}</div>
+    ${ORN()}`;
 }
 
 function viewSettings() {
   return header('설정·백업') + `<div class="settings">
-    <div class="box"><h3>백업 / 복원</h3>
+    <div class="box tape0"><h3>${ic('i-book')} 백업 / 복원</h3>
       <p>기록은 이 기기의 브라우저에 저장돼요. 폰을 바꾸거나 가족과 나눌 땐 파일로 내보내서 옮기세요.</p>
-      <button class="btn-sub" id="exp" style="margin-top:0">📤 기록 파일로 내보내기 (JSON)</button>
-      <button class="btn-sub" id="expcsv">📄 엑셀용 CSV로 내보내기</button>
-      <button class="btn-sub" id="imp">📥 백업 파일 불러오기</button>
+      <button class="btn-sub" id="exp" style="margin-top:0">${ic('i-bottle')} 기록 파일로 내보내기 (JSON)</button>
+      <button class="btn-sub" id="expcsv">${ic('i-book')} 엑셀용 CSV로 내보내기</button>
+      <button class="btn-sub" id="imp">${ic('i-flask')} 백업 파일 불러오기</button>
       <input type="file" id="file" accept=".json,application/json" hidden>
     </div>
-    <div class="box"><h3>정보</h3>
+    <div class="box tape1"><h3>${ic('i-dram')} 정보</h3>
       <p>내장 위스키 ${DB.length}종 · 내 기록 ${logs.length}건<br>목록에 없는 위스키는 이름을 직접 쓰면 다음부터 자동완성에 나와요.<br>내장 정보는 시판 제품 기준 참고값이라 자유롭게 수정할 수 있어요.</p>
     </div>
-    <div class="box"><h3>위험 구역</h3><button class="btn-sub" id="wipe" style="margin-top:0;color:var(--red)">🗑 모든 기록 삭제</button></div>
+    <div class="box"><h3>${ic('i-glass')} 위험 구역</h3><button class="btn-sub" id="wipe" style="margin-top:0;color:var(--red)">모든 기록 삭제</button></div>
   </div>`;
 }
 
@@ -545,31 +598,31 @@ function openForm(id) {
 
   const draw = () => {
     root.innerHTML = `<div class="sheet"><div class="sheet-in">
-      <div class="sheet-head"><button class="link" id="cancel">취소</button><h2>${old ? '기록 수정' : '한 잔 기록하기'}</h2><button class="link" id="del" style="${old ? '' : 'visibility:hidden'}" ><span class="danger" style="color:var(--red)">삭제</span></button></div>
+      <div class="sheet-head"><button class="link" id="cancel">취소</button><h2>${ic(old ? 'i-pen' : 'i-cheers')} ${old ? '기록 수정' : '오늘의 한 잔'}</h2><button class="link" id="del" style="${old ? '' : 'visibility:hidden'}" ><span style="color:var(--red)">삭제</span></button></div>
 
-      <label class="lb">위스키 이름</label>
+      <label class="lb">${ic('i-bottle')} 위스키 이름</label>
       <div class="ac-wrap"><input class="field" id="name" placeholder="예: 맥캘란, glenfiddich, ㄱㄹㅍㄷ" value="${esc(f.name)}" autocomplete="off" autocapitalize="off"><div class="ac" id="ac" hidden></div></div>
       <div class="autonote" id="note">${esc(note)}</div>
 
       <div class="grid2">
-        <div><label class="lb">용량</label><div class="unit"><input class="field" id="ml" type="number" inputmode="numeric" min="0" value="${f.ml || ''}"><em>ml</em></div></div>
-        <div><label class="lb">알콜 도수</label><div class="unit"><input class="field" id="abv" type="number" inputmode="decimal" step="0.1" min="0" max="100" value="${f.abv || ''}"><em>%</em></div></div>
+        <div><label class="lb">${ic('i-bottle')} 용량</label><div class="unit"><input class="field" id="ml" type="number" inputmode="numeric" min="0" value="${f.ml || ''}"><em>ml</em></div></div>
+        <div><label class="lb">${ic('i-drop')} 알콜 도수</label><div class="unit"><input class="field" id="abv" type="number" inputmode="decimal" step="0.1" min="0" max="100" value="${f.abv || ''}"><em>%</em></div></div>
       </div>
       <div class="quick">${VOLS.map(v => `<button class="chip ${+f.ml === v ? 'on' : ''}" data-vol="${v}">${v}ml</button>`).join('')}</div>
 
-      <label class="lb">맛의 특징 (여러 개 선택)</label>
-      <div class="flavors" id="fl">${FLAVORS.map(([n, ic]) => `<button class="chip ${f.flavors.includes(n) ? 'on' : ''} ${pre.has(n) ? 'pre' : ''}" data-f="${esc(n)}">${ic} ${n}</button>`).join('')}</div>
+      <label class="lb">${ic('i-dram')} 맛의 특징 (여러 개 선택)</label>
+      <div class="flavors" id="fl">${FLAVORS.map(([n, icn]) => `<button class="chip ${f.flavors.includes(n) ? 'on' : ''} ${pre.has(n) ? 'pre' : ''}" data-f="${esc(n)}">${icn} ${n}</button>`).join('')}</div>
 
-      <label class="lb">별점</label>
-      <div class="rate" id="rate">${[1, 2, 3, 4, 5].map(i => `<button class="${i <= f.rating ? 'on' : ''}" data-r="${i}">★</button>`).join('')}</div>
+      <label class="lb">${ic('i-glass')} 오늘의 점수</label>
+      <div class="rate" id="rate">${[1, 2, 3, 4, 5].map(i => `<button class="${i <= f.rating ? 'on' : ''}" data-r="${i}" aria-label="${i}점">${ic('i-glass')}</button>`).join('')}</div>
 
-      <label class="lb">마신 날짜</label>
+      <label class="lb">${ic('i-cal')} 마신 날짜</label>
       <input class="field" id="date" type="date" value="${esc(f.date)}">
 
-      <label class="lb">메모</label>
+      <label class="lb">${ic('i-pen')} 메모</label>
       <textarea class="field" id="memo" placeholder="누구와, 어디서, 어떤 느낌이었는지 자유롭게 적어보세요">${esc(f.memo)}</textarea>
 
-      <button class="btn-main" id="save">${old ? '수정 저장' : '기록 저장'}</button>
+      <button class="btn-main" id="save">${ic('i-glass')} ${old ? '수정 저장' : '다이어리에 기록'}</button>
     </div></div>`;
     bindForm();
   };
@@ -594,9 +647,9 @@ function openForm(id) {
     const showAc = () => {
       res = searchWords(name.value);
       hi = -1;
-      if (!res.length || (res.length === 1 && norm(res[0].ko) === norm(name.value))) { ac.hidden = true; return; }
+      if (!res.length || (note && res.length === 1 && norm(res[0].ko) === norm(name.value))) { ac.hidden = true; return; }
       ac.hidden = false;
-      ac.innerHTML = res.map((c, i) => `<button type="button" data-i="${i}"><b>${hl(c.ko, name.value)}</b><small>${esc(c.en ? c.en + ' · ' : '')}${esc(c.type)} · ${c.ml}ml · ${c.abv}%</small></button>`).join('');
+      ac.innerHTML = res.map((c, i) => `<button type="button" data-i="${i}">${ic((TYPE_STYLE[c.type] || TYPE_STYLE['기타·직접입력'])[0])}<span><b>${hl(c.ko, name.value)}</b><small>${esc(c.en ? c.en + ' · ' : '')}${esc(c.type)} · ${c.ml}ml · ${c.abv}%</small></span></button>`).join('');
       ac.querySelectorAll('button').forEach(b => b.onmousedown = e => { e.preventDefault(); pick(res[+b.dataset.i]); });
     };
     name.addEventListener('input', () => { note = ''; $('#note').textContent = ''; showAc(); });
@@ -630,7 +683,7 @@ function openForm(id) {
       if (f.abv > 100 || f.abv < 0) { toast('도수를 확인해주세요'); return; }
       const rec = { id: old ? old.id : uid(), name: nm, ml: f.ml, abv: f.abv, flavors: f.flavors, memo: f.memo.trim(), date: f.date || today(), rating: f.rating, created: old ? old.created : Date.now() };
       if (old) logs = logs.map(l => l.id === old.id ? rec : l); else logs.push(rec);
-      store.save(logs); close(); toast(old ? '수정했어요' : '기록했어요 🥃');
+      store.save(logs); close(); toast(old ? '수정했어요' : '다이어리에 기록했어요');
       state.tab = 'list'; render();
     };
   };
