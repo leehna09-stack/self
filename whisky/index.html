@@ -241,6 +241,25 @@ textarea.field { min-height: 140px; resize: vertical; line-height: 28px; padding
 .pc-r.best .pr { color: var(--mint-ink); }
 .sum { margin: 0 0 8px; font-size: 13px; color: var(--muted); }
 .sum b { color: var(--amber-ink); font: 700 18px var(--hand); }
+
+/* 사진 */
+.phs { display: flex; gap: 8px; margin-top: 10px; }
+.ph { width: 62px; height: 62px; object-fit: cover; border: 3px solid #fff; border-radius: 4px; box-shadow: 0 1px 4px #3b2f2340; cursor: zoom-in; background: #fff; }
+.ph:nth-child(1) { transform: rotate(-2deg); } .ph:nth-child(2) { transform: rotate(1.5deg); } .ph:nth-child(3) { transform: rotate(-1deg); }
+.photos { display: flex; gap: 10px; flex-wrap: wrap; }
+.pbox { position: relative; width: 92px; height: 92px; }
+.pbox img { width: 100%; height: 100%; object-fit: cover; border: 4px solid #fff; border-radius: 4px; box-shadow: 0 2px 6px #3b2f2340; cursor: zoom-in; background: #fff; }
+.px { position: absolute; top: -8px; right: -8px; width: 26px; height: 26px; border-radius: 50%; background: #3b2f23; color: #fff; font-size: 17px; line-height: 26px; text-align: center; }
+.padd { width: 92px; height: 92px; border: 1.5px dashed #cdb98d; border-radius: 6px; background: var(--paper); color: var(--amber-ink); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; cursor: pointer; font-size: 12px; }
+.padd .ic { font-size: 26px; }
+.padd small { color: var(--muted); font-size: 11px; }
+.pnote { margin: 6px 2px 0; font-size: 12px; color: var(--muted); }
+.viewer { position: fixed; inset: 0; z-index: 90; background: #1c140dee; display: grid; place-items: center; touch-action: pan-y; }
+.viewer img { max-width: 96vw; max-height: 86vh; border: 6px solid #fff; border-radius: 4px; box-shadow: 0 10px 40px #000a; background: #fff; }
+.viewer button { position: absolute; color: #fff; background: #ffffff26; border-radius: 50%; width: 44px; height: 44px; font-size: 26px; line-height: 44px; }
+.viewer .vx { top: calc(14px + var(--safe-t)); right: 14px; }
+.viewer .vp { left: 10px; top: 50%; margin-top: -22px; } .viewer .vn { right: 10px; top: 50%; margin-top: -22px; }
+.viewer .vc { position: absolute; bottom: calc(18px + var(--safe-b)); color: #fff; font-size: 13px; }
 </style>
 </head>
 
@@ -263,6 +282,7 @@ textarea.field { min-height: 140px; resize: vertical; line-height: 28px; padding
   <symbol id="i-download" viewBox="0 0 24 24"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></symbol>
   <symbol id="i-tag" viewBox="0 0 24 24"><path d="M3.5 12.2V4.5a1 1 0 0 1 1-1h7.7l8.3 8.3a1.5 1.5 0 0 1 0 2.1l-6.1 6.1a1.5 1.5 0 0 1-2.1 0z"/><circle cx="8" cy="8" r="1.4"/></symbol>
   <symbol id="i-shop" viewBox="0 0 24 24"><path d="M4 9.5V20h16V9.5"/><path d="M3 9.5 5 4h14l2 5.5a3 3 0 0 1-6 0 3 3 0 0 1-6 0 3 3 0 0 1-6 0z"/><path d="M10 20v-5h4v5"/></symbol>
+  <symbol id="i-camera" viewBox="0 0 24 24"><path d="M4 8h3l1.6-2.5h6.8L17 8h3a1 1 0 0 1 1 1v9.5a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13.5" r="3.6"/></symbol>
   <symbol id="i-cheers" viewBox="0 0 24 24"><path d="M3.5 6.5l4-1.2 2.4 7.6a2.4 2.4 0 0 1-1.6 3l-.9.3a2.4 2.4 0 0 1-3-1.6z"/><path d="M20.5 6.5l-4-1.2-2.4 7.6a2.4 2.4 0 0 0 1.6 3l.9.3a2.4 2.4 0 0 0 3-1.6z"/><path d="M12 2.5v2M9.2 3.2l.7 1.4M14.8 3.2l-.7 1.4"/></symbol>
 </defs></svg>
 <div class="app" id="app"></div>
@@ -449,6 +469,7 @@ const typeStyle = name => TYPE_STYLE[typeOfName(name)] || TYPE_STYLE['기타·�
 const fmtNum = n => (Math.round(n * 10) / 10).toString();
 
 function toast(msg) {
+  $('#toastRoot').innerHTML = '';
   const el = document.createElement('div'); el.className = 'toast'; el.innerHTML = ic('i-glass') + ' ' + esc(msg);
   $('#toastRoot').appendChild(el); setTimeout(() => el.remove(), 1800);
 }
@@ -505,6 +526,87 @@ function render() {
   bindView();
 }
 
+/* 사진은 용량이 커서 기록(localStorage)과 따로 IndexedDB에 저장해요 */
+const PH = {
+  db: null, ok: true,
+  open() {
+    return new Promise(res => {
+      try {
+        const r = indexedDB.open('whisky-photos', 1);
+        r.onupgradeneeded = () => r.result.createObjectStore('p');
+        r.onsuccess = () => { PH.db = r.result; res(true); };
+        r.onerror = r.onblocked = () => { PH.ok = false; res(false); };
+      } catch { PH.ok = false; res(false); }
+    });
+  },
+  all() {
+    return new Promise(res => {
+      if (!PH.db) return res({});
+      const out = {};
+      try {
+        const req = PH.db.transaction('p', 'readonly').objectStore('p').openCursor();
+        req.onsuccess = () => { const c = req.result; if (c) { out[c.key] = c.value; c.continue(); } else res(out); };
+        req.onerror = () => res(out);
+      } catch { res(out); }
+    });
+  },
+  set(id, list) {
+    return new Promise(res => {
+      if (!PH.db) return res(false);
+      try {
+        const t = PH.db.transaction('p', 'readwrite'), st = t.objectStore('p');
+        if (list && list.length) st.put(list, id); else st.delete(id);
+        t.oncomplete = () => res(true); t.onerror = t.onabort = () => res(false);
+      } catch { res(false); }
+    });
+  },
+  clear() {
+    return new Promise(res => {
+      if (!PH.db) return res(false);
+      try { const t = PH.db.transaction('p', 'readwrite'); t.objectStore('p').clear(); t.oncomplete = () => res(true); t.onerror = t.onabort = () => res(false); } catch { res(false); }
+    });
+  },
+};
+let photoMap = {};            /* 기록 id → [{full, thumb}] (최대 3장) */
+const MAX_PHOTOS = 3;
+const isImg = v => typeof v === 'string' && v.startsWith('data:image/') && v.length < 4e6;
+
+/* 올린 사진을 줄여서 저장 (원본은 보관하지 않아요) */
+async function shrink(file) {
+  const url = URL.createObjectURL(file);
+  try {
+    const img = await new Promise((ok, no) => { const i = new Image(); i.onload = () => ok(i); i.onerror = no; i.src = url; });
+    const make = (max, q) => {
+      const k = Math.min(1, max / Math.max(img.naturalWidth, img.naturalHeight));
+      const c = document.createElement('canvas'); c.width = Math.max(1, Math.round(img.naturalWidth * k)); c.height = Math.max(1, Math.round(img.naturalHeight * k));
+      const g = c.getContext('2d'); g.fillStyle = '#fff'; g.fillRect(0, 0, c.width, c.height); g.drawImage(img, 0, 0, c.width, c.height);
+      return c.toDataURL('image/jpeg', q);
+    };
+    return { full: make(1280, 0.75), thumb: make(240, 0.72) };
+  } finally { URL.revokeObjectURL(url); }
+}
+
+/* 사진 크게 보기 (좌우 버튼·스와이프·방향키) */
+function openViewer(list, start) {
+  if (!list || !list.length) return;
+  let i = start, x0 = null;
+  const v = document.createElement('div'); v.className = 'viewer'; v.setAttribute('role', 'dialog'); v.setAttribute('aria-label', '사진 보기');
+  const end = () => { document.removeEventListener('keydown', key); v.remove(); };
+  const go = d => { i = (i + d + list.length) % list.length; draw(); };
+  const key = e => { if (e.key === 'Escape') end(); else if (e.key === 'ArrowLeft' && list.length > 1) go(-1); else if (e.key === 'ArrowRight' && list.length > 1) go(1); };
+  const draw = () => {
+    v.innerHTML = `<img src="${list[i].full}" alt="사진 ${i + 1}"><button class="vx" aria-label="닫기">×</button>` +
+      (list.length > 1 ? `<button class="vp" aria-label="이전 사진">‹</button><button class="vn" aria-label="다음 사진">›</button><div class="vc">${i + 1} / ${list.length}</div>` : '');
+    v.querySelector('.vx').onclick = end;
+    if (list.length > 1) { v.querySelector('.vp').onclick = () => go(-1); v.querySelector('.vn').onclick = () => go(1); }
+  };
+  v.addEventListener('click', e => { if (e.target === v) end(); });
+  v.addEventListener('touchstart', e => { x0 = e.touches[0].clientX; }, { passive: true });
+  v.addEventListener('touchend', e => { if (x0 === null || list.length < 2) return; const dx = e.changedTouches[0].clientX - x0; x0 = null; if (Math.abs(dx) > 50) go(dx < 0 ? 1 : -1); });
+  document.addEventListener('keydown', key);
+  draw(); document.body.appendChild(v);
+}
+
 function header(sub) {
   return `<div class="top">${LOGO}<div><h1>위스키 노트</h1><small>${sub}</small></div></div>`;
 }
@@ -546,6 +648,7 @@ function viewList() {
         <div class="row1"><h3>${esc(l.name)}</h3><div class="date">${fmtDate(l.date)}</div></div>
         <div class="meta">${l.ml ? `<span>${ic('i-bottle', 'sm')} ${l.ml}ml</span>` : ''}${l.abv ? `<span>${ic('i-drop', 'sm')} ${l.abv}%</span>` : ''}${l.rating ? stars(l.rating) : ''}</div>
         ${(l.price > 0 || l.shop) ? `<div class="meta buyline">${l.price > 0 ? `<span>${ic('i-tag', 'sm')} <b>${won(l.price)}</b>${isLowest(l) ? ' <span class="low">최저가</span>' : ''}</span>` : ''}${l.shop ? `<span>${ic('i-shop', 'sm')} ${esc(l.shop)}</span>` : ''}${l.price > 0 ? `<span>${fmtDate(buyDateOf(l))} 구매</span>` : ''}</div>` : ''}
+        ${(photoMap[l.id] || []).length ? `<div class="phs">${photoMap[l.id].map((ph, n) => `<img class="ph" src="${ph.thumb}" data-ph="${l.id}:${n}" alt="사진 ${n + 1}">`).join('')}</div>` : ''}
         ${(l.flavors || []).length ? `<div class="tags">${l.flavors.map(f => `<span class="tag">${FICON[f] || ''} ${esc(f)}</span>`).join('')}</div>` : ''}
         ${l.memo ? `<div class="memo">${esc(l.memo)}</div>` : ''}
       </div>
@@ -617,7 +720,7 @@ function viewStats() {
 function viewSettings() {
   return header('설정·백업') + `<div class="settings">
     <div class="box tape0"><h3>${ic('i-book')} 백업 / 복원</h3>
-      <p>기록은 이 기기의 브라우저에 저장돼요. 폰을 바꾸거나 가족과 나눌 땐 파일로 내보내서 옮기세요.</p>
+      <p>기록과 사진은 이 기기의 브라우저에 저장돼요. 폰을 바꾸거나 가족과 나눌 땐 파일로 내보내서 옮기세요. (JSON 백업에는 사진도 들어가요. CSV에는 글 기록만 들어가요.)</p>
       <button class="btn-sub" id="exp" style="margin-top:0">${ic('i-bottle')} 기록 파일로 내보내기 (JSON)</button>
       <button class="btn-sub" id="expcsv">${ic('i-book')} 엑셀용 CSV로 내보내기</button>
       <button class="btn-sub" id="imp">${ic('i-flask')} 백업 파일 불러오기</button>
@@ -655,13 +758,14 @@ function installApp() {
   $('#installModal').hidden = false;
 }
 function exportJson() {
-  download('whisky-notes-backup-' + today() + '.json', JSON.stringify({ app: 'whisky-notes', version: 1, logs }, null, 2), 'application/json');
+  download('whisky-notes-backup-' + today() + '.json', JSON.stringify({ app: 'whisky-notes', version: 2, logs: logs.map(l => photoMap[l.id] ? { ...l, photos: photoMap[l.id] } : l) }, null, 2), 'application/json');
   toast('백업 파일을 내려받았어요.');
 }
 
 function bindView() {
   $('#installBtn').onclick = installApp;
   $('#backupBtn').onclick = exportJson;
+  document.querySelectorAll('[data-ph]').forEach(img => img.onclick = e => { e.stopPropagation(); const [id, n] = img.dataset.ph.split(':'); openViewer(photoMap[id], +n); });
   const q = $('#q');
   if (q) q.addEventListener('input', e => { state.q = e.target.value; const pos = e.target.selectionStart; render(); const n = $('#q'); n.focus(); n.setSelectionRange(pos, pos); });
   const so = $('#sort'); if (so) so.onchange = e => { state.sort = e.target.value; render(); };
@@ -684,10 +788,15 @@ function bindView() {
         const ids = new Set(logs.map(l => l.id));
         let add = 0;
         inc.forEach(l => { if (l && l.name && !ids.has(l.id)) { logs.push({ id: l.id || uid(), name: String(l.name), ml: +l.ml || 0, abv: +l.abv || 0, flavors: Array.isArray(l.flavors) ? l.flavors : [], memo: l.memo || '', date: l.date || today(), rating: +l.rating || 0, price: +l.price || 0, shop: l.shop || '', buyDate: l.buyDate || '', created: l.created || Date.now() }); add++; } });
+        for (const l of inc) {
+          if (!l || !l.id || !Array.isArray(l.photos) || photoMap[l.id] || !logs.some(x => x.id === l.id)) continue;
+          const ph = l.photos.filter(x => x && isImg(x.full) && isImg(x.thumb)).slice(0, MAX_PHOTOS);
+          if (ph.length && await PH.set(l.id, ph)) photoMap[l.id] = ph;
+        }
         store.save(logs); toast(add + '건을 불러왔어요'); render();
       } catch { toast('올바른 백업 파일이 아니에요'); }
     };
-    $('#wipe').onclick = () => { if (confirm('모든 기록을 삭제할까요?\n(백업하지 않았다면 되돌릴 수 없어요)') && confirm('정말 삭제합니다.')) { logs = []; store.save(logs); toast('삭제했어요'); render(); } };
+    $('#wipe').onclick = () => { if (confirm('모든 기록을 삭제할까요?\n(백업하지 않았다면 되돌릴 수 없어요)') && confirm('정말 삭제합니다.')) { logs = []; store.save(logs); PH.clear(); photoMap = {}; toast('삭제했어요'); render(); } };
   }
 }
 function download(name, text, type) {
@@ -699,7 +808,7 @@ function download(name, text, type) {
 ============================================================= */
 function openForm(id) {
   const old = id ? logs.find(l => l.id === id) : null;
-  const f = old ? { price: '', shop: '', buyDate: old.buyDate || old.date, ...old, flavors: [...(old.flavors || [])] } : { name: '', ml: 700, abv: '', flavors: [], memo: '', date: today(), rating: 0, price: '', shop: '', buyDate: today() };
+  const f = old ? { price: '', shop: '', buyDate: old.buyDate || old.date, ...old, flavors: [...(old.flavors || [])], photos: (photoMap[old.id] || []).slice() } : { name: '', ml: 700, abv: '', flavors: [], memo: '', date: today(), rating: 0, price: '', shop: '', buyDate: today(), photos: [] };
   let pre = new Set(); // 자동으로 채워진 맛 (표시용)
   let note = '';
   const root = $('#sheetRoot');
@@ -728,6 +837,10 @@ function openForm(id) {
 
       <label class="lb">${ic('i-cal')} 마신 날짜</label>
       <input class="field" id="date" type="date" value="${esc(f.date)}">
+
+      <label class="lb">${ic('i-camera')} 사진 <span style="color:var(--muted);font:12px var(--hand)">(최대 ${MAX_PHOTOS}장)</span></label>
+      <div class="photos" id="photos"></div>
+      <input type="file" id="photoIn" accept="image/*" multiple hidden>
 
       <div class="buy">
         <div class="buy-t">${ic('i-tag')} 구매 정보</div>
@@ -758,6 +871,24 @@ function openForm(id) {
 
   const bindForm = () => {
     $('#cancel').onclick = close;
+    /* 사진 올리기/지우기 (화면 전체를 다시 그리지 않고 사진 영역만 갱신) */
+    const photosEl = $('#photos'), photoIn = $('#photoIn');
+    const drawPhotos = () => {
+      photosEl.innerHTML = f.photos.map((ph, n) => `<div class="pbox"><img src="${ph.thumb}" data-view="${n}" alt="사진 ${n + 1}"><button type="button" class="px" data-pdel="${n}" aria-label="사진 ${n + 1} 지우기">×</button></div>`).join('') +
+        (!PH.ok ? `<div class="pnote">이 브라우저에서는 사진을 저장할 수 없어요.</div>` :
+          f.photos.length < MAX_PHOTOS ? `<label class="padd" for="photoIn">${ic('i-camera')}<span>사진 추가</span><small>${f.photos.length}/${MAX_PHOTOS}</small></label>` : '');
+      photosEl.querySelectorAll('[data-view]').forEach(im => im.onclick = () => openViewer(f.photos, +im.dataset.view));
+      photosEl.querySelectorAll('[data-pdel]').forEach(b => b.onclick = () => { f.photos.splice(+b.dataset.pdel, 1); drawPhotos(); });
+    };
+    drawPhotos();
+    photoIn.onchange = async () => {
+      const files = [...photoIn.files]; photoIn.value = '';
+      const room = MAX_PHOTOS - f.photos.length;
+      if (files.length > room) toast(`사진은 최대 ${MAX_PHOTOS}장까지 올릴 수 있어요`);
+      for (const file of files.slice(0, Math.max(0, room))) {
+        try { f.photos.push(await shrink(file)); drawPhotos(); } catch { toast('사진을 불러오지 못했어요'); }
+      }
+    };
     /* 같은 위스키의 이전 최저가와 비교해서 알려주기 */
     const hintEl = $('#pricehint');
     const updateHint = () => {
@@ -778,7 +909,7 @@ function openForm(id) {
       $('#shop').value = b.dataset.shop;
       root.querySelectorAll('[data-shop]').forEach(x => x.classList.toggle('on', x === b));
     });
-    if (old) $('#del').onclick = () => { if (confirm(`"${old.name}" 기록을 삭제할까요?`)) { logs = logs.filter(l => l.id !== old.id); store.save(logs); close(); toast('삭제했어요'); render(); } };
+    if (old) $('#del').onclick = () => { if (confirm(`"${old.name}" 기록을 삭제할까요?`)) { logs = logs.filter(l => l.id !== old.id); store.save(logs); PH.set(old.id, null); delete photoMap[old.id]; close(); toast('삭제했어요'); render(); } };
     const name = $('#name'), ac = $('#ac');
     let hi = -1, res = [];
     const pick = c => {
@@ -820,7 +951,7 @@ function openForm(id) {
       const r = +b.dataset.r; f.rating = f.rating === r ? 0 : r;
       root.querySelectorAll('[data-r]').forEach(x => x.classList.toggle('on', +x.dataset.r <= f.rating));
     });
-    $('#save').onclick = () => {
+    $('#save').onclick = async () => {
       readFields();
       const nm = f.name.trim();
       if (!nm) { toast('위스키 이름을 입력해주세요'); $('#name').focus(); return; }
@@ -828,7 +959,14 @@ function openForm(id) {
       if (f.price < 0) { toast('구매가격을 확인해주세요'); return; }
       const rec = { id: old ? old.id : uid(), name: nm, ml: f.ml, abv: f.abv, flavors: f.flavors, memo: f.memo.trim(), date: f.date || today(), rating: f.rating, price: f.price, shop: f.shop, buyDate: f.price > 0 ? (f.buyDate || f.date || today()) : '', created: old ? old.created : Date.now() };
       if (old) logs = logs.map(l => l.id === old.id ? rec : l); else logs.push(rec);
-      store.save(logs); close(); toast(old ? '수정했어요' : '다이어리에 기록했어요');
+      $('#save').disabled = true;
+      store.save(logs);
+      let photoFail = false;
+      if (f.photos.length || photoMap[rec.id]) {
+        photoFail = !(await PH.set(rec.id, f.photos));
+        if (!photoFail) { if (f.photos.length) { photoMap[rec.id] = f.photos; try { navigator.storage && navigator.storage.persist && navigator.storage.persist(); } catch {} } else delete photoMap[rec.id]; }
+      }
+      close(); toast(photoFail ? '기록은 저장했지만 사진은 저장하지 못했어요' : old ? '수정했어요' : '다이어리에 기록했어요');
       state.tab = 'list'; render();
     };
   };
@@ -846,6 +984,7 @@ document.querySelectorAll('.tab').forEach(t => t.onclick = () => {
 $('#installClose').onclick = () => { $('#installModal').hidden = true; };
 $('#installModal').onclick = e => { if (e.target.id === 'installModal') e.currentTarget.hidden = true; };
 render();
+PH.open().then(PH.all).then(m => { photoMap = m; if (!$('#sheetRoot').innerHTML.trim()) render(); });
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
 </script>
 </body>
