@@ -494,6 +494,11 @@ input:focus, input:focus-visible { outline: 0; border-color: var(--primary); box
 .tabbar .fab.on, .tabbar .fab { color: #fff; }
 .tabbar .fab svg { width: 24px; height: 24px; filter: none; }
 #toast { bottom: calc(78px + env(safe-area-inset-bottom)); }
+
+/* 제목 왼쪽 아이콘: 배경 없이 그림만, 글자 블록과 같은 높이 */
+.hero-title { align-items: center; gap: 10px; }
+.brand { width: auto; height: 51px; align-self: center; flex: none; border-radius: 0; box-shadow: none; background: none; }
+.mininav img { width: auto; height: 20px; border-radius: 0; }
 </style>
 </head>
 
@@ -522,7 +527,7 @@ input:focus, input:focus-visible { outline: 0; border-color: var(--primary); box
       </div>
     </div>
     <div class="hero-title">
-      <img class="brand" src="icons/d1-192.png" alt="" width="62" height="62">
+      <img class="brand" src="icons/coin.png" alt="">
       <div><p class="eyebrow">우리 둘의 살림 기록</p><h1>알뜰살뜰 가계부</h1></div>
     </div>
   </header>
@@ -736,7 +741,7 @@ input:focus, input:focus-visible { outline: 0; border-color: var(--primary); box
 
 <!-- 알림 영역: 저장했어요 / 삭제했어요 같은 메시지가 여기에 떠요 -->
 <!-- 위쪽 미니 제목 + 아래쪽 탭바 (iOS 앱 느낌) -->
-<div class="mininav" id="miniNav" aria-hidden="true"><img src="icons/d1-192.png" alt="">알뜰살뜰 가계부</div>
+<div class="mininav" id="miniNav" aria-hidden="true"><img src="icons/coin.png" alt="">알뜰살뜰 가계부</div>
 <nav class="tabbar" aria-label="화면 이동">
   <button type="button" data-go="sec-home" class="on"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10v9.5a1 1 0 0 0 1 1H10v-5h4v5h3.5a1 1 0 0 0 1-1V10"/></svg>홈</button>
   <button type="button" data-go="sec-cal"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15.5" rx="3"/><path d="M8 3v4M16 3v4M3.5 10h17"/></svg>달력</button>

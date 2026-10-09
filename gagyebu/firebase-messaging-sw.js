@@ -14,8 +14,8 @@ self.addEventListener('push', function (event) {
   var body = data.body || n.body || '새 소식이 있어요.';
   event.waitUntil(self.registration.showNotification(title, {
     body: body,
-    icon: 'icon-192.png',
-    badge: 'icon-192.png',
+    icon: 'icons/d1-192.png',
+    badge: 'icons/badge.png',
     tag: 'gagyebu-news',
     data: { link: data.link || './' }
   }));
