@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#1a110b">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon-180.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="위스키노트">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>위스키 노트</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+
+<!-- ============================================================
+  [1] 꾸미기(CSS) - 맨 위 :root 의 색 이름표만 바꿔도 분위기가 바뀌어요
+============================================================= -->
+<style>
+:root {
+  --bg: #1a110b;          /* 바탕: 오크통 같은 짙은 갈색 */
+  --surface: #261a11;     /* 카드 */
+  --surface2: #312216;    /* 카드 위 입력칸 */
+  --text: #f6ebdc;
+  --muted: #b9a58d;
+  --line: #43301f;
+  --amber: #e8a33d;       /* 대표색: 위스키 호박색 */
+  --amber-soft: #e8a33d26;
+  --amber-deep: #b86f12;
+  --red: #e5645a;
+  --radius: 16px;
+  --safe-b: env(safe-area-inset-bottom, 0px);
+  --safe-t: env(safe-area-inset-top, 0px);
+}
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+[hidden] { display: none !important; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0; background: var(--bg); color: var(--text);
+  font: 14px/1.55 "Pretendard Variable", Pretendard, -apple-system, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+  min-height: 100vh;
+}
+button { font: inherit; color: inherit; cursor: pointer; border: 0; background: none; }
+input, textarea, select { font: inherit; color: var(--text); }
+.app { max-width: 560px; margin: 0 auto; padding: calc(var(--safe-t) + 18px) 16px calc(90px + var(--safe-b)); }
+
+/* 상단 제목 */
+.top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+.brand { display: flex; align-items: center; gap: 10px; }
+.brand svg { width: 34px; height: 34px; }
+.brand h1 { margin: 0; font-size: 21px; letter-spacing: -.02em; }
+.brand small { display: block; color: var(--muted); font-size: 12px; margin-top: -2px; }
+
+/* 요약 카드 */
+.hero {
+  background: linear-gradient(135deg, #3a2412, #261a11 70%);
+  border: 1px solid var(--line); border-radius: 20px; padding: 18px; margin-bottom: 14px;
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; text-align: center;
+}
+.hero b { display: block; font-size: 24px; color: var(--amber); letter-spacing: -.02em; }
+.hero span { font-size: 12px; color: var(--muted); }
+
+/* 검색/필터 */
+.search {
+  width: 100%; padding: 12px 14px; border-radius: 12px; border: 1px solid var(--line);
+  background: var(--surface); outline: none;
+}
+.search:focus, .field:focus { border-color: var(--amber); }
+.filters { display: flex; gap: 6px; overflow-x: auto; padding: 10px 0 4px; scrollbar-width: none; }
+.filters::-webkit-scrollbar { display: none; }
+.chip {
+  flex: none; padding: 7px 12px; border-radius: 999px; border: 1px solid var(--line);
+  background: var(--surface); color: var(--muted); font-size: 13px; white-space: nowrap;
+}
+.chip.on { background: var(--amber); border-color: var(--amber); color: #2a1904; font-weight: 700; }
+.sortrow { display: flex; justify-content: space-between; align-items: center; margin: 6px 2px 10px; color: var(--muted); font-size: 12px; }
+.sortrow select { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 4px 8px; }
+
+/* 기록 카드 */
+.card {
+  display: block; width: 100%; text-align: left; background: var(--surface);
+  border: 1px solid var(--line); border-radius: var(--radius); padding: 14px; margin-bottom: 10px;
+}
+.card:active { transform: scale(.99); }
+.card .row1 { display: flex; justify-content: space-between; gap: 10px; align-items: flex-start; }
+.card h3 { margin: 0; font-size: 16px; letter-spacing: -.01em; }
+.card .meta { color: var(--muted); font-size: 12.5px; margin-top: 2px; }
+.card .date { color: var(--muted); font-size: 12px; white-space: nowrap; }
+.tags { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 9px; }
+.tag { padding: 3px 9px; border-radius: 999px; background: var(--amber-soft); color: var(--amber); font-size: 12px; }
+.memo { margin-top: 9px; color: #d9c7ae; font-size: 13px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.stars { color: var(--amber); letter-spacing: 1px; font-size: 13px; }
+.stars i { font-style: normal; color: #5a4430; }
+
+.empty { text-align: center; color: var(--muted); padding: 50px 10px; }
+.empty .big { font-size: 46px; margin-bottom: 8px; }
+
+/* 하단 탭 */
+.tabbar {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 20;
+  background: #1a110bee; backdrop-filter: blur(14px); border-top: 1px solid var(--line);
+  padding-bottom: var(--safe-b);
+}
+.tabbar-in { max-width: 560px; margin: 0 auto; display: grid; grid-template-columns: repeat(4, 1fr); align-items: center; }
+.tab { padding: 9px 0 8px; color: var(--muted); font-size: 11px; display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.tab svg { width: 22px; height: 22px; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.tab.on { color: var(--amber); }
+.tab.add .plus {
+  width: 46px; height: 46px; border-radius: 50%; margin-top: -20px; display: grid; place-items: center;
+  background: linear-gradient(145deg, #f2b552, #c87a14); box-shadow: 0 6px 18px #e8a33d44; color: #2a1904;
+}
+.tab.add .plus svg { stroke-width: 2.6; }
+
+/* 입력 화면(전체 덮개) */
+.sheet { position: fixed; inset: 0; z-index: 40; background: var(--bg); overflow-y: auto; }
+.sheet-in { max-width: 560px; margin: 0 auto; padding: calc(var(--safe-t) + 14px) 16px calc(40px + var(--safe-b)); }
+.sheet-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.sheet-head h2 { margin: 0; font-size: 18px; }
+.link { color: var(--muted); padding: 6px 4px; font-size: 14px; }
+.link.danger { color: var(--red); }
+label.lb { display: block; margin: 16px 2px 6px; color: var(--muted); font-size: 12.5px; font-weight: 600; }
+.field {
+  width: 100%; padding: 13px 14px; border-radius: 12px; border: 1px solid var(--line);
+  background: var(--surface); outline: none; font-size: 16px;
+}
+textarea.field { min-height: 96px; resize: vertical; line-height: 1.5; }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.unit { position: relative; }
+.unit .field { padding-right: 44px; }
+.unit em { position: absolute; right: 14px; top: 50%; transform: translateY(-50%); color: var(--muted); font-style: normal; font-size: 14px; }
+.quick { display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; }
+.quick .chip { padding: 5px 10px; font-size: 12px; }
+
+/* 자동완성 */
+.ac-wrap { position: relative; }
+.ac {
+  position: absolute; left: 0; right: 0; top: calc(100% + 4px); z-index: 10; max-height: 300px; overflow-y: auto;
+  background: #34241a; border: 1px solid var(--amber-deep); border-radius: 12px;
+  box-shadow: 0 14px 30px #000a;
+}
+.ac button { display: block; width: 100%; text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--line); }
+.ac button:last-child { border-bottom: 0; }
+.ac button:active, .ac button.hi { background: var(--amber-soft); }
+.ac b { display: block; font-weight: 600; }
+.ac small { color: var(--muted); font-size: 12px; }
+.ac mark { background: none; color: var(--amber); }
+.autonote { margin: 8px 2px 0; font-size: 12px; color: var(--amber); }
+
+/* 맛 선택 */
+.flavors { display: flex; flex-wrap: wrap; gap: 7px; }
+.flavors .chip { font-size: 14px; padding: 8px 12px; }
+.flavors .chip.pre:not(.on) { border-color: var(--amber-deep); }
+
+/* 별점 */
+.rate { display: flex; gap: 4px; }
+.rate button { font-size: 30px; line-height: 1; color: #5a4430; padding: 2px; }
+.rate button.on { color: var(--amber); }
+
+.btn-main {
+  width: 100%; margin-top: 24px; padding: 15px; border-radius: 14px; font-weight: 700; font-size: 16px;
+  background: linear-gradient(145deg, #f2b552, #c87a14); color: #2a1904;
+}
+.btn-sub { width: 100%; margin-top: 10px; padding: 13px; border-radius: 14px; border: 1px solid var(--line); background: var(--surface); }
+
+/* 통계 */
+.box { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px; margin-bottom: 12px; }
+.box h3 { margin: 0 0 12px; font-size: 14px; color: var(--muted); font-weight: 600; }
+.bar { display: grid; grid-template-columns: 78px 1fr 30px; gap: 8px; align-items: center; margin: 7px 0; font-size: 13px; }
+.bar .tr { height: 10px; background: #3a291b; border-radius: 6px; overflow: hidden; }
+.bar .fi { height: 100%; background: linear-gradient(90deg, var(--amber-deep), var(--amber)); border-radius: 6px; }
+.bar .n { text-align: right; color: var(--muted); }
+.kpis { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+.kpi { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px; }
+.kpi span { font-size: 12px; color: var(--muted); }
+.kpi b { display: block; font-size: 22px; color: var(--amber); margin-top: 2px; }
+.fav { display: flex; justify-content: space-between; gap: 8px; padding: 8px 0; border-top: 1px solid var(--line); }
+.fav:first-of-type { border-top: 0; }
+
+.settings p { color: var(--muted); font-size: 13px; margin: 4px 2px 10px; }
+.toast {
+  position: fixed; left: 50%; bottom: calc(86px + var(--safe-b)); transform: translateX(-50%); z-index: 99;
+  background: #f6ebdc; color: #2a1904; padding: 10px 16px; border-radius: 999px; font-weight: 600; font-size: 13px;
+  box-shadow: 0 8px 24px #0008;
+}
+</style>
+</head>
+
+<body>
+<div class="app" id="app"></div>
+
+<nav class="tabbar"><div class="tabbar-in">
+  <button class="tab" data-tab="list"><svg viewBox="0 0 24 24"><path d="M5 4h14v4l-2 12H7L5 8z"/><path d="M6 11h12"/></svg>기록</button>
+  <button class="tab" data-tab="stats"><svg viewBox="0 0 24 24"><path d="M5 20V10M12 20V4M19 20v-7"/></svg>통계</button>
+  <button class="tab add" data-tab="add"><span class="plus"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></span></button>
+  <button class="tab" data-tab="settings"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1 2.1"/></svg>설정</button>
+</div></nav>
+<div id="sheetRoot"></div>
+<div id="toastRoot"></div>
+
+<script>
+/* ============================================================
+  [2] 기본 위스키 정보 (자동완성용)
+  형식: [한글이름, 영문이름, 종류, 용량(ml), 도수(%), [맛 특징...]]
+  ※ 시판 제품 기준의 대략적인 값이에요. 자동으로 채워진 뒤 언제든 고칠 수 있어요.
+  새 위스키를 넣고 싶으면 아래 목록에 한 줄만 추가하면 됩니다.
+============================================================= */
+const DB = [
+  // ── 스카치 싱글몰트
+  ['글렌피딕 12년','Glenfiddich 12','싱글몰트',700,40,['사과·배','바닐라','오크']],
+  ['글렌피딕 15년 솔레라','Glenfiddich 15 Solera','싱글몰트',700,40,['꿀','건과일','견과류','스파이스']],
+  ['글렌피딕 18년','Glenfiddich 18','싱글몰트',700,40,['건과일','오크','스파이스','캐러멜']],
+  ['글렌리벳 12년','The Glenlivet 12','싱글몰트',700,40,['꽃향','사과·배','바닐라','시트러스']],
+  ['글렌리벳 15년','The Glenlivet 15','싱글몰트',700,40,['견과류','꿀','오크','스파이스']],
+  ['글렌리벳 18년','The Glenlivet 18','싱글몰트',700,43,['건과일','오크','초콜릿','스파이스']],
+  ['글렌리벳 나두라','The Glenlivet Nadurra','싱글몰트',700,48,['바닐라','꿀','시트러스','오크']],
+  ['맥캘란 12년 더블캐스크','Macallan 12 Double Cask','싱글몰트',700,40,['바닐라','꿀','오크','스파이스']],
+  ['맥캘란 12년 셰리오크','Macallan 12 Sherry Oak','싱글몰트',700,40,['셰리','건과일','초콜릿','스파이스']],
+  ['맥캘란 15년 더블캐스크','Macallan 15 Double Cask','싱글몰트',700,43,['꿀','건과일','바닐라','오크']],
+  ['맥캘란 18년 셰리오크','Macallan 18 Sherry Oak','싱글몰트',700,43,['셰리','초콜릿','건과일','스파이스']],
+  ['발베니 12년 더블우드','The Balvenie 12 DoubleWood','싱글몰트',700,40,['꿀','바닐라','셰리','견과류']],
+  ['발베니 14년 캐리비안캐스크','The Balvenie 14 Caribbean Cask','싱글몰트',700,43,['토피','열대과일','바닐라','꿀']],
+  ['발베니 17년 더블우드','The Balvenie 17 DoubleWood','싱글몰트',700,43,['꿀','건과일','오크','스파이스']],
+  ['글렌모렌지 오리지널 10년','Glenmorangie Original 10','싱글몰트',700,40,['꽃향','시트러스','바닐라','복숭아']],
+  ['글렌모렌지 라산타','Glenmorangie Lasanta 12','싱글몰트',700,43,['셰리','초콜릿','건과일','오렌지']],
+  ['글렌모렌지 퀸타루반','Glenmorangie Quinta Ruban 14','싱글몰트',700,46,['초콜릿','민트','건과일','스파이스']],
+  ['글렌모렌지 넥타도르','Glenmorangie Nectar d\'Or 12','싱글몰트',700,46,['꿀','견과류','캐러멜','시트러스']],
+  ['라프로익 10년','Laphroaig 10','싱글몰트',700,40,['피트','스모키','바다·요오드','약품']],
+  ['라프로익 셀렉트','Laphroaig Select','싱글몰트',700,40,['피트','스모키','바닐라','바다·요오드']],
+  ['라프로익 쿼터캐스크','Laphroaig Quarter Cask','싱글몰트',700,48,['피트','스모키','바닐라','바다·요오드']],
+  ['아드벡 10년','Ardbeg 10','싱글몰트',700,46,['피트','스모키','시트러스','초콜릿']],
+  ['아드벡 우가달','Ardbeg Uigeadail','싱글몰트',700,54.2,['피트','스모키','셰리','건과일']],
+  ['아드벡 코리브레칸','Ardbeg Corryvreckan','싱글몰트',700,57.1,['피트','스모키','후추','초콜릿']],
+  ['라가불린 16년','Lagavulin 16','싱글몰트',700,43,['피트','스모키','셰리','바다·요오드']],
+  ['라가불린 8년','Lagavulin 8','싱글몰트',700,48,['피트','스모키','시트러스','바닐라']],
+  ['보모어 12년','Bowmore 12','싱글몰트',700,40,['피트','스모키','꿀','시트러스']],
+  ['보모어 15년 다커','Bowmore 15 Darkest','싱글몰트',700,43,['셰리','초콜릿','스모키','건과일']],
+  ['탈리스커 10년','Talisker 10','싱글몰트',700,45.8,['후추','스모키','바다·요오드','스파이스']],
+  ['탈리스커 스톰','Talisker Storm','싱글몰트',700,45.8,['스모키','후추','바다·요오드','시트러스']],
+  ['하이랜드파크 12년','Highland Park 12','싱글몰트',700,40,['꿀','스모키','히더·허브','스파이스']],
+  ['하이랜드파크 18년','Highland Park 18','싱글몰트',700,43,['셰리','초콜릿','스모키','꿀']],
+  ['오반 14년','Oban 14','싱글몰트',700,43,['바다·요오드','스모키','꿀','건과일']],
+  ['달위니 15년','Dalwhinnie 15','싱글몰트',700,43,['꿀','히더·허브','바닐라','몰트']],
+  ['글렌고인 10년','Glengoyne 10','싱글몰트',700,40,['사과·배','몰트','바닐라','꿀']],
+  ['글렌드로낙 12년','GlenDronach 12','싱글몰트',700,43,['셰리','건과일','견과류','초콜릿']],
+  ['글렌드로낙 15년 리바이벌','GlenDronach 15 Revival','싱글몰트',700,46,['셰리','초콜릿','건과일','커피']],
+  ['벤리악 10년','BenRiach 10','싱글몰트',700,43,['사과·배','꿀','바닐라','몰트']],
+  ['아벨라워 12년 더블캐스크','Aberlour 12 Double Cask','싱글몰트',700,40,['셰리','건과일','토피','스파이스']],
+  ['아벨라워 아부나흐','Aberlour A\'bunadh','싱글몰트',700,60,['셰리','초콜릿','건과일','스파이스']],
+  ['크래건모어 12년','Cragganmore 12','싱글몰트',700,40,['꽃향','꿀','스모키','몰트']],
+  ['부나하벤 12년','Bunnahabhain 12','싱글몰트',700,46.3,['견과류','셰리','바다·요오드','토피']],
+  ['스프링뱅크 10년','Springbank 10','싱글몰트',700,46,['바다·요오드','피트','바닐라','사과·배']],
+  ['카발란 클래식','Kavalan Classic','싱글몰트',700,40,['열대과일','바닐라','꽃향','꿀']],
+  ['카발란 솔리스트 비노바리끄','Kavalan Solist Vinho Barrique','싱글몰트',700,56,['포도·베리','초콜릿','스파이스','오크']],
+  ['카발란 콘서트마스터','Kavalan Concertmaster','싱글몰트',700,40,['열대과일','바닐라','캐러멜','견과류']],
+  // ── 스카치 블렌디드
+  ['조니워커 레드라벨','Johnnie Walker Red Label','블렌디드',700,40,['시트러스','후추','스파이스','스모키']],
+  ['조니워커 블랙라벨 12년','Johnnie Walker Black Label 12','블렌디드',700,40,['스모키','바닐라','건과일','몰트']],
+  ['조니워커 더블블랙','Johnnie Walker Double Black','블렌디드',700,40,['스모키','바닐라','건과일','피트']],
+  ['조니워커 그린라벨 15년','Johnnie Walker Green Label 15','블렌디드',700,43,['스모키','견과류','사과·배','히더·허브']],
+  ['조니워커 골드리저브','Johnnie Walker Gold Label Reserve','블렌디드',700,40,['꿀','크리미','바닐라','과일']],
+  ['조니워커 블루라벨','Johnnie Walker Blue Label','블렌디드',700,40,['꿀','스모키','초콜릿','건과일']],
+  ['발렌타인 12년','Ballantine\'s 12','블렌디드',700,40,['꿀','바닐라','사과·배','몰트']],
+  ['발렌타인 17년','Ballantine\'s 17','블렌디드',700,40,['꿀','바닐라','오크','건과일']],
+  ['발렌타인 21년','Ballantine\'s 21','블렌디드',700,40,['꿀','오크','건과일','스파이스']],
+  ['발렌타인 30년','Ballantine\'s 30','블렌디드',700,40,['꿀','오크','초콜릿','스파이스']],
+  ['시바스리갈 12년','Chivas Regal 12','블렌디드',700,40,['꿀','바닐라','사과·배','크리미']],
+  ['시바스리갈 18년','Chivas Regal 18','블렌디드',700,40,['초콜릿','건과일','꿀','오크']],
+  ['로얄살루트 21년','Royal Salute 21','블렌디드',700,40,['꿀','건과일','바닐라','스파이스']],
+  ['듀어스 12년','Dewar\'s 12','블렌디드',700,40,['꿀','바닐라','사과·배','몰트']],
+  ['커티삭 오리지널','Cutty Sark Original','블렌디드',700,40,['시트러스','바닐라','몰트','꽃향']],
+  ['몽키숄더','Monkey Shoulder','블렌디드',700,40,['바닐라','꿀','오렌지','몰트']],
+  ['화이트호스 파인','White Horse Fine Old','블렌디드',700,40,['스모키','몰트','바닐라','꿀']],
+  // ── 버번 / 테네시 / 라이
+  ['메이커스마크','Maker\'s Mark','버번',700,45,['캐러멜','바닐라','오크','스파이스']],
+  ['메이커스마크 46','Maker\'s Mark 46','버번',700,47,['캐러멜','바닐라','오크','스파이스']],
+  ['짐빔 화이트','Jim Beam White','버번',700,40,['바닐라','캐러멜','오크','곡물']],
+  ['버팔로 트레이스','Buffalo Trace','버번',750,40,['바닐라','토피','민트','오크']],
+  ['와일드터키 101','Wild Turkey 101','버번',700,50.5,['바닐라','스파이스','캐러멜','오크']],
+  ['와일드터키 81','Wild Turkey 81','버번',700,40.5,['바닐라','캐러멜','스파이스','오크']],
+  ['우드포드 리저브','Woodford Reserve','버번',700,43.2,['초콜릿','바닐라','스파이스','건과일']],
+  ['포로지스 스몰배치','Four Roses Small Batch','버번',700,45,['꽃향','과일','스파이스','바닐라']],
+  ['불릿 버번','Bulleit Bourbon','버번',700,45,['스파이스','바닐라','오크','캐러멜']],
+  ['에반 윌리엄스 블랙','Evan Williams Black','버번',700,43,['바닐라','캐러멜','오크','토피']],
+  ['잭다니엘 No.7','Jack Daniel\'s Old No.7','테네시',700,40,['바닐라','캐러멜','스모키','오크']],
+  ['잭다니엘 젠틀맨잭','Gentleman Jack','테네시',700,40,['바닐라','캐러멜','견과류','오크']],
+  ['불릿 라이','Bulleit Rye','라이',700,45,['스파이스','후추','바닐라','오크']],
+  ['리튼하우스 라이','Rittenhouse Rye','라이',700,50,['스파이스','후추','캐러멜','오크']],
+  // ── 아이리시
+  ['제임슨','Jameson','아이리시',700,40,['바닐라','견과류','꿀','곡물']],
+  ['제임슨 블랙배럴','Jameson Black Barrel','아이리시',700,40,['바닐라','토피','스파이스','오크']],
+  ['부시밀 오리지널','Bushmills Original','아이리시',700,40,['꿀','바닐라','사과·배','곡물']],
+  ['부시밀 10년','Bushmills 10','아이리시',700,40,['꿀','견과류','초콜릿','바닐라']],
+  ['레드브레스트 12년','Redbreast 12','아이리시',700,40,['셰리','견과류','스파이스','건과일']],
+  ['티리코넬','Tyrconnell','아이리시',700,43,['꿀','바닐라','사과·배','몰트']],
+  // ── 재패니즈
+  ['야마자키 NA','Yamazaki NA','재패니즈',700,43,['복숭아','바닐라','건과일','오크']],
+  ['야마자키 12년','Yamazaki 12','재패니즈',700,43,['복숭아','건과일','꿀','오크']],
+  ['하쿠슈 NA','Hakushu NA','재패니즈',700,43,['허브','시트러스','스모키','사과·배']],
+  ['하쿠슈 12년','Hakushu 12','재패니즈',700,43,['허브','스모키','사과·배','시트러스']],
+  ['히비키 하모니','Hibiki Harmony','재패니즈',700,43,['꽃향','꿀','오렌지','오크']],
+  ['토키','Suntory Toki','재패니즈',700,43,['사과·배','바닐라','꿀','허브']],
+  ['닛카 프롬 더 배럴','Nikka From The Barrel','재패니즈',500,51.4,['스파이스','바닐라','초콜릿','오크']],
+  ['닛카 미야기쿄 NA','Nikka Miyagikyo NA','재패니즈',700,45,['사과·배','꽃향','바닐라','몰트']],
+  ['닛카 요이치 NA','Nikka Yoichi NA','재패니즈',700,45,['피트','스모키','바다·요오드','몰트']],
+  ['치치부 더 퍼스트텐','Chichibu The First Ten','재패니즈',700,50.5,['꿀','시트러스','오크','스파이스']],
+  // ── 기타
+  ['아머릭 오리지널','Amrut Fusion','싱글몰트',700,50,['피트','열대과일','스파이스','꿀']],
+  ['폴 존 브릴리언스','Paul John Brilliance','싱글몰트',700,46,['꿀','열대과일','바닐라','스파이스']],
+];
+
+/* 맛 특징 선택지 (아이콘 + 이름) */
+const FLAVORS = [
+  ['바닐라','🍦'],['꿀','🍯'],['캐러멜','🍮'],['토피','🍬'],['초콜릿','🍫'],['커피','☕'],
+  ['견과류','🥜'],['오크','🪵'],['몰트','🌾'],['곡물','🌽'],['크리미','🥛'],['꽃향','🌸'],
+  ['사과·배','🍐'],['복숭아','🍑'],['시트러스','🍊'],['오렌지','🍊'],['열대과일','🍍'],['건과일','🍇'],['포도·베리','🫐'],['과일','🍎'],
+  ['셰리','🍷'],['스파이스','🌶️'],['후추','🧂'],['히더·허브','🌿'],['허브','🌱'],['민트','🍃'],
+  ['스모키','🔥'],['피트','🪨'],['바다·요오드','🌊'],['약품','🩹'],
+];
+const FICON = Object.fromEntries(FLAVORS);
+/* 목록 화면 필터에서 보여줄 대표 맛 */
+const FILTER_FLAVORS = ['바닐라','꿀','캐러멜','초콜릿','견과류','오크','꽃향','과일','셰리','스파이스','스모키','피트','바다·요오드'];
+const FRUITS = ['사과·배','복숭아','시트러스','오렌지','열대과일','건과일','포도·베리','과일'];
+const VOLS = [200, 350, 500, 700, 750, 1000];
+
+/* ============================================================
+  [3] 도우미 + 저장소
+============================================================= */
+const $ = (s, r = document) => r.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const KEY = 'whisky-notes-v1';
+const store = {
+  load() { try { return JSON.parse(localStorage.getItem(KEY)) || []; } catch { return []; } },
+  save(list) { try { localStorage.setItem(KEY, JSON.stringify(list)); } catch { toast('저장 공간이 부족해요'); } },
+};
+let logs = store.load();
+let state = { tab: 'list', q: '', flavor: '', sort: 'new' };
+
+const today = () => { const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+const fmtDate = s => { const [y, m, d] = (s || '').split('-'); return y ? `${y}.${+m}.${+d}` : ''; };
+const stars = n => `<span class="stars">${'★'.repeat(n)}<i>${'★'.repeat(5 - n)}</i></span>`;
+const fmtNum = n => (Math.round(n * 10) / 10).toString();
+
+function toast(msg) {
+  const el = document.createElement('div'); el.className = 'toast'; el.textContent = msg;
+  $('#toastRoot').appendChild(el); setTimeout(() => el.remove(), 1800);
+}
+
+/* 한글 초성 검색 지원 (예: "ㅁㅋㄹ" → 맥캘란) */
+const CHO = 'ㄱㄲㄴㄷㄸㄹㅁㅂㅃㅅㅆㅇㅈㅉㅊㅋㅌㅍㅎ';
+const cho = s => [...s].map(c => { const n = c.charCodeAt(0) - 0xAC00; return n >= 0 && n < 11172 ? CHO[Math.floor(n / 588)] : c; }).join('');
+const norm = s => s.toLowerCase().replace(/[\s'’·.\-]/g, '');
+
+/* 자동완성 후보: 내장 DB + 내가 예전에 직접 적은 위스키 */
+function candidates() {
+  const list = DB.map(([ko, en, type, ml, abv, fl]) => ({ ko, en, type, ml, abv, fl, src: 'db' }));
+  const seen = new Set(list.map(x => norm(x.ko)));
+  [...logs].reverse().forEach(l => {
+    if (!seen.has(norm(l.name))) { seen.add(norm(l.name)); list.push({ ko: l.name, en: '', type: '내 기록', ml: l.ml, abv: l.abv, fl: l.flavors || [], src: 'mine' }); }
+  });
+  return list;
+}
+function search(q) {
+  q = norm(q); if (!q) return [];
+  const isCho = /^[ㄱ-ㅎ]+$/.test(q);
+  const scored = [];
+  candidates().forEach(c => {
+    const ko = norm(c.ko), en = norm(c.en);
+    let sc = -1;
+    if (ko.startsWith(q) || en.startsWith(q)) sc = 0;
+    else if (ko.includes(q) || en.includes(q)) sc = 1;
+    else if (isCho && cho(ko).includes(q)) sc = 2;
+    if (sc >= 0) scored.push([sc, c]);
+  });
+  return scored.sort((a, b) => a[0] - b[0]).slice(0, 8).map(x => x[1]);
+}
+/* 여러 단어를 띄어 쓴 경우(예: "맥캘란 12")는 모든 단어가 들어있는 것만 */
+function searchWords(raw) {
+  const words = raw.toLowerCase().split(/\s+/).map(norm).filter(Boolean);
+  if (words.length < 2) return search(raw);
+  return candidates().filter(c => { const t = norm(c.ko + ' ' + c.en); return words.every(w => t.includes(w)); }).slice(0, 8);
+}
+const hl = (text, raw) => {
+  const q = raw.trim(); if (!q) return esc(text);
+  const i = text.toLowerCase().indexOf(q.toLowerCase());
+  return i < 0 ? esc(text) : esc(text.slice(0, i)) + '<mark>' + esc(text.slice(i, i + q.length)) + '</mark>' + esc(text.slice(i + q.length));
+};
+
+/* ============================================================
+  [4] 화면 그리기
+============================================================= */
+const LOGO = `<svg viewBox="0 0 48 48"><defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f2b552"/><stop offset="1" stop-color="#b86f12"/></linearGradient></defs><rect width="48" height="48" rx="12" fill="#31221a"/><path d="M12 11h24l-2.4 25a3 3 0 0 1-3 2.7H17.4a3 3 0 0 1-3-2.7z" fill="none" stroke="#f6ebdc" stroke-width="2"/><path d="M13.4 22h21.2l-1 14a2 2 0 0 1-2 1.8H16.4a2 2 0 0 1-2-1.8z" fill="url(#g)"/><rect x="19" y="26" width="7" height="7" rx="1.5" fill="#f6ebdc" opacity=".35"/></svg>`;
+
+function render() {
+  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('on', t.dataset.tab === state.tab));
+  const app = $('#app');
+  app.innerHTML = { list: viewList, stats: viewStats, settings: viewSettings }[state.tab]();
+  bindView();
+}
+
+function header(sub) {
+  return `<div class="top"><div class="brand">${LOGO}<div><h1>위스키 노트</h1><small>${sub}</small></div></div></div>`;
+}
+
+function filtered() {
+  let arr = logs.slice();
+  const q = norm(state.q);
+  if (q) arr = arr.filter(l => norm(l.name + ' ' + (l.memo || '') + ' ' + (l.flavors || []).join('')).includes(q) || cho(norm(l.name)).includes(q));
+  if (state.flavor) {
+    const f = state.flavor === '과일' ? FRUITS : [state.flavor];
+    arr = arr.filter(l => (l.flavors || []).some(x => f.includes(x)));
+  }
+  const by = {
+    new: (a, b) => (b.date || '').localeCompare(a.date || '') || b.created - a.created,
+    old: (a, b) => (a.date || '').localeCompare(b.date || '') || a.created - b.created,
+    rate: (a, b) => (b.rating || 0) - (a.rating || 0) || (b.date || '').localeCompare(a.date || ''),
+    abv: (a, b) => (b.abv || 0) - (a.abv || 0),
+    name: (a, b) => a.name.localeCompare(b.name, 'ko'),
+  }[state.sort];
+  return arr.sort(by);
+}
+
+function viewList() {
+  const total = logs.length;
+  const uniq = new Set(logs.map(l => norm(l.name))).size;
+  const rated = logs.filter(l => l.rating);
+  const avg = rated.length ? fmtNum(rated.reduce((s, l) => s + l.rating, 0) / rated.length) : '-';
+  const arr = filtered();
+  const chips = ['', ...FILTER_FLAVORS].map(f => `<button class="chip ${state.flavor === f ? 'on' : ''}" data-flavor="${esc(f)}">${f ? (FICON[f] || '🍎') + ' ' + f : '전체'}</button>`).join('');
+  const cards = arr.map(l => `
+    <button class="card" data-edit="${l.id}">
+      <div class="row1">
+        <div><h3>${esc(l.name)}</h3>
+        <div class="meta">${[l.ml ? l.ml + 'ml' : '', l.abv ? l.abv + '%' : ''].filter(Boolean).join(' · ')}${l.rating ? ' · ' : ''}${l.rating ? stars(l.rating) : ''}</div></div>
+        <div class="date">${fmtDate(l.date)}</div>
+      </div>
+      ${(l.flavors || []).length ? `<div class="tags">${l.flavors.map(f => `<span class="tag">${FICON[f] || ''} ${esc(f)}</span>`).join('')}</div>` : ''}
+      ${l.memo ? `<div class="memo">${esc(l.memo)}</div>` : ''}
+    </button>`).join('');
+  const empty = logs.length
+    ? `<div class="empty"><div class="big">🔍</div>조건에 맞는 기록이 없어요</div>`
+    : `<div class="empty"><div class="big">🥃</div>아직 기록이 없어요<br>가운데 <b style="color:var(--amber)">+</b> 버튼으로 첫 한 잔을 남겨보세요</div>`;
+  return header('우리가 마신 위스키 기록') + `
+    <div class="hero"><div><b>${total}</b><span>마신 기록</span></div><div><b>${uniq}</b><span>다른 위스키</span></div><div><b>${avg}</b><span>평균 별점</span></div></div>
+    <input class="search" id="q" placeholder="이름·메모·맛으로 검색 (초성 가능: ㅁㅋㄹ)" value="${esc(state.q)}" enterkeyhint="search">
+    <div class="filters">${chips}</div>
+    <div class="sortrow"><span>${arr.length}건</span>
+      <select id="sort">${[['new', '최신순'], ['old', '오래된순'], ['rate', '별점순'], ['abv', '도수 높은순'], ['name', '이름순']].map(([v, t]) => `<option value="${v}" ${state.sort === v ? 'selected' : ''}>${t}</option>`).join('')}</select></div>
+    ${arr.length ? cards : empty}`;
+}
+
+function viewStats() {
+  if (!logs.length) return header('통계') + `<div class="empty"><div class="big">📊</div>기록이 쌓이면 취향 통계가 보여요</div>`;
+  const cnt = {};
+  logs.forEach(l => (l.flavors || []).forEach(f => cnt[f] = (cnt[f] || 0) + 1));
+  const top = Object.entries(cnt).sort((a, b) => b[1] - a[1]).slice(0, 7);
+  const topMax = top.length ? top[0][1] : 1;
+  const withAbv = logs.filter(l => l.abv);
+  const avgAbv = withAbv.length ? fmtNum(withAbv.reduce((s, l) => s + l.abv, 0) / withAbv.length) : '-';
+  /* 최근 6개월 */
+  const months = [];
+  const now = new Date();
+  for (let i = 5; i >= 0; i--) { const d = new Date(now.getFullYear(), now.getMonth() - i, 1); months.push(d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0')); }
+  const mc = months.map(m => [m, logs.filter(l => (l.date || '').startsWith(m)).length]);
+  const mMax = Math.max(1, ...mc.map(x => x[1]));
+  /* 종류별 */
+  const typeOf = l => { const hit = DB.find(d => norm(d[0]) === norm(l.name)); return hit ? hit[2] : '기타·직접입력'; };
+  const tc = {}; logs.forEach(l => { const t = typeOf(l); tc[t] = (tc[t] || 0) + 1; });
+  const tEntries = Object.entries(tc).sort((a, b) => b[1] - a[1]);
+  const tMax = tEntries[0][1];
+  /* 최애 */
+  const favs = logs.filter(l => l.rating >= 4).sort((a, b) => b.rating - a.rating || (b.date || '').localeCompare(a.date || '')).slice(0, 5);
+  const bar = (label, n, max) => `<div class="bar"><span>${label}</span><div class="tr"><div class="fi" style="width:${Math.max(4, n / max * 100)}%"></div></div><span class="n">${n}</span></div>`;
+  return header('내 취향 통계') + `
+    <div class="kpis"><div class="kpi"><span>평균 도수</span><b>${avgAbv}${avgAbv === '-' ? '' : '%'}</b></div>
+    <div class="kpi"><span>가장 많이 고른 맛</span><b>${top.length ? (FICON[top[0][0]] || '') + ' ' + esc(top[0][0]) : '-'}</b></div></div>
+    <div class="box"><h3>자주 고른 맛 TOP</h3>${top.length ? top.map(([f, n]) => bar((FICON[f] || '') + ' ' + esc(f), n, topMax)).join('') : '<span style="color:var(--muted)">맛 특징을 선택하면 집계돼요</span>'}</div>
+    <div class="box"><h3>최근 6개월 마신 횟수</h3>${mc.map(([m, n]) => bar(m.slice(2).replace('-', '.'), n, mMax)).join('')}</div>
+    <div class="box"><h3>종류별</h3>${tEntries.map(([t, n]) => bar(esc(t), n, tMax)).join('')}</div>
+    <div class="box"><h3>⭐ 별 4개 이상 최애 위스키</h3>${favs.length ? favs.map(l => `<div class="fav"><span>${esc(l.name)}</span>${stars(l.rating)}</div>`).join('') : '<span style="color:var(--muted)">별점 4개 이상을 주면 여기에 모여요</span>'}</div>`;
+}
+
+function viewSettings() {
+  return header('설정·백업') + `<div class="settings">
+    <div class="box"><h3>백업 / 복원</h3>
+      <p>기록은 이 기기의 브라우저에 저장돼요. 폰을 바꾸거나 가족과 나눌 땐 파일로 내보내서 옮기세요.</p>
+      <button class="btn-sub" id="exp" style="margin-top:0">📤 기록 파일로 내보내기 (JSON)</button>
+      <button class="btn-sub" id="expcsv">📄 엑셀용 CSV로 내보내기</button>
+      <button class="btn-sub" id="imp">📥 백업 파일 불러오기</button>
+      <input type="file" id="file" accept=".json,application/json" hidden>
+    </div>
+    <div class="box"><h3>정보</h3>
+      <p>내장 위스키 ${DB.length}종 · 내 기록 ${logs.length}건<br>목록에 없는 위스키는 이름을 직접 쓰면 다음부터 자동완성에 나와요.<br>내장 정보는 시판 제품 기준 참고값이라 자유롭게 수정할 수 있어요.</p>
+    </div>
+    <div class="box"><h3>위험 구역</h3><button class="btn-sub" id="wipe" style="margin-top:0;color:var(--red)">🗑 모든 기록 삭제</button></div>
+  </div>`;
+}
+
+function bindView() {
+  const q = $('#q');
+  if (q) q.addEventListener('input', e => { state.q = e.target.value; const pos = e.target.selectionStart; render(); const n = $('#q'); n.focus(); n.setSelectionRange(pos, pos); });
+  const so = $('#sort'); if (so) so.onchange = e => { state.sort = e.target.value; render(); };
+  document.querySelectorAll('[data-flavor]').forEach(b => b.onclick = () => { state.flavor = b.dataset.flavor; render(); });
+  document.querySelectorAll('[data-edit]').forEach(b => b.onclick = () => openForm(b.dataset.edit));
+  if ($('#exp')) {
+    $('#exp').onclick = () => download('whisky-notes-' + today() + '.json', JSON.stringify({ app: 'whisky-notes', version: 1, logs }, null, 2), 'application/json');
+    $('#expcsv').onclick = () => {
+      const rows = [['날짜', '위스키', '용량(ml)', '도수(%)', '맛', '별점', '메모']].concat(logs.slice().sort((a, b) => (a.date || '').localeCompare(b.date || '')).map(l => [l.date, l.name, l.ml, l.abv, (l.flavors || []).join('/'), l.rating || '', l.memo || '']));
+      const csv = '﻿' + rows.map(r => r.map(v => '"' + String(v ?? '').replace(/"/g, '""') + '"').join(',')).join('\r\n');
+      download('whisky-notes-' + today() + '.csv', csv, 'text/csv');
+    };
+    $('#imp').onclick = () => $('#file').click();
+    $('#file').onchange = async e => {
+      const f = e.target.files[0]; if (!f) return;
+      try {
+        const data = JSON.parse(await f.text());
+        const inc = Array.isArray(data) ? data : data.logs;
+        if (!Array.isArray(inc)) throw 0;
+        const ids = new Set(logs.map(l => l.id));
+        let add = 0;
+        inc.forEach(l => { if (l && l.name && !ids.has(l.id)) { logs.push({ id: l.id || uid(), name: String(l.name), ml: +l.ml || 0, abv: +l.abv || 0, flavors: Array.isArray(l.flavors) ? l.flavors : [], memo: l.memo || '', date: l.date || today(), rating: +l.rating || 0, created: l.created || Date.now() }); add++; } });
+        store.save(logs); toast(add + '건을 불러왔어요'); render();
+      } catch { toast('올바른 백업 파일이 아니에요'); }
+    };
+    $('#wipe').onclick = () => { if (confirm('모든 기록을 삭제할까요?\n(백업하지 않았다면 되돌릴 수 없어요)') && confirm('정말 삭제합니다.')) { logs = []; store.save(logs); toast('삭제했어요'); render(); } };
+  }
+}
+function download(name, text, type) {
+  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([text], { type })); a.download = name; document.body.appendChild(a); a.click(); a.remove();
+}
+
+/* ============================================================
+  [5] 기록 입력/수정 화면
+============================================================= */
+function openForm(id) {
+  const old = id ? logs.find(l => l.id === id) : null;
+  const f = old ? { ...old, flavors: [...(old.flavors || [])] } : { name: '', ml: 700, abv: '', flavors: [], memo: '', date: today(), rating: 0 };
+  let pre = new Set(); // 자동으로 채워진 맛 (표시용)
+  let note = '';
+  const root = $('#sheetRoot');
+  const close = () => { root.innerHTML = ''; document.body.style.overflow = ''; };
+  document.body.style.overflow = 'hidden';
+
+  const draw = () => {
+    root.innerHTML = `<div class="sheet"><div class="sheet-in">
+      <div class="sheet-head"><button class="link" id="cancel">취소</button><h2>${old ? '기록 수정' : '한 잔 기록하기'}</h2><button class="link" id="del" style="${old ? '' : 'visibility:hidden'}" ><span class="danger" style="color:var(--red)">삭제</span></button></div>
+
+      <label class="lb">위스키 이름</label>
+      <div class="ac-wrap"><input class="field" id="name" placeholder="예: 맥캘란, glenfiddich, ㄱㄹㅍㄷ" value="${esc(f.name)}" autocomplete="off" autocapitalize="off"><div class="ac" id="ac" hidden></div></div>
+      <div class="autonote" id="note">${esc(note)}</div>
+
+      <div class="grid2">
+        <div><label class="lb">용량</label><div class="unit"><input class="field" id="ml" type="number" inputmode="numeric" min="0" value="${f.ml || ''}"><em>ml</em></div></div>
+        <div><label class="lb">알콜 도수</label><div class="unit"><input class="field" id="abv" type="number" inputmode="decimal" step="0.1" min="0" max="100" value="${f.abv || ''}"><em>%</em></div></div>
+      </div>
+      <div class="quick">${VOLS.map(v => `<button class="chip ${+f.ml === v ? 'on' : ''}" data-vol="${v}">${v}ml</button>`).join('')}</div>
+
+      <label class="lb">맛의 특징 (여러 개 선택)</label>
+      <div class="flavors" id="fl">${FLAVORS.map(([n, ic]) => `<button class="chip ${f.flavors.includes(n) ? 'on' : ''} ${pre.has(n) ? 'pre' : ''}" data-f="${esc(n)}">${ic} ${n}</button>`).join('')}</div>
+
+      <label class="lb">별점</label>
+      <div class="rate" id="rate">${[1, 2, 3, 4, 5].map(i => `<button class="${i <= f.rating ? 'on' : ''}" data-r="${i}">★</button>`).join('')}</div>
+
+      <label class="lb">마신 날짜</label>
+      <input class="field" id="date" type="date" value="${esc(f.date)}">
+
+      <label class="lb">메모</label>
+      <textarea class="field" id="memo" placeholder="누구와, 어디서, 어떤 느낌이었는지 자유롭게 적어보세요">${esc(f.memo)}</textarea>
+
+      <button class="btn-main" id="save">${old ? '수정 저장' : '기록 저장'}</button>
+    </div></div>`;
+    bindForm();
+  };
+
+  const readFields = () => {
+    f.name = $('#name').value; f.ml = +$('#ml').value || 0; f.abv = +$('#abv').value || 0;
+    f.date = $('#date').value; f.memo = $('#memo').value;
+  };
+
+  const bindForm = () => {
+    $('#cancel').onclick = close;
+    if (old) $('#del').onclick = () => { if (confirm(`"${old.name}" 기록을 삭제할까요?`)) { logs = logs.filter(l => l.id !== old.id); store.save(logs); close(); toast('삭제했어요'); render(); } };
+    const name = $('#name'), ac = $('#ac');
+    let hi = -1, res = [];
+    const pick = c => {
+      readFields();
+      f.name = c.ko; f.ml = c.ml; f.abv = c.abv;
+      f.flavors = [...c.fl]; pre = new Set(c.fl);
+      note = c.src === 'db' ? `✨ ${c.en || c.type} · 용량·도수·맛을 자동으로 채웠어요. 마신 느낌에 맞게 고쳐주세요.` : '✨ 예전에 적은 기록에서 불러왔어요.';
+      draw();
+    };
+    const showAc = () => {
+      res = searchWords(name.value);
+      hi = -1;
+      if (!res.length || (res.length === 1 && norm(res[0].ko) === norm(name.value))) { ac.hidden = true; return; }
+      ac.hidden = false;
+      ac.innerHTML = res.map((c, i) => `<button type="button" data-i="${i}"><b>${hl(c.ko, name.value)}</b><small>${esc(c.en ? c.en + ' · ' : '')}${esc(c.type)} · ${c.ml}ml · ${c.abv}%</small></button>`).join('');
+      ac.querySelectorAll('button').forEach(b => b.onmousedown = e => { e.preventDefault(); pick(res[+b.dataset.i]); });
+    };
+    name.addEventListener('input', () => { note = ''; $('#note').textContent = ''; showAc(); });
+    name.addEventListener('focus', showAc);
+    name.addEventListener('blur', () => setTimeout(() => ac.hidden = true, 120));
+    name.addEventListener('keydown', e => {
+      if (ac.hidden) return;
+      const bs = ac.querySelectorAll('button');
+      if (e.key === 'ArrowDown') { hi = Math.min(bs.length - 1, hi + 1); e.preventDefault(); }
+      else if (e.key === 'ArrowUp') { hi = Math.max(0, hi - 1); e.preventDefault(); }
+      else if (e.key === 'Enter' && hi >= 0) { e.preventDefault(); pick(res[hi]); return; }
+      else if (e.key === 'Escape') { ac.hidden = true; return; }
+      else return;
+      bs.forEach((b, i) => b.classList.toggle('hi', i === hi));
+    });
+
+    root.querySelectorAll('[data-vol]').forEach(b => b.onclick = () => { readFields(); f.ml = +b.dataset.vol; draw(); });
+    root.querySelectorAll('[data-f]').forEach(b => b.onclick = () => {
+      const n = b.dataset.f, i = f.flavors.indexOf(n);
+      if (i >= 0) f.flavors.splice(i, 1); else f.flavors.push(n);
+      b.classList.toggle('on', i < 0);
+    });
+    root.querySelectorAll('[data-r]').forEach(b => b.onclick = () => {
+      const r = +b.dataset.r; f.rating = f.rating === r ? 0 : r;
+      root.querySelectorAll('[data-r]').forEach(x => x.classList.toggle('on', +x.dataset.r <= f.rating));
+    });
+    $('#save').onclick = () => {
+      readFields();
+      const nm = f.name.trim();
+      if (!nm) { toast('위스키 이름을 입력해주세요'); $('#name').focus(); return; }
+      if (f.abv > 100 || f.abv < 0) { toast('도수를 확인해주세요'); return; }
+      const rec = { id: old ? old.id : uid(), name: nm, ml: f.ml, abv: f.abv, flavors: f.flavors, memo: f.memo.trim(), date: f.date || today(), rating: f.rating, created: old ? old.created : Date.now() };
+      if (old) logs = logs.map(l => l.id === old.id ? rec : l); else logs.push(rec);
+      store.save(logs); close(); toast(old ? '수정했어요' : '기록했어요 🥃');
+      state.tab = 'list'; render();
+    };
+  };
+  draw();
+  if (!old) setTimeout(() => { const n = $('#name'); n && n.focus(); }, 60);
+}
+
+/* ============================================================
+  [6] 시작
+============================================================= */
+document.querySelectorAll('.tab').forEach(t => t.onclick = () => {
+  if (t.dataset.tab === 'add') return openForm();
+  state.tab = t.dataset.tab; window.scrollTo(0, 0); render();
+});
+render();
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
+</script>
+</body>
+</html>
