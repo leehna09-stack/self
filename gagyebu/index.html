@@ -454,6 +454,46 @@ input:focus, input:focus-visible { outline: 0; border-color: var(--primary); box
 
 @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } html { scroll-behavior: auto; } }
 
+
+/* ===== 아이콘은 작고 옅게, 하단 바는 네모로 ===== */
+.brand { width: 42px; height: 42px; border-radius: 22%; box-shadow: 0 3px 8px rgba(37,99,235,.2); }
+.hero-title { gap: 12px; }
+.hero-title h1 { font-size: 26px; }
+.navicons { gap: 8px; }
+.navicons .icon-btn { width: 36px; height: 36px; border-radius: 11px; box-shadow: none; filter: none; }
+.navicons .icon-btn svg { width: 18px; height: 18px; stroke-width: 2; filter: none; }
+.navicons .bell { background: #fff1e2; } .navicons .bell svg { stroke: #c4650d; }
+.navicons .nudge { background: #e8f0ff; } .navicons .nudge svg { stroke: #2563eb; }
+.navicons .ratiobtn { background: #f0e9ff; } .navicons .ratiobtn svg { stroke: #6d3fc4; }
+.navicons .badge { top: -6px; right: -6px; box-shadow: none; }
+.monthnav .icon-btn { width: 34px; height: 34px; background: rgba(255,255,255,.16); box-shadow: none; }
+.monthnav .icon-btn svg { width: 16px; height: 16px; stroke-width: 2.2; }
+.cico { width: 32px; height: 32px; border-radius: 10px; }
+.cico.ca { background: #e8f0ff; box-shadow: none; }
+.cico.cb { background: #e0f4f1; box-shadow: none; }
+.cico svg { width: 17px; height: 17px; stroke-width: 2; filter: none; }
+.cico.ca svg { stroke: #2563eb; } .cico.cb svg { stroke: #0f8a7c; }
+.cico.ca svg circle { fill: #2563eb; } .cico.cb svg circle { fill: #0f8a7c; }
+.item .row { gap: 10px; }
+.act svg { width: 16px; height: 16px; }
+.foot-actions .icon-btn { width: 38px; height: 38px; border-radius: 11px; box-shadow: none; background: #f4f7fc; }
+.foot-actions .icon-btn svg { width: 18px; height: 18px; }
+.mininav img { width: 20px; height: 20px; }
+
+.wrap { padding-bottom: calc(96px + env(safe-area-inset-bottom)); }
+.tabbar {
+  left: 0; right: 0; bottom: 0; transform: none; width: auto; height: auto; min-height: 60px;
+  padding: 6px max(10px, calc((100% - 540px) / 2)) calc(6px + env(safe-area-inset-bottom)); gap: 4px;
+  border-radius: 0; border: 0; border-top: 1px solid var(--line); background: #fff; box-shadow: 0 -2px 12px rgba(30,60,130,.07);
+}
+.tabbar button { min-height: 48px; border-radius: 10px; gap: 3px; }
+.tabbar button.on { background: #e8f0ff; }
+.tabbar button.on svg { filter: none; }
+.tabbar svg { width: 22px; height: 22px; }
+.tabbar .fab { flex: none; width: 52px; height: 48px; min-height: 48px; margin: 0 4px; border-radius: 10px; background: var(--primary); box-shadow: 0 3px 8px rgba(37,99,235,.35); }
+.tabbar .fab.on, .tabbar .fab { color: #fff; }
+.tabbar .fab svg { width: 24px; height: 24px; filter: none; }
+#toast { bottom: calc(78px + env(safe-area-inset-bottom)); }
 </style>
 </head>
 
