@@ -1,5 +1,5 @@
 // 오프라인에서도 열리도록 앱 파일을 저장해두는 간단한 서비스워커
-const CACHE = 'whisky-notes-v1';
+const CACHE = 'whisky-notes-v2';
 const FILES = ['./', './index.html', './manifest.json', './icon.svg', './icon-192.png', './icon-512.png', './icon-180.png'];
 self.addEventListener('install', e => { e.waitUntil(caches.open(CACHE).then(c => c.addAll(FILES)).then(() => self.skipWaiting())); });
 self.addEventListener('activate', e => { e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k !== CACHE).map(k => caches.delete(k)))).then(() => self.clients.claim())); });
