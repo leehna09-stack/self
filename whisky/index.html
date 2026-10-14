@@ -130,6 +130,10 @@ input, textarea, select { font: inherit; color: var(--text); }
 .gl { display: inline-flex; gap: 1px; }
 .gl .ic { width: 14px; height: 14px; color: var(--amber); }
 .gl .ic.off { color: #e3d7bd; }
+.gl .hg { position: relative; display: inline-block; width: 14px; height: 14px; }
+.gl .hg .ic { position: absolute; left: 0; top: 0; }
+.gl .ic.half { clip-path: inset(0 50% 0 0); }
+.gl .rn { margin-left: 4px; font: 700 14px/1 var(--hand); color: var(--amber-ink); align-self: center; }
 
 .empty { text-align: center; color: var(--muted); padding: 34px 10px 20px; }
 .empty .ic { font-size: 64px; color: var(--amber); margin-bottom: 8px; }
@@ -183,9 +187,14 @@ textarea.field { min-height: 140px; resize: vertical; line-height: 28px; padding
 .field.dt { padding: 12px 8px 12px 12px; font-size: 15px; min-height: 48px; min-width: 0; text-align: left; }
 .flavors .chip.pre:not(.on) { border-color: var(--amber); border-style: dashed; }
 
-.rate { display: flex; gap: 6px; }
-.rate button { font-size: 34px; line-height: 1; color: #e3d7bd; padding: 2px; }
-.rate button.on { color: var(--amber); }
+.rate { display: flex; gap: 4px; align-items: center; }
+.rate button { position: relative; width: 40px; height: 38px; font-size: 34px; line-height: 1; padding: 0; }
+.rate button .ic { position: absolute; left: 3px; top: 2px; }
+.rate .base { color: #e3d7bd; }
+.rate .fill { color: var(--amber); display: none; }
+.rate button.on .fill { display: block; }
+.rate button.half .fill { display: block; clip-path: inset(0 50% 0 0); }
+.rv { margin-left: 8px; font: 700 24px/1 var(--hand); color: var(--amber-ink); min-width: 40px; }
 
 .btn-main { width: 100%; margin-top: 26px; padding: 15px; border-radius: 14px; font-weight: 700; font-size: 16px; background: var(--amber); color: #3a2208; box-shadow: 0 4px 0 #c47f17; display: flex; align-items: center; justify-content: center; gap: 8px; }
 .btn-main:active { transform: translateY(3px); box-shadow: 0 1px 0 #c47f17; }
@@ -346,7 +355,9 @@ const today = () => { const d = new Date(); return d.getFullYear() + '-' + Strin
 const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
 const fmtDate = s => { const [y, m, d] = (s || '').split('-'); return y ? `${y}.${+m}.${+d}` : ''; };
 const ic = (id, cls = '') => `<svg class="ic ${cls}" aria-hidden="true"><use href="#${id}"/></svg>`;
-const stars = n => `<span class="gl" role="img" aria-label="${n}점">${[1, 2, 3, 4, 5].map(i => ic('i-glass', i <= n ? '' : 'off')).join('')}</span>`;
+const stars = n => `<span class="gl" role="img" aria-label="${n}점">${[1, 2, 3, 4, 5].map(i => n >= i ? ic('i-glass') : n >= i - 0.5 ? `<span class="hg">${ic('i-glass', 'off')}${ic('i-glass', 'half')}</span>` : ic('i-glass', 'off')).join('')}<span class="rn">${n}</span></span>`;
+/* 입력 화면 점수: 잔의 왼쪽 절반을 누르면 0.5점, 오른쪽 절반을 누르면 1점 */
+const rateHtml = r => [1, 2, 3, 4, 5].map(i => `<button type="button" class="${r >= i ? 'on' : r >= i - 0.5 ? 'half' : ''}" data-r="${i}" aria-label="${i}점 (잔의 왼쪽 절반은 ${i - 0.5}점)">${ic('i-glass', 'base')}${ic('i-glass', 'fill')}</button>`).join('') + `<span class="rv">${r ? r + '점' : ''}</span>`;
 /* 위스키 종류별 아이콘·색 */
 const TYPE_STYLE = {
   '싱글몰트': ['i-dram', 'c1'], '블렌디드': ['i-bottle', 'c2'], '버번': ['i-glass', 'c3'], '테네시': ['i-glass', 'c3'],
@@ -701,7 +712,7 @@ function bindView() {
         if (!Array.isArray(inc)) throw 0;
         const ids = new Set(logs.map(l => l.id));
         let add = 0;
-        inc.forEach(l => { if (l && l.name && !ids.has(l.id)) { logs.push({ id: l.id || uid(), name: String(l.name), ml: +l.ml || 0, abv: +l.abv || 0, flavors: Array.isArray(l.flavors) ? l.flavors : [], memo: l.memo || '', date: l.date || today(), openDate: l.openDate || '', rating: +l.rating || 0, price: +l.price || 0, shop: l.shop || '', buyDate: l.buyDate || '', created: l.created || Date.now() }); add++; } });
+        inc.forEach(l => { if (l && l.name && !ids.has(l.id)) { logs.push({ id: l.id || uid(), name: String(l.name), ml: +l.ml || 0, abv: +l.abv || 0, flavors: Array.isArray(l.flavors) ? l.flavors : [], memo: l.memo || '', date: l.date || today(), openDate: l.openDate || '', rating: Math.min(5, Math.max(0, Math.round((+l.rating || 0) * 2) / 2)), price: +l.price || 0, shop: l.shop || '', buyDate: l.buyDate || '', created: l.created || Date.now() }); add++; } });
         for (const l of inc) {
           if (!l || !l.id || !Array.isArray(l.photos) || photoMap[l.id] || !logs.some(x => x.id === l.id)) continue;
           const ph = l.photos.filter(x => x && isImg(x.full) && isImg(x.thumb)).slice(0, MAX_PHOTOS);
@@ -748,7 +759,7 @@ function openForm(id) {
       <div class="fl-sel" id="flsel"></div>
 
       <label class="lb">${ic('i-glass')} 나의 점수</label>
-      <div class="rate" id="rate">${[1, 2, 3, 4, 5].map(i => `<button class="${i <= f.rating ? 'on' : ''}" data-r="${i}" aria-label="${i}점">${ic('i-glass')}</button>`).join('')}</div>
+      <div class="rate" id="rate"></div>
 
       <div class="grid2">
         <div><label class="lb">${ic('i-cal')} 마신 날짜</label><input class="field dt" id="date" type="date" value="${esc(f.date)}"></div>
@@ -882,10 +893,18 @@ function openForm(id) {
       updateFlSel();
     });
     updateFlSel();
-    root.querySelectorAll('[data-r]').forEach(b => b.onclick = () => {
-      const r = +b.dataset.r; f.rating = f.rating === r ? 0 : r;
-      root.querySelectorAll('[data-r]').forEach(x => x.classList.toggle('on', +x.dataset.r <= f.rating));
-    });
+    const rateEl = $('#rate');
+    const drawRate = () => {
+      rateEl.innerHTML = rateHtml(f.rating);
+      rateEl.querySelectorAll('[data-r]').forEach(b => b.onclick = e => {
+        const i = +b.dataset.r, rect = b.getBoundingClientRect();
+        /* 키보드로 누른 경우(e.detail === 0)는 1점 단위, 터치·클릭은 누른 위치가 왼쪽 절반이면 0.5점 */
+        const v = e.detail !== 0 && e.clientX - rect.left < rect.width / 2 ? i - 0.5 : i;
+        f.rating = f.rating === v ? 0 : v;
+        drawRate();
+      });
+    };
+    drawRate();
     $('#save').onclick = async () => {
       readFields();
       const nm = f.name.trim();
