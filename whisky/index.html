@@ -173,8 +173,14 @@ textarea.field { min-height: 140px; resize: vertical; line-height: 28px; padding
 .ac mark { background: none; color: var(--amber-ink); text-decoration: underline; text-decoration-color: var(--amber); }
 .autonote { margin: 8px 2px 0; font-size: 12.5px; color: var(--amber-ink); }
 
-.flavors { display: flex; flex-wrap: wrap; gap: 7px; }
-.flavors .chip { font-size: 14px; padding: 8px 12px; }
+.flavors { display: flex; flex-wrap: wrap; gap: 7px; max-height: 84px; overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; scroll-snap-type: y proximity; padding: 2px 6px 2px 2px; scrollbar-width: thin; scrollbar-color: var(--amber) transparent; }
+.flavors::-webkit-scrollbar { width: 5px; }
+.flavors::-webkit-scrollbar-thumb { background: var(--amber); border-radius: 3px; }
+.flavors .chip { font-size: 14px; line-height: 1.3; padding: 8px 12px; scroll-snap-align: start; }
+.fl-sel { margin: 7px 2px 0; font-size: 12.5px; color: var(--amber-ink); }
+.fl-sel.none { color: var(--muted); }
+.grid2 > div { min-width: 0; }
+.field.dt { padding: 12px 8px 12px 12px; font-size: 15px; min-height: 48px; min-width: 0; text-align: left; }
 .flavors .chip.pre:not(.on) { border-color: var(--amber); border-style: dashed; }
 
 .rate { display: flex; gap: 6px; }
@@ -221,10 +227,8 @@ textarea.field { min-height: 140px; resize: vertical; line-height: 28px; padding
 .modal-box p { margin: 4px 0 6px; font-size: 14.5px; line-height: 1.65; }
 
 /* 구매 정보 */
-.buy { margin-top: 20px; padding: 4px 14px 16px; background: var(--paper); border: 1.5px dashed #d8c9a8; border-radius: 16px; }
-.buy-t { margin-top: 14px; font: 700 20px/1.1 var(--hand); color: var(--amber-ink); display: flex; align-items: center; gap: 6px; }
-.buy-t .ic { font-size: 22px; }
-.buy-s { margin: 4px 2px 0; color: var(--muted); font-size: 12px; }
+.buy { margin-top: 8px; padding: 0 14px 16px; background: var(--paper); border: 1.5px dashed #d8c9a8; border-radius: 16px; }
+.buy-s { margin: -2px 2px 0; color: var(--muted); font-size: 12px; }
 .buy label.lb { margin-top: 14px; }
 .hint { margin: 8px 2px 0; font-size: 12.5px; color: var(--amber-ink); font-weight: 600; min-height: 0; }
 .hint:empty { display: none; }
@@ -280,6 +284,7 @@ textarea.field { min-height: 140px; resize: vertical; line-height: 28px; padding
   <symbol id="i-flask" viewBox="0 0 24 24"><path d="M9 3h6M10 3v6l-4.6 8.2A2.2 2.2 0 0 0 7.3 20.5h9.4a2.2 2.2 0 0 0 1.9-3.3L14 9V3"/><path d="M7.4 15.5h9.2" /></symbol>
   <symbol id="i-install" viewBox="0 0 24 24"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><path d="M3 6h18"/><path d="m10 11 4.5 2.5L10 16z"/></symbol>
   <symbol id="i-download" viewBox="0 0 24 24"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></symbol>
+  <symbol id="i-won" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9.8"/><path d="M6.8 8.2l2.6 7.8 2.6-6 2.6 6 2.6-7.8"/><path d="M5.8 11.2h12.4M5.8 13.6h12.4"/></symbol>
   <symbol id="i-tag" viewBox="0 0 24 24"><path d="M3.5 12.2V4.5a1 1 0 0 1 1-1h7.7l8.3 8.3a1.5 1.5 0 0 1 0 2.1l-6.1 6.1a1.5 1.5 0 0 1-2.1 0z"/><circle cx="8" cy="8" r="1.4"/></symbol>
   <symbol id="i-shop" viewBox="0 0 24 24"><path d="M4 9.5V20h16V9.5"/><path d="M3 9.5 5 4h14l2 5.5a3 3 0 0 1-6 0 3 3 0 0 1-6 0 3 3 0 0 1-6 0z"/><path d="M10 20v-5h4v5"/></symbol>
   <symbol id="i-camera" viewBox="0 0 24 24"><path d="M4 8h3l1.6-2.5h6.8L17 8h3a1 1 0 0 1 1 1v9.5a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13.5" r="3.6"/></symbol>
@@ -556,8 +561,8 @@ function viewList() {
       <span class="tile ${color}">${ic(icon)}</span>
       <div class="cbody">
         <div class="row1"><h3>${esc(l.name)}</h3><div class="date">${fmtDate(l.date)}</div></div>
-        <div class="meta">${l.ml ? `<span>${ic('i-bottle', 'sm')} ${l.ml}ml</span>` : ''}${l.abv ? `<span>${ic('i-drop', 'sm')} ${l.abv}%</span>` : ''}${l.rating ? stars(l.rating) : ''}</div>
-        ${(l.price > 0 || l.shop) ? `<div class="meta buyline">${l.price > 0 ? `<span>${ic('i-tag', 'sm')} <b>${won(l.price)}</b>${isLowest(l) ? ' <span class="low">최저가</span>' : ''}</span>` : ''}${l.shop ? `<span>${ic('i-shop', 'sm')} ${esc(l.shop)}</span>` : ''}${l.price > 0 ? `<span>${fmtDate(buyDateOf(l))} 구매</span>` : ''}</div>` : ''}
+        <div class="meta">${l.ml ? `<span>${ic('i-bottle', 'sm')} ${l.ml}ml</span>` : ''}${l.abv ? `<span>${ic('i-drop', 'sm')} ${l.abv}%</span>` : ''}${l.openDate ? `<span>${ic('i-cal', 'sm')} ${fmtDate(l.openDate)} 오픈</span>` : ''}${l.rating ? stars(l.rating) : ''}</div>
+        ${(l.price > 0 || l.shop) ? `<div class="meta buyline">${l.price > 0 ? `<span>${ic('i-won', 'sm')} <b>${won(l.price)}</b>${isLowest(l) ? ' <span class="low">최저가</span>' : ''}</span>` : ''}${l.shop ? `<span>${ic('i-shop', 'sm')} ${esc(l.shop)}</span>` : ''}${l.price > 0 ? `<span>${fmtDate(buyDateOf(l))} 구매</span>` : ''}</div>` : ''}
         ${(photoMap[l.id] || []).length ? `<div class="phs">${photoMap[l.id].map((ph, n) => `<img class="ph" src="${ph.thumb}" data-ph="${l.id}:${n}" alt="사진 ${n + 1}">`).join('')}</div>` : ''}
         ${(l.flavors || []).length ? `<div class="tags">${l.flavors.map(f => `<span class="tag">${FICON[f] || ''} ${esc(f)}</span>`).join('')}</div>` : ''}
         ${l.memo ? `<div class="memo">${esc(l.memo)}</div>` : ''}
@@ -684,7 +689,7 @@ function bindView() {
   if ($('#exp')) {
     $('#exp').onclick = exportJson;
     $('#expcsv').onclick = () => {
-      const rows = [['날짜', '위스키', '용량(ml)', '도수(%)', '맛', '점수', '구매가격(원)', '구매일', '구매처', '메모']].concat(logs.slice().sort((a, b) => (a.date || '').localeCompare(b.date || '')).map(l => [l.date, l.name, l.ml, l.abv, (l.flavors || []).join('/'), l.rating || '', l.price || '', l.price > 0 ? buyDateOf(l) : '', l.shop || '', l.memo || '']));
+      const rows = [['날짜', '오픈일', '위스키', '용량(ml)', '도수(%)', '맛', '점수', '구매가격(원)', '구매일', '구매처', '메모']].concat(logs.slice().sort((a, b) => (a.date || '').localeCompare(b.date || '')).map(l => [l.date, l.openDate || '', l.name, l.ml, l.abv, (l.flavors || []).join('/'), l.rating || '', l.price || '', l.price > 0 ? buyDateOf(l) : '', l.shop || '', l.memo || '']));
       const csv = '﻿' + rows.map(r => r.map(v => '"' + String(v ?? '').replace(/"/g, '""') + '"').join(',')).join('\r\n');
       download('whisky-notes-' + today() + '.csv', csv, 'text/csv');
     };
@@ -697,7 +702,7 @@ function bindView() {
         if (!Array.isArray(inc)) throw 0;
         const ids = new Set(logs.map(l => l.id));
         let add = 0;
-        inc.forEach(l => { if (l && l.name && !ids.has(l.id)) { logs.push({ id: l.id || uid(), name: String(l.name), ml: +l.ml || 0, abv: +l.abv || 0, flavors: Array.isArray(l.flavors) ? l.flavors : [], memo: l.memo || '', date: l.date || today(), rating: +l.rating || 0, price: +l.price || 0, shop: l.shop || '', buyDate: l.buyDate || '', created: l.created || Date.now() }); add++; } });
+        inc.forEach(l => { if (l && l.name && !ids.has(l.id)) { logs.push({ id: l.id || uid(), name: String(l.name), ml: +l.ml || 0, abv: +l.abv || 0, flavors: Array.isArray(l.flavors) ? l.flavors : [], memo: l.memo || '', date: l.date || today(), openDate: l.openDate || '', rating: +l.rating || 0, price: +l.price || 0, shop: l.shop || '', buyDate: l.buyDate || '', created: l.created || Date.now() }); add++; } });
         for (const l of inc) {
           if (!l || !l.id || !Array.isArray(l.photos) || photoMap[l.id] || !logs.some(x => x.id === l.id)) continue;
           const ph = l.photos.filter(x => x && isImg(x.full) && isImg(x.thumb)).slice(0, MAX_PHOTOS);
@@ -741,22 +746,25 @@ function openForm(id) {
 
       <label class="lb">${ic('i-dram')} 맛의 특징 (여러 개 선택)</label>
       <div class="flavors" id="fl">${FLAVORS.map(([n, icn]) => `<button class="chip ${f.flavors.includes(n) ? 'on' : ''} ${pre.has(n) ? 'pre' : ''}" data-f="${esc(n)}">${icn} ${n}</button>`).join('')}</div>
+      <div class="fl-sel" id="flsel"></div>
 
-      <label class="lb">${ic('i-glass')} 오늘의 점수</label>
+      <label class="lb">${ic('i-glass')} 나의 점수</label>
       <div class="rate" id="rate">${[1, 2, 3, 4, 5].map(i => `<button class="${i <= f.rating ? 'on' : ''}" data-r="${i}" aria-label="${i}점">${ic('i-glass')}</button>`).join('')}</div>
 
-      <label class="lb">${ic('i-cal')} 마신 날짜</label>
-      <input class="field" id="date" type="date" value="${esc(f.date)}">
+      <div class="grid2">
+        <div><label class="lb">${ic('i-cal')} 마신 날짜</label><input class="field dt" id="date" type="date" value="${esc(f.date)}"></div>
+        <div><label class="lb">${ic('i-bottle')} 오픈한 날짜</label><input class="field dt" id="opendate" type="date" value="${esc(f.openDate || '')}"></div>
+      </div>
 
       <label class="lb">${ic('i-camera')} 사진 <span style="color:var(--muted);font:12px var(--hand)">(최대 ${MAX_PHOTOS}장)</span></label>
       <div class="photos" id="photos"></div>
       <input type="file" id="photoIn" accept="image/*" multiple hidden>
 
+      <label class="lb">${ic('i-tag')} 구매 정보 <span style="color:var(--muted);font:12px var(--hand)">(선택)</span></label>
+      <div class="buy-s">살 때마다 적어두면 언제 어디서 싸게 샀는지 비교할 수 있어요.</div>
       <div class="buy">
-        <div class="buy-t">${ic('i-tag')} 구매 정보</div>
-        <div class="buy-s">선택 항목이에요. 살 때마다 적어두면 언제 어디서 싸게 샀는지 비교할 수 있어요.</div>
         <div class="grid2">
-          <div><label class="lb">${ic('i-tag')} 구매가격</label><div class="unit"><input class="field" id="price" type="number" inputmode="numeric" min="0" step="100" value="${f.price || ''}" placeholder="0"><em>원</em></div></div>
+          <div><label class="lb">${ic('i-won')} 구매가격</label><div class="unit"><input class="field" id="price" type="number" inputmode="numeric" min="0" step="100" value="${f.price || ''}" placeholder="0"><em>원</em></div></div>
           <div><label class="lb">${ic('i-cal')} 구매일</label><input class="field" id="buydate" type="date" value="${esc(f.buyDate)}"></div>
         </div>
         <div class="hint" id="pricehint"></div>
@@ -775,12 +783,29 @@ function openForm(id) {
 
   const readFields = () => {
     f.name = $('#name').value; f.ml = +$('#ml').value || 0; f.abv = +$('#abv').value || 0;
-    f.date = $('#date').value; f.memo = $('#memo').value;
+    f.date = $('#date').value; f.openDate = $('#opendate').value; f.memo = $('#memo').value;
     f.price = Math.round(+$('#price').value) || 0; f.shop = $('#shop').value.trim(); f.buyDate = $('#buydate').value;
   };
 
   const bindForm = () => {
     $('#cancel').onclick = close;
+    /* 맛 칸은 칩 높이를 재서 정확히 두 줄만 보이게 맞춰요 (글꼴이 늦게 불러와져도 다시 맞춤) */
+    const fitFlavors = () => {
+      const fl = $('#fl'); if (!fl) return;
+      fl.style.maxHeight = '';
+      const chips = [...fl.children], tops = [...new Set(chips.map(c => c.offsetTop))];
+      if (tops.length <= 2) return;
+      const second = chips.filter(c => c.offsetTop === tops[1]).pop();
+      fl.style.maxHeight = (second.offsetTop + second.offsetHeight - chips[0].offsetTop + 4) + 'px';
+    };
+    fitFlavors();
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(fitFlavors);
+    /* 맛은 두 줄만 보이고 스크롤로 고르기 때문에, 고른 맛을 아래 한 줄로 보여줘요 */
+    const updateFlSel = () => {
+      const el = $('#flsel');
+      el.className = 'fl-sel' + (f.flavors.length ? '' : ' none');
+      el.textContent = f.flavors.length ? `선택 ${f.flavors.length}개: ` + f.flavors.map(x => (FICON[x] || '') + ' ' + x).join(' · ') : '위아래로 밀어서 맛을 골라보세요';
+    };
     /* 사진 올리기/지우기 (화면 전체를 다시 그리지 않고 사진 영역만 갱신) */
     const photosEl = $('#photos'), photoIn = $('#photoIn');
     const drawPhotos = () => {
@@ -856,7 +881,9 @@ function openForm(id) {
       const n = b.dataset.f, i = f.flavors.indexOf(n);
       if (i >= 0) f.flavors.splice(i, 1); else f.flavors.push(n);
       b.classList.toggle('on', i < 0);
+      updateFlSel();
     });
+    updateFlSel();
     root.querySelectorAll('[data-r]').forEach(b => b.onclick = () => {
       const r = +b.dataset.r; f.rating = f.rating === r ? 0 : r;
       root.querySelectorAll('[data-r]').forEach(x => x.classList.toggle('on', +x.dataset.r <= f.rating));
@@ -867,7 +894,8 @@ function openForm(id) {
       if (!nm) { toast('위스키 이름을 입력해주세요'); $('#name').focus(); return; }
       if (f.abv > 100 || f.abv < 0) { toast('도수를 확인해주세요'); return; }
       if (f.price < 0) { toast('구매가격을 확인해주세요'); return; }
-      const rec = { id: old ? old.id : uid(), name: nm, ml: f.ml, abv: f.abv, flavors: f.flavors, memo: f.memo.trim(), date: f.date || today(), rating: f.rating, price: f.price, shop: f.shop, buyDate: f.price > 0 ? (f.buyDate || f.date || today()) : '', created: old ? old.created : Date.now() };
+      if (f.openDate && f.date && f.openDate > f.date) { toast('오픈한 날짜는 마신 날짜보다 늦을 수 없어요'); return; }
+      const rec = { id: old ? old.id : uid(), name: nm, ml: f.ml, abv: f.abv, flavors: f.flavors, memo: f.memo.trim(), date: f.date || today(), openDate: f.openDate || '', rating: f.rating, price: f.price, shop: f.shop, buyDate: f.price > 0 ? (f.buyDate || f.date || today()) : '', created: old ? old.created : Date.now() };
       if (old) logs = logs.map(l => l.id === old.id ? rec : l); else logs.push(rec);
       $('#save').disabled = true;
       store.save(logs);
