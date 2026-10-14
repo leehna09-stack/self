@@ -165,6 +165,9 @@ textarea.field { min-height: 140px; resize: vertical; line-height: 28px; padding
 .unit em { position: absolute; right: 14px; top: 50%; transform: translateY(-50%); color: var(--muted); font-style: normal; font-size: 14px; }
 .quick { display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; }
 .quick .chip { padding: 5px 10px; font-size: 12px; }
+.quick.vols { flex-wrap: nowrap; overflow-x: auto; overscroll-behavior-x: contain; -webkit-overflow-scrolling: touch; scrollbar-width: none; padding-bottom: 2px; }
+.quick.vols::-webkit-scrollbar { display: none; }
+.quick.vols .chip { flex: none; white-space: nowrap; padding: 6px 13px; font-size: 13px; }
 
 .ac-wrap { position: relative; }
 .ac { position: absolute; left: 0; right: 0; top: calc(100% + 4px); z-index: 10; max-height: 300px; overflow-y: auto; background: var(--paper); border: 1.5px solid var(--amber); border-radius: 12px; box-shadow: 0 12px 28px #5a3c1a30; }
@@ -336,7 +339,8 @@ const FICON = Object.fromEntries(FLAVORS);
 /* 목록 화면 필터에서 보여줄 대표 맛 */
 const FILTER_FLAVORS = ['바닐라','꿀','캐러멜','초콜릿','견과류','오크','꽃향','과일','셰리','스파이스','스모키','피트','바다·요오드'];
 const FRUITS = ['사과·배','복숭아','시트러스','오렌지','열대과일','건과일','포도·베리','과일'];
-const VOLS = [200, 350, 500, 700, 750, 1000];
+const VOLS = [350, 500, 700, 750, 1000, 1500, 1750];
+const volLabel = v => v >= 1500 ? (v / 1000) + 'L' : v + 'ml';
 
 /* ============================================================
   [3] 도우미 + 저장소
@@ -571,7 +575,7 @@ function viewList() {
       <span class="tile ${color}">${ic(icon)}</span>
       <div class="cbody">
         <div class="row1"><h3>${esc(l.name)}</h3><div class="date">${fmtDate(l.date)}</div></div>
-        <div class="meta">${l.ml ? `<span>${ic('i-bottle', 'sm')} ${l.ml}ml</span>` : ''}${l.abv ? `<span>${ic('i-drop', 'sm')} ${l.abv}%</span>` : ''}${l.openDate ? `<span>${ic('i-cal', 'sm')} ${fmtDate(l.openDate)} 오픈</span>` : ''}${l.rating ? stars(l.rating) : ''}</div>
+        <div class="meta">${l.ml ? `<span>${ic('i-bottle', 'sm')} ${volLabel(l.ml)}</span>` : ''}${l.abv ? `<span>${ic('i-drop', 'sm')} ${l.abv}%</span>` : ''}${l.openDate ? `<span>${ic('i-cal', 'sm')} ${fmtDate(l.openDate)} 오픈</span>` : ''}${l.rating ? stars(l.rating) : ''}</div>
         ${(l.price > 0 || l.shop) ? `<div class="meta buyline">${l.price > 0 ? `<span>${ic('i-won', 'sm')} <b>${won(l.price)}</b>${isLowest(l) ? ' <span class="low">최저가</span>' : ''}</span>` : ''}${l.shop ? `<span>${ic('i-shop', 'sm')} ${esc(l.shop)}</span>` : ''}${l.price > 0 ? `<span>${fmtDate(buyDateOf(l))} 구매</span>` : ''}</div>` : ''}
         ${(photoMap[l.id] || []).length ? `<div class="phs">${photoMap[l.id].map((ph, n) => `<img class="ph" src="${ph.thumb}" data-ph="${l.id}:${n}" alt="사진 ${n + 1}">`).join('')}</div>` : ''}
         ${(l.flavors || []).length ? `<div class="tags">${l.flavors.map(f => `<span class="tag">${FICON[f] || ''} ${esc(f)}</span>`).join('')}</div>` : ''}
@@ -629,7 +633,7 @@ function viewStats() {
         ${gList.map(g => {
           const best = g.length > 1 ? bestOf(g) : null;
           const rows = g.slice().sort((a, b) => buyDateOf(b).localeCompare(buyDateOf(a)));
-          return `<div class="pc"><div class="pc-h">${ic(typeStyle(g[0].name)[0])}${esc(g[0].name)}</div>${rows.map(l => `<div class="pc-r ${best && best.id === l.id ? 'best' : ''}"><span>${fmtDate(buyDateOf(l))} · ${esc(l.shop || '구매처 미입력')}<small>${l.ml ? l.ml + 'ml' : ''}${per100(l).replace(/^ · /, l.ml ? ' · ' : '')}</small></span><span class="pr">${won(l.price)}${best && best.id === l.id ? ' <span class="low">최저가</span>' : ''}</span></div>`).join('')}</div>`;
+          return `<div class="pc"><div class="pc-h">${ic(typeStyle(g[0].name)[0])}${esc(g[0].name)}</div>${rows.map(l => `<div class="pc-r ${best && best.id === l.id ? 'best' : ''}"><span>${fmtDate(buyDateOf(l))} · ${esc(l.shop || '구매처 미입력')}<small>${l.ml ? volLabel(l.ml) : ''}${per100(l).replace(/^ · /, l.ml ? ' · ' : '')}</small></span><span class="pr">${won(l.price)}${best && best.id === l.id ? ' <span class="low">최저가</span>' : ''}</span></div>`).join('')}</div>`;
         }).join('')}</div>`;
   return header('내 취향 노트') + `
     ${priceBox}
@@ -752,7 +756,7 @@ function openForm(id) {
         <div><label class="lb">${ic('i-bottle')} 용량</label><div class="unit"><input class="field" id="ml" type="number" inputmode="numeric" min="0" value="${f.ml || ''}"><em>ml</em></div></div>
         <div><label class="lb">${ic('i-drop')} 알콜 도수</label><div class="unit"><input class="field" id="abv" type="number" inputmode="decimal" step="0.1" min="0" max="100" value="${f.abv || ''}"><em>%</em></div></div>
       </div>
-      <div class="quick">${VOLS.map(v => `<button class="chip ${+f.ml === v ? 'on' : ''}" data-vol="${v}">${v}ml</button>`).join('')}</div>
+      <div class="quick vols" id="vols">${VOLS.map(v => `<button type="button" class="chip ${+f.ml === v ? 'on' : ''}" data-vol="${v}">${volLabel(v)}</button>`).join('')}</div>
 
       <label class="lb">${ic('i-dram')} 맛의 특징 (여러 개 선택)</label>
       <div class="flavors" id="fl">${FLAVORS.map(([n, icn]) => `<button class="chip ${f.flavors.includes(n) ? 'on' : ''} ${pre.has(n) ? 'pre' : ''}" data-f="${esc(n)}">${icn} ${n}</button>`).join('')}</div>
@@ -868,7 +872,7 @@ function openForm(id) {
       hi = -1;
       if (!res.length || (note && res.length === 1 && norm(res[0].ko) === norm(name.value))) { ac.hidden = true; return; }
       ac.hidden = false;
-      ac.innerHTML = res.map((c, i) => `<button type="button" data-i="${i}">${ic((TYPE_STYLE[c.type] || TYPE_STYLE['기타·직접입력'])[0])}<span><b>${hl(c.ko, name.value)}</b><small>${esc(c.en ? c.en + ' · ' : '')}${esc(c.type)} · ${c.ml}ml · ${c.abv}%</small></span></button>`).join('');
+      ac.innerHTML = res.map((c, i) => `<button type="button" data-i="${i}">${ic((TYPE_STYLE[c.type] || TYPE_STYLE['기타·직접입력'])[0])}<span><b>${hl(c.ko, name.value)}</b><small>${esc(c.en ? c.en + ' · ' : '')}${esc(c.type)} · ${volLabel(c.ml)} · ${c.abv}%</small></span></button>`).join('');
       ac.querySelectorAll('button').forEach(b => b.onmousedown = e => { e.preventDefault(); pick(res[+b.dataset.i]); });
     };
     name.addEventListener('input', () => { note = ''; $('#note').textContent = ''; showAc(); });
@@ -885,7 +889,16 @@ function openForm(id) {
       bs.forEach((b, i) => b.classList.toggle('hi', i === hi));
     });
 
-    root.querySelectorAll('[data-vol]').forEach(b => b.onclick = () => { readFields(); f.ml = +b.dataset.vol; draw(); });
+    const volsEl = $('#vols');
+    const showVol = () => {
+      const on = volsEl.querySelector('.on'); if (!on) return;
+      const v = volsEl.getBoundingClientRect(), c = on.getBoundingClientRect();
+      volsEl.scrollLeft += (c.left + c.width / 2) - (v.left + v.width / 2);
+    };
+    const markVol = () => volsEl.querySelectorAll('[data-vol]').forEach(x => x.classList.toggle('on', +x.dataset.vol === (+$('#ml').value || 0)));
+    volsEl.querySelectorAll('[data-vol]').forEach(b => b.onclick = () => { $('#ml').value = b.dataset.vol; markVol(); updateHint(); });
+    $('#ml').addEventListener('input', markVol);
+    showVol();
     root.querySelectorAll('[data-f]').forEach(b => b.onclick = () => {
       const n = b.dataset.f, i = f.flavors.indexOf(n);
       if (i >= 0) f.flavors.splice(i, 1); else f.flavors.push(n);
