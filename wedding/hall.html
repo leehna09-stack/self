@@ -230,7 +230,7 @@ dialog { border-radius:28px; }
     <label>지도 링크 (카카오맵·네이버지도)<input name="link" maxlength="500" inputmode="url" autocomplete="off" placeholder="링크를 붙여넣으면 주소·전화번호·위치를 자동으로 채워요"></label>
     <button type="button" class="btn" id="lookBtn">정보 자동 입력</button>
     <div class="hint" id="lookHint" aria-live="polite"></div>
-    <div class="hint" id="keyHint" hidden>이름만으로 정확히 찾으려면 <button type="button" class="linkbtn" id="keyBtn">카카오 REST API 키 설정</button> (무료 발급)</div>
+    <div class="hint" id="keyHint"><span id="keyState"></span> <button type="button" class="linkbtn" id="keyBtn"></button></div>
     <div class="cands" id="cands"></div>
     <label>주소 (자동 입력 · 직접 수정 가능)<input name="addr" maxlength="300" placeholder="자동으로 채워지지 않으면 직접 입력해 주세요"></label>
     <label>전화번호<input name="phone" type="tel" inputmode="tel" maxlength="30"></label>
@@ -702,7 +702,7 @@ function openEditor(id) {
   draftExtras = (h?.extras ?? []).map(e => ({ ...e }));
   draftGeo = null; warnedAddr = null; lastLook = ''; draftCands = [];
   $('cands').innerHTML = ''; setHint($('lookHint'), '');
-  $('keyHint').hidden = !!kakaoKey();
+  drawKeyHint();
   setHint($('distHint'), '');
   drawThumbs(); drawExtras(); updateTotal();
   $('dlg').showModal();
@@ -813,11 +813,17 @@ $('list').onclick = e => {
 $('lb').onclick = () => $('lb').close();
 
 // ───────── 기준 위치 관리창 ─────────
+// 카카오 키 상태는 항상 보여 준다 (있으면 변경, 없으면 설정)
+function drawKeyHint() {
+  const has = !!kakaoKey();
+  $('keyState').textContent = has ? '카카오 키 설정됨 ·' : '이름만으로 정확히 찾으려면';
+  $('keyBtn').textContent = has ? '키 변경' : '카카오 REST API 키 설정 (무료 발급)';
+}
 function openOrigins() { resetOForm(); $('kkey').value = kakaoKey(); setHint($('oHint'), ''); renderOrigins(); $('odlg').showModal(); }
 $('originBtn').onclick = openOrigins;
 $('kkey').onchange = e => {
   try { localStorage.setItem('wedding-kakao-key', e.target.value.trim()); } catch {}
-  $('keyHint').hidden = !!kakaoKey(); lastLook = '';
+  drawKeyHint(); lastLook = '';
 };
 $('oclose').onclick = () => $('odlg').close();
 $('origin').onchange = e => setOrigin(e.target.value);
