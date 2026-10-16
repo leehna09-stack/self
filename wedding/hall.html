@@ -5,6 +5,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="color-scheme" content="light">
 <meta name="theme-color" content="#f2f2f7">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/svg+xml" href="icon.svg">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="결혼 로드맵">
 <title>웨딩홀 비교</title>
 <style>
 :root {
@@ -152,7 +160,18 @@ h1 { font-size:30px; font-weight:800; letter-spacing:-.035em; }
 .starbtn.on { border-color:#f59e0b; }
 .sortsel,.filters input,.filters select,.searchrow input,.originrow select { border:0; box-shadow:inset 0 0 0 .5px rgba(60,60,67,.18); }
 dialog { border-radius:28px; }
-.photo .n { backdrop-filter:blur(6px); }
+.cands { display:grid; gap:8px; }
+.cands:empty { display:none; }
+.cand { text-align:left; border:0; border-radius:12px; padding:10px 12px; background:#fff; box-shadow:inset 0 0 0 .5px rgba(60,60,67,.2); display:grid; gap:2px; }
+.cand b { font-size:15px; }
+.cand span { font-size:13px; color:var(--muted); }
+.cand:active { background:var(--accent-soft); }
+.linkbtn { border:0; background:none; padding:0; color:var(--accent); font-weight:700; text-decoration:underline; font-size:inherit; min-height:32px; }
+.lightbox { overflow:auto; width:min(560px, calc(100vw - 24px)); }
+.lightbox img + img { margin-top:6px; }
+.card .body { padding-top:14px; }
+.meta a { color:var(--accent); font-weight:600; text-decoration:none; }
+.meta a:active { opacity:.6; }
 </style>
 </head>
 <body>
@@ -165,6 +184,7 @@ dialog { border-radius:28px; }
   <symbol id="i-nav" viewBox="0 0 24 24"><polygon points="3 11 22 2 13 21 11 13 3 11"/></symbol>
   <symbol id="i-check" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></symbol>
   <symbol id="i-alert" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></symbol>
+  <symbol id="i-photo" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.09-3.09a2 2 0 0 0-2.82 0L6 21"/></symbol>
   <symbol id="i-wallet" viewBox="0 0 24 24"><path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1"/><path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4"/></symbol>
 </svg>
 <main class="wrap">
@@ -207,8 +227,14 @@ dialog { border-radius:28px; }
   <form class="edit" id="form">
     <h2 id="dlgTitle">예식장 추가</h2>
     <label>예식장 이름 *<input name="name" required maxlength="60"></label>
-    <label>주소 또는 네이버지도 링크 *<input name="addr" required maxlength="300" placeholder="입력하면 기준 위치에서의 거리가 자동 계산돼요"></label>
-    <div class="hint" id="distHint" aria-live="polite"></div>
+    <label>지도 링크 (카카오맵·네이버지도)<input name="link" maxlength="500" inputmode="url" autocomplete="off" placeholder="링크를 붙여넣으면 주소·전화번호·위치를 자동으로 채워요"></label>
+    <button type="button" class="btn" id="lookBtn">정보 자동 입력</button>
+    <div class="hint" id="lookHint" aria-live="polite"></div>
+    <div class="hint" id="keyHint" hidden>이름만으로 정확히 찾으려면 <button type="button" class="linkbtn" id="keyBtn">카카오 REST API 키 설정</button> (무료 발급)</div>
+    <div class="cands" id="cands"></div>
+    <label>주소 (자동 입력 · 직접 수정 가능)<input name="addr" maxlength="300" placeholder="자동으로 채워지지 않으면 직접 입력해 주세요"></label>
+    <label>전화번호<input name="phone" type="tel" inputmode="tel" maxlength="30"></label>
+    <div class="hint" id="distHint" aria-live="polite">입력하면 기준 위치에서의 거리가 자동 계산돼요</div>
     <div class="row">
       <label>대관료 (만원) *<input name="price" type="number" min="0" step="any" inputmode="decimal" required></label>
       <label>식대 1인 (만원)<input name="meal" type="number" min="0" step="any" inputmode="decimal"></label>
@@ -261,7 +287,7 @@ dialog { border-radius:28px; }
   </div>
 </dialog>
 
-<dialog id="lb" class="lightbox" aria-label="사진 크게 보기"><img id="lbImg" alt=""></dialog>
+<dialog id="lb" class="lightbox" aria-label="사진 크게 보기"><div id="lbBody"></div></dialog>
 
 <script>
 const KEY = 'wedding-halls-v1';
@@ -325,13 +351,15 @@ function coordsFromLink(text) {
   return inKorea(lat, lon) ? { lat, lon } : null;                 // null = 링크지만 좌표 없음
 }
 let lastNom = 0; // Nominatim은 초당 1회 제한
-async function nominatim(q) {
+async function nomGet(qs) {
   const wait = lastNom + 1100 - Date.now();
   if (wait > 0) await new Promise(r => setTimeout(r, wait));
   lastNom = Date.now();
-  const r = await fetch('https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=kr&q=' + encodeURIComponent(q));
+  const r = await fetch('https://nominatim.openstreetmap.org/' + qs);
   return r.json();
 }
+const nominatim = q => nomGet('search?format=json&limit=1&countrycodes=kr&q=' + encodeURIComponent(q));
+const KAKAO_DENIED = '카카오 API 사용이 거부됐어요. REST API 키와, 카카오 개발자 콘솔의 “카카오맵” 사용 설정을 확인해 주세요.';
 const kakaoKey = () => { try { return localStorage.getItem('wedding-kakao-key') || ''; } catch { return ''; } };
 async function geocode(text) {
   const link = coordsFromLink(text);
@@ -343,7 +371,7 @@ async function geocode(text) {
       let r;
       try { r = await fetch(`https://dapi.kakao.com/v2/local/search/${api}.json?size=1&query=${encodeURIComponent(text)}`, { headers: { Authorization: 'KakaoAK ' + key } }); }
       catch { throw new Error('카카오 주소 검색에 연결하지 못했어요.'); }
-      if (r.status === 401 || r.status === 403) throw new Error('카카오 REST API 키를 확인해 주세요. (위치 관리에서 수정)');
+      if (r.status === 401 || r.status === 403) throw new Error(KAKAO_DENIED);
       const d = (await r.json()).documents?.[0];
       if (d) return { lat: +d.y, lon: +d.x };
     }
@@ -357,6 +385,137 @@ async function geocode(text) {
   }
   throw new Error('주소를 찾지 못했어요. 도로명주소로 다시 입력해 주세요.');
 }
+// ───────── 지도 링크 해석 / 예식장 정보 자동 입력 ─────────
+const addrOf = h => (isUrl(h.addr) ? '' : h.addr || '');
+const linkOf = h => { const l = h.link || (isUrl(h.addr) ? h.addr : ''); return isUrl(l) ? l : ''; };
+const geoSrc = h => addrOf(h) || linkOf(h);                      // 좌표를 찾을 때 쓰는 텍스트
+const needsGeo = h => h.lat == null && !h.geoFail && !!(addrOf(h) || coordsFromLink(linkOf(h)));
+const URL_RE = /https?:\/\/[^\s<>"']+/i;
+const decode = s => { try { return decodeURIComponent(s); } catch { return s; } };
+function splitShare(text) {                                      // 공유 문구에서 링크와 이름 후보를 분리
+  const m = text.match(URL_RE);
+  if (!m) return { url: '', label: text.trim() };
+  return { url: m[0], label: text.replace(m[0], '').split('\n').map(x => x.trim()).find(Boolean) || '' };
+}
+// 카카오맵·네이버지도 링크에서 브라우저만으로 읽을 수 있는 것(장소 ID·좌표·이름)만 뽑는다
+function parseMapLink(text) {
+  const out = { kind: null, id: null, lat: null, lon: null, name: '', short: false };
+  let u; try { u = new URL(text); } catch { return out; }
+  const host = u.hostname, path = decode(u.pathname), q = u.searchParams;
+  if (/(^|\.)(kko\.to|naver\.me)$/.test(host)) { out.short = true; return out; }   // 단축 링크는 열어 볼 수 없다
+  const c = coordsFromLink(text);
+  if (c) { out.lat = c.lat; out.lon = c.lon; }
+  if (/kakao\.com$/.test(host)) {
+    out.kind = 'kakao';
+    out.id = (path.match(/^\/(\d{5,})\/?$/) || [])[1] || q.get('itemId') || q.get('id') || null;
+    const m = path.match(/\/link\/(?:map|to|from)\/([^,/]+),(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?)/);
+    if (m) { out.name = m[1]; if (inKorea(+m[2], +m[3])) { out.lat = +m[2]; out.lon = +m[3]; } }
+    if (!out.name) out.name = q.get('q') || '';
+  } else if (/naver\.com$/.test(host)) {
+    out.kind = 'naver';
+    out.id = (path.match(/\/place\/(\d+)/) || path.match(/\/(?:restaurant|hospital|beauty|accommodation)\/(\d+)/) || [])[1] || null;
+    const sm = path.match(/\/search\/([^/]+)/);
+    if (sm) out.name = sm[1];
+  }
+  return out;
+}
+async function kakaoApi(path, params) {
+  let r;
+  try { r = await fetch('https://dapi.kakao.com/v2/local/' + path + '?' + new URLSearchParams(params), { headers: { Authorization: 'KakaoAK ' + kakaoKey() } }); }
+  catch { throw new Error('카카오 검색에 연결하지 못했어요.'); }
+  if (r.status === 401 || r.status === 403) throw new Error(KAKAO_DENIED);
+  if (!r.ok) throw new Error('카카오 검색에 실패했어요. 잠시 후 다시 시도해 주세요.');
+  return r.json();
+}
+const kPlace = d => ({ id: d.id, name: d.place_name, addr: d.road_address_name || d.address_name || '', phone: d.phone || '',
+  lat: +d.y, lon: +d.x, url: d.place_url || '', cat: (d.category_name || '').split(' > ').slice(-2).join(' > ') });
+const nomAddr = a => [...new Set([a.state, a.city || a.county, a.borough || a.city_district, a.suburb, a.road, a.house_number].filter(Boolean))].join(' ');
+const weddingLike = p => /웨딩|결혼|예식/.test(p.cat + p.name);
+async function reverseAddr(pt) {
+  try {
+    if (kakaoKey()) {
+      const d = (await kakaoApi('geo/coord2address.json', { x: pt.lon, y: pt.lat })).documents?.[0];
+      if (d) return d.road_address?.address_name || d.address?.address_name || '';
+    } else {
+      const j = await nomGet(`reverse?format=jsonv2&zoom=18&accept-language=ko&lat=${pt.lat}&lon=${pt.lon}`);
+      if (j.address) return nomAddr(j.address);
+    }
+  } catch {}
+  return '';
+}
+async function findPlaces(name, info) {
+  if (kakaoKey()) {                                              // 이름으로 장소 검색: 주소·전화·좌표·장소 링크
+    const base = { query: name, size: 8 };
+    let docs = [];
+    if (info.lat != null) docs = (await kakaoApi('search/keyword.json', { ...base, x: info.lon, y: info.lat, radius: 3000, sort: 'distance' })).documents || [];
+    if (!docs.length) docs = (await kakaoApi('search/keyword.json', base)).documents || [];
+    return docs.map(kPlace);
+  }
+  const j = await nomGet('search?format=json&limit=5&addressdetails=1&accept-language=ko&countrycodes=kr&q=' + encodeURIComponent(name));
+  return j.map(x => ({ id: 'osm' + x.place_id, name: x.name || name, addr: x.address ? nomAddr(x.address) : '', phone: '', lat: +x.lat, lon: +x.lon, url: '', cat: 'OpenStreetMap' }));
+}
+function formLoc() {
+  const f = $('form');
+  let addr = f.addr.value.trim(), link = f.link.value.trim();
+  if (isUrl(addr)) { link = link || addr; addr = ''; }
+  if (link && !isUrl(link)) link = '';
+  return { addr, link, gt: addr || link };
+}
+let lookJob = 0, lastLook = '', draftCands = [];
+function applyPlace(p) {
+  const f = $('form');
+  if (!f.name.value.trim()) f.name.value = p.name;
+  f.addr.value = p.addr;
+  if (p.phone) f.phone.value = p.phone;
+  if (!f.link.value.trim() && p.url) f.link.value = p.url;
+  draftGeo = { addr: formLoc().gt, geo: { lat: p.lat, lon: p.lon } };
+  $('cands').innerHTML = '';
+  setHint($('lookHint'), `${p.name}${p.addr ? ' · ' + p.addr : ''}${p.approx ? ' (링크 지도 중심 기준, 주소를 확인해 주세요)' : ''}`, false, true);
+  showDistance({ lat: p.lat, lon: p.lon });
+}
+async function lookup(force) {
+  const f = $('form'), hint = $('lookHint');
+  const sh = splitShare(f.link.value);
+  if (sh.url) {
+    if (sh.url !== f.link.value.trim()) f.link.value = sh.url;
+    if (!f.name.value.trim() && sh.label) f.name.value = sh.label.slice(0, 60);
+  } else if (sh.label) {                                         // 링크 칸에 이름을 적은 경우
+    if (!f.name.value.trim()) f.name.value = sh.label.slice(0, 60);
+    f.link.value = '';
+  }
+  const link = f.link.value.trim(), name = f.name.value.trim(), stamp = name + '|' + link;
+  if (!force && stamp === lastLook) return;
+  lastLook = stamp;
+  const info = parseMapLink(link), q = name || info.name, my = ++lookJob;
+  $('cands').innerHTML = '';
+  if (!q && info.lat == null) {
+    setHint(hint, info.short ? '단축 링크(naver.me, kko.to)는 위치를 읽을 수 없어요. 예식장 이름을 입력하거나, 주소창에 보이는 전체 링크를 붙여넣어 주세요.' : '예식장 이름이나 지도 링크를 먼저 입력해 주세요.', true);
+    return;
+  }
+  setHint(hint, '정보를 찾는 중…');
+  try {
+    let list = q ? await findPlaces(q, info) : [];
+    if (my !== lookJob) return;
+    if (!list.length && info.lat != null)                        // 검색 결과가 없으면 링크 좌표로 주소만 채움
+      list = [{ id: '', name: q, addr: await reverseAddr(info), phone: '', lat: info.lat, lon: info.lon, url: '', cat: '', approx: true }];
+    if (my !== lookJob) return;
+    if (!list.length) throw new Error(kakaoKey()
+      ? '검색 결과가 없어요. 이름을 줄여서 다시 해보거나 주소를 직접 입력해 주세요.'
+      : '위치를 찾지 못했어요. 카카오 REST API 키를 설정하면 이름만으로도 찾을 수 있어요. 아니면 주소를 직접 입력해 주세요.');
+    list.sort((a, b) => weddingLike(b) - weddingLike(a));        // 웨딩홀·예식장 분류를 앞으로
+    let pick = info.kind === 'kakao' && info.id ? list.find(x => x.id === info.id) : null;
+    if (!pick) { const w = list.filter(weddingLike); pick = list.length === 1 ? list[0] : w.length === 1 ? w[0] : null; }
+    if (pick) applyPlace(pick);
+    else {
+      draftCands = list;
+      $('cands').innerHTML = list.map((x, i) => `<button type="button" class="cand" data-i="${i}"><b>${esc(x.name)}</b><span>${esc(x.addr)}${x.cat ? ' · ' + esc(x.cat) : ''}</span></button>`).join('');
+      setHint(hint, `후보 ${list.length}곳 — 맞는 곳을 선택해 주세요.`);
+    }
+  } catch (err) {
+    if (my === lookJob) setHint(hint, err instanceof TypeError ? '검색 서비스에 연결하지 못했어요. 잠시 후 다시 시도해 주세요.' : err.message, true);
+  }
+}
+
 function straightKm(a, b) {
   const t = x => x * Math.PI / 180, dLat = t(b.lat - a.lat), dLon = t(b.lon - a.lon);
   const h = Math.sin(dLat / 2) ** 2 + Math.cos(t(a.lat)) * Math.cos(t(b.lat)) * Math.sin(dLon / 2) ** 2;
@@ -375,13 +534,13 @@ async function distanceKm(from, to) {
 let job = 0;
 async function ensureDistances() {
   const my = ++job, oid = cur, org = curOrigin();
-  const todo = halls.filter(h => (h.lat == null && isUrl(h.addr) === false && h.addr && !h.geoFail) || (h.lat != null && !h.dists?.[oid]));
+  const todo = halls.filter(h => needsGeo(h) || (h.lat != null && !h.dists?.[oid]));
   let n = 0;
   for (const h of todo) {
     if (my !== job) return;
     busy = `거리 계산 중 (${++n}/${todo.length})`; render();
     try {
-      if (h.lat == null) { const g = await geocode(h.addr); h.lat = g.lat; h.lon = g.lon; }
+      if (h.lat == null) { const g = await geocode(geoSrc(h)); h.lat = g.lat; h.lon = g.lon; }
       (h.dists ??= {})[oid] = await distanceKm(org, h);
     } catch { if (h.lat == null) h.geoFail = true; }
     save();
@@ -397,7 +556,7 @@ function visible() {
   const likedOnly = $('liked').value === '1';
   let r = halls.filter(h => {
     const d = distFor(h);
-    return (!q || (h.name + ' ' + h.memo + ' ' + h.addr).toLowerCase().includes(q)) &&
+    return (!q || [h.name, h.memo, h.addr, h.phone].filter(Boolean).join(' ').toLowerCase().includes(q)) &&
       (isNaN(mp) || total(h) <= mp) &&
       (isNaN(md) || (d != null && d <= md)) &&
       (!likedOnly || h.liked);
@@ -416,7 +575,7 @@ function visible() {
 }
 
 function dirUrl(h) {
-  if (h.lat == null) return isUrl(h.addr) ? h.addr : 'https://map.naver.com/p/search/' + encodeURIComponent(h.addr || h.name);
+  if (h.lat == null) return linkOf(h) || 'https://map.naver.com/p/search/' + encodeURIComponent(addrOf(h) || h.name);
   const o = curOrigin(), nm = s => encodeURIComponent(s.replace(/,/g, ' '));
   return `https://map.naver.com/p/directions/${o.lon},${o.lat},${nm(o.name)}/${h.lon},${h.lat},${nm(h.name)}/-/car`;
 }
@@ -424,7 +583,7 @@ function distText(h) {
   const d = h.dists?.[cur], km = distFor(h);
   const pin = icon('pin') + ' ';
   if (km != null) return `${pin}${esc(curOrigin().name)}에서 ${km}km${d?.k === '직선' ? ' (직선)' : ''}`;
-  return pin + (h.lat != null || (h.addr && !h.geoFail && !isUrl(h.addr)) ? '거리 계산 중…' : '거리 미확인');
+  return pin + (h.lat != null || needsGeo(h) ? '거리 계산 중…' : '거리 미확인');
 }
 
 function render() {
@@ -436,9 +595,6 @@ function render() {
     const t = total(h);
     return `
     <article class="card">
-      <div class="photo">${h.photos?.length
-        ? `<button class="photobtn" data-id="${h.id}" data-act="view" aria-label="${esc(h.name)} 사진 크게 보기"><img src="${h.photos[0]}" alt=""></button>` + (h.photos.length > 1 ? `<span class="n">${h.photos.length}장</span>` : '')
-        : '사진 없음'}</div>
       <div class="body">
         <div class="namerow">
           <div class="name">${esc(h.name)}</div>
@@ -448,11 +604,14 @@ function render() {
         ${h.meal && h.guests ? `<div class="meta">대관료 ${fmtPrice(h.price)} + 식대 ${h.meal}만×${h.guests}명</div>` : ''}
         ${h.extras?.length ? `<ul class="ex">${h.extras.map(e => `<li>${esc(e.label)}: ${fmtPrice(total(h, e.price))}</li>`).join('')}</ul>` : ''}
         <div class="meta">${distText(h)}</div>
-        ${h.addr ? `<div class="meta">${isUrl(h.addr) ? `<a href="${esc(h.addr)}" target="_blank" rel="noopener">지도 링크</a>` : esc(h.addr)}</div>` : ''}
+        ${addrOf(h) ? `<div class="meta">${esc(addrOf(h))}</div>` : ''}
+        ${h.phone ? `<div class="meta"><a href="tel:${esc(h.phone.replace(/[^\d+]/g, ''))}">${esc(h.phone)}</a></div>` : ''}
+        ${linkOf(h) ? `<div class="meta"><a href="${esc(linkOf(h))}" target="_blank" rel="noopener">지도에서 보기</a></div>` : ''}
         ${h.memo ? `<div class="memo">${esc(h.memo)}</div>` : ''}
       </div>
       <div class="actions">
         <a class="btn wide" href="${esc(dirUrl(h))}" target="_blank" rel="noopener">${icon('nav')} 길찾기</a>
+        ${h.photos?.length ? `<button class="btn wide" data-id="${h.id}" data-act="view">${icon('photo')} 사진 ${h.photos.length}장 보기</button>` : ''}
         <button class="btn" data-id="${h.id}" data-act="edit">수정</button>
         <button class="btn danger" data-id="${h.id}" data-act="del">삭제</button>
       </div>
@@ -532,36 +691,53 @@ function openEditor(id) {
   f.reset();
   $('dlgTitle').textContent = h ? '예식장 수정' : '예식장 추가';
   f.name.value = h?.name ?? '';
-  f.addr.value = h?.addr ?? '';
+  f.addr.value = h ? addrOf(h) : '';
+  f.link.value = h ? linkOf(h) : '';
+  f.phone.value = h?.phone ?? '';
   f.price.value = h?.price ?? '';
   f.meal.value = h?.meal ?? '';
   f.guests.value = h?.guests ?? '';
   f.memo.value = h?.memo ?? '';
   draftPhotos = [...(h?.photos ?? [])];
   draftExtras = (h?.extras ?? []).map(e => ({ ...e }));
-  draftGeo = null; warnedAddr = null;
+  draftGeo = null; warnedAddr = null; lastLook = ''; draftCands = [];
+  $('cands').innerHTML = ''; setHint($('lookHint'), '');
+  $('keyHint').hidden = !!kakaoKey();
   setHint($('distHint'), '');
   drawThumbs(); drawExtras(); updateTotal();
   $('dlg').showModal();
 }
 
-// 주소를 입력하고 칸을 벗어나면 거리를 미리 보여준다
+// 위치가 정해지면 기준 위치에서의 거리를 미리 보여준다
+async function showDistance(geo) {
+  const hint = $('distHint'), key = formLoc().gt;
+  setHint(hint, '거리 계산 중…');
+  const d = await distanceKm(curOrigin(), geo);
+  if (formLoc().gt === key)
+    setHint(hint, `${curOrigin().name}에서 ${d.km}km (${d.k === '직선' ? '직선거리' : '도로 기준'})`, false, true);
+}
+// 주소를 직접 고치고 칸을 벗어나면 다시 좌표를 찾는다
 async function previewDistance() {
-  const addr = $('form').addr.value.trim(), hint = $('distHint');
-  if (!addr) { setHint(hint, ''); return; }
+  const { gt } = formLoc(), hint = $('distHint');
+  if (!gt) { setHint(hint, ''); return; }
+  if (draftGeo?.addr === gt) return showDistance(draftGeo.geo);
   setHint(hint, '거리 계산 중…');
   try {
-    const geo = await geocode(addr);
-    draftGeo = { addr, geo };
-    const d = await distanceKm(curOrigin(), geo);
-    if ($('form').addr.value.trim() === addr)
-      setHint(hint, `${curOrigin().name}에서 ${d.km}km (${d.k === '직선' ? '직선거리' : '도로 기준'})`, false, true);
+    const geo = await geocode(gt);
+    draftGeo = { addr: gt, geo };
+    await showDistance(geo);
   } catch (e) { setHint(hint, e.message, true); }
 }
 
 $('addBtn').onclick = () => openEditor(null);
 $('cancel').onclick = () => $('dlg').close();
 $('form').addr.onchange = previewDistance;
+$('form').link.addEventListener('change', () => lookup(false));
+$('form').link.addEventListener('paste', () => setTimeout(() => lookup(false), 0));
+$('form').link.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); lookup(true); } });
+$('lookBtn').onclick = () => lookup(true);
+$('cands').onclick = e => { const b = e.target.closest('.cand'); if (b) applyPlace(draftCands[+b.dataset.i]); };
+$('keyBtn').onclick = () => openOrigins();
 ['price', 'meal', 'guests'].forEach(n => $('form')[n].addEventListener('input', updateTotal));
 $('addEx').onclick = () => { draftExtras.push({ label: '', price: '' }); drawExtras(); };
 $('extras').oninput = e => { const { i, k } = e.target.dataset; if (i != null) draftExtras[+i][k] = e.target.value; };
@@ -580,20 +756,20 @@ $('thumbs').onclick = e => {
 
 $('form').onsubmit = async e => {
   e.preventDefault();
-  const f = $('form'), btn = $('saveBtn'), addr = f.addr.value.trim();
+  const f = $('form'), btn = $('saveBtn'), { addr, link, gt } = formLoc();
   const old = halls.find(x => x.id === editing);
   btn.disabled = true;
   try {
-    // 좌표: 주소가 그대로면 기존 값, 아니면 미리 찾은 값, 없으면 새로 검색
+    // 좌표: 주소·링크가 그대로면 기존 값, 아니면 자동 입력으로 찾은 값, 없으면 새로 검색
     let geo = null;
-    const keep = old && old.addr === addr && old.lat != null;
+    const keep = old && addrOf(old) === addr && linkOf(old) === link && old.lat != null;
     if (keep) geo = { lat: old.lat, lon: old.lon };
-    else if (draftGeo?.addr === addr) geo = draftGeo.geo;
-    else if (warnedAddr !== addr) {
+    else if (draftGeo?.addr === gt) geo = draftGeo.geo;
+    else if (gt && warnedAddr !== gt) {
       setHint($('distHint'), '주소로 위치를 찾는 중…');
-      try { geo = await geocode(addr); }
+      try { geo = await geocode(gt); }
       catch (err) {
-        warnedAddr = addr;
+        warnedAddr = gt;
         setHint($('distHint'), err.message + ' 그대로 저장하려면 저장을 다시 눌러 주세요(거리는 표시되지 않아요).', true);
         return;
       }
@@ -601,6 +777,8 @@ $('form').onsubmit = async e => {
     const data = {
       name: f.name.value.trim(),
       addr,
+      link,
+      phone: f.phone.value.trim(),
       price: Number(f.price.value),
       meal: f.meal.value === '' ? null : Number(f.meal.value),
       guests: f.guests.value === '' ? null : Math.round(Number(f.guests.value)),
@@ -630,13 +808,17 @@ $('list').onclick = e => {
   else if (t.dataset.act === 'like') { h.liked = !h.liked; save(); render(); }
   else if (t.dataset.act === 'del') {
     if (confirm(`“${h.name}”을(를) 삭제할까요?`)) { halls = halls.filter(x => x !== h); save(); render(); }
-  } else if (t.dataset.act === 'view') { $('lbImg').src = h.photos[0]; $('lb').showModal(); }
+  } else if (t.dataset.act === 'view') { $('lbBody').innerHTML = h.photos.map(x => `<img src="${x}" alt="">`).join(''); $('lb').showModal(); }
 };
 $('lb').onclick = () => $('lb').close();
 
 // ───────── 기준 위치 관리창 ─────────
-$('originBtn').onclick = () => { resetOForm(); $('kkey').value = kakaoKey(); setHint($('oHint'), ''); renderOrigins(); $('odlg').showModal(); };
-$('kkey').onchange = e => { try { localStorage.setItem('wedding-kakao-key', e.target.value.trim()); } catch {} };
+function openOrigins() { resetOForm(); $('kkey').value = kakaoKey(); setHint($('oHint'), ''); renderOrigins(); $('odlg').showModal(); }
+$('originBtn').onclick = openOrigins;
+$('kkey').onchange = e => {
+  try { localStorage.setItem('wedding-kakao-key', e.target.value.trim()); } catch {}
+  $('keyHint').hidden = !!kakaoKey(); lastLook = '';
+};
 $('oclose').onclick = () => $('odlg').close();
 $('origin').onchange = e => setOrigin(e.target.value);
 $('olist').onclick = e => {
@@ -699,14 +881,14 @@ $('cmpBtn').onclick = () => {
       const row = (label, cell) => `<tr><th class="rl">${label}</th>${L.map(cell).join('')}</tr>`;
       return `<div class="tblwrap"><table>
         <tr><th class="rl"></th>${L.map(h => `<th>${esc(h.name)}</th>`).join('')}</tr>
-        ${row('사진', h => `<td>${h.photos?.[0] ? `<img src="${h.photos[0]}" alt="">` : '-'}</td>`)}
         ${row('총액', h => `<td class="${total(h) === bt ? 'best' : ''}">${fmtPrice(total(h))}</td>`)}
         ${row('대관료', h => `<td>${fmtPrice(h.price)}</td>`)}
         ${row('식대 1인', h => `<td>${h.meal ? h.meal + '만원' : '-'}</td>`)}
         ${row('보증인원', h => `<td>${h.guests ? h.guests + '명' : '-'}</td>`)}
         ${row('요금표', h => `<td>${h.extras?.length ? h.extras.map(x => `${esc(x.label)}: ${fmtPrice(total(h, x.price))}`).join('<br>') : '-'}</td>`)}
         ${row('거리', h => { const d = distFor(h); return `<td class="${d != null && d === bd ? 'best' : ''}">${d != null ? d + 'km' : '-'}</td>`; })}
-        ${row('주소', h => `<td>${isUrl(h.addr) ? `<a href="${esc(h.addr)}" target="_blank" rel="noopener">지도 링크</a>` : esc(h.addr || '-')}</td>`)}
+        ${row('주소', h => `<td>${esc(addrOf(h) || '-')}${linkOf(h) ? `<br><a href="${esc(linkOf(h))}" target="_blank" rel="noopener">지도 링크</a>` : ''}</td>`)}
+        ${row('전화', h => `<td>${h.phone ? `<a href="tel:${esc(h.phone.replace(/[^\d+]/g, ''))}">${esc(h.phone)}</a>` : '-'}</td>`)}
         ${row('메모', h => `<td>${esc(h.memo || '-')}</td>`)}
       </table></div><div class="hint" style="margin-top:6px">거리는 “${esc(curOrigin().name)}” 기준 · 강조 표시는 최저 총액/가장 가까운 곳</div>`;
     })();
