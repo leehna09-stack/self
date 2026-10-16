@@ -117,7 +117,7 @@ td img { width: 100%; max-height: 110px; object-fit: cover; border-radius: 8px; 
 @media (max-width: 480px) { .filters { grid-template-columns: 1fr 1fr; } }
 
 /* 드롭다운: 기본 화살표 대신 안쪽으로 들여 그린 화살표 */
-select, .filters select, .originrow select, .searchrow select.sortsel {
+select, .filters select, .originrow select, .searchrow select.sortsel, .countrow select.sortsel {
   -webkit-appearance: none; appearance: none;
   padding-right: 40px;
   background-color: var(--surface);
@@ -171,6 +171,17 @@ dialog { border-radius:28px; }
 .lightbox img + img { margin-top:6px; }
 .card .body { padding-top:12px; }
 header { flex-wrap:nowrap; }
+.searchrow { grid-template-columns:1fr auto; }
+.searchrow .btn { min-height:44px; padding:0 16px; }
+.countrow { display:flex; align-items:center; justify-content:space-between; gap:8px; }
+.countrow .count { color:var(--muted); min-width:0; }
+.countrow .count b { color:var(--text); }
+.countrow .sortsel { width:auto; min-width:0; min-height:40px; padding:4px 36px 4px 12px; background-position:right 10px center; }
+.keybox { display:grid; gap:6px; padding-bottom:12px; border-bottom:1px solid var(--line); }
+.keybox > label { font-weight:700; color:var(--text); }
+.keyrow { display:grid; grid-template-columns:1fr auto; gap:8px; }
+.keyrow .btn { min-height:44px; padding:0 18px; }
+.sect { font-size:13px; font-weight:700; color:var(--text); margin-top:4px; }
 .hbtns { gap:0; flex:none; margin-right:-8px; }
 .hico { width:40px; height:40px; border:0; border-radius:50%; background:none; color:var(--accent); display:grid; place-items:center; transition:background-color .15s, transform .12s; }
 .hico .i { width:24px; height:24px; vertical-align:0; }
@@ -217,6 +228,7 @@ header { flex-wrap:nowrap; }
   <symbol id="i-edit" viewBox="0 0 24 24"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></symbol>
   <symbol id="i-trash" viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M10 11v6M14 11v6"/></symbol>
   <symbol id="i-map" viewBox="0 0 24 24"><path d="M3 6 9 3l6 3 6-3v15l-6 3-6-3-6 3Z"/><path d="M9 3v15M15 6v15"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></symbol>
   <symbol id="i-wallet" viewBox="0 0 24 24"><path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1"/><path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4"/></symbol>
 </svg>
 <main class="wrap">
@@ -233,22 +245,20 @@ header { flex-wrap:nowrap; }
   </header>
 
   <div class="toolbar">
-    <div class="searchrow">
-      <input id="q" type="search" aria-label="예식장 검색" placeholder="예식장 이름·메모 검색">
+    <form class="searchrow" id="searchForm" role="search">
+      <input id="q" type="search" aria-label="예식장 검색" placeholder="예식장 이름·메모 검색" enterkeyhint="search">
+      <button class="btn primary" type="submit" id="searchBtn"><svg class="i" aria-hidden="true"><use href="#i-search"/></svg> 검색</button>
+    </form>
+    <div class="countrow">
+      <div class="count" id="count" aria-live="polite"></div>
       <select id="sort" class="sortsel" aria-label="정렬">
+        <option value="all">전체</option>
         <option value="cheap">저가순</option>
         <option value="expensive">고가순</option>
-        <option value="recent">최근등록순</option>
         <option value="far">거리먼순</option>
         <option value="near">거리가까운순</option>
       </select>
     </div>
-    <div class="filters">
-      <input id="maxPrice" aria-label="최대 총액(만원)" type="number" min="0" inputmode="numeric" placeholder="최대 총액(만원)">
-      <input id="maxDist" aria-label="최대 거리(km)" type="number" min="0" step="0.1" inputmode="decimal" placeholder="최대 거리(km)">
-      <select id="liked" aria-label="관심 필터"><option value="">전체</option><option value="1">관심만</option></select>
-    </div>
-    <div class="count" id="count" aria-live="polite"></div>
   </div>
 
   <div class="grid" id="list"></div>
@@ -290,14 +300,19 @@ header { flex-wrap:nowrap; }
 <dialog id="odlg" aria-labelledby="oh">
   <div class="edit">
     <h2 id="oh">기본 주소 관리</h2>
+    <div class="keybox">
+      <label for="kkey">카카오 REST API 키 (선택 · 이름만으로 주소·전화번호 자동 입력)</label>
+      <div class="keyrow">
+        <input id="kkey" placeholder="developers.kakao.com에서 발급한 REST API 키" autocomplete="off">
+        <button type="button" class="btn primary" id="kSave">저장</button>
+      </div>
+      <div class="hint" id="kHint" aria-live="polite"></div>
+    </div>
+    <div class="sect">현재 주소지</div>
     <div class="hint">“기본으로 설정”한 위치가 앱을 열 때 기준이 되고, 위치를 바꾸면 거리가까운순으로 자동 정렬돼요.</div>
     <div id="olist"></div>
-    <label>카카오 REST API 키 (선택 · 주소 인식률↑)
-      <input id="kkey" placeholder="developers.kakao.com에서 발급한 REST API 키" autocomplete="off">
-    </label>
-    <div class="hint">키가 없으면 무료 OpenStreetMap 검색을 쓰는데, 국내 상세주소·건물명은 못 찾는 경우가 많아요. 키는 이 브라우저에만 저장돼요.</div>
     <form id="oform" style="display:grid;gap:8px;margin-top:6px">
-      <div class="sub" id="oTitle">새 위치 추가</div>
+      <div class="sect" id="oTitle">추가 주소지 등록</div>
       <input name="oname" required maxlength="20" placeholder="이름 (예: 회사, 부모님 댁)">
       <input name="oaddr" required maxlength="300" placeholder="주소 또는 네이버지도 링크">
       <div class="hint" id="oHint" aria-live="polite"></div>
@@ -330,7 +345,8 @@ const DEFAULT_ORIGIN = { id: 'home', name: '집', addr: '경기 군포시 송부
 let halls = load();
 let O = loadOrigins();
 let cur = O.defId;      // 현재 기준 위치 id
-let sort = 'cheap';
+let sort = 'all';
+let query = '';          // 검색 버튼을 눌러 확정한 검색어
 let editing = null;     // 수정 중인 id (없으면 신규)
 let draftPhotos = [];   // 편집창의 사진 임시 목록
 let draftExtras = [];   // 편집창의 월별·요일별 요금 임시 목록
@@ -581,17 +597,8 @@ async function ensureDistances() {
 
 // ───────── 목록 ─────────
 function visible() {
-  const q = $('q').value.trim().toLowerCase();
-  const mp = parseFloat($('maxPrice').value);
-  const md = parseFloat($('maxDist').value);
-  const likedOnly = $('liked').value === '1';
-  let r = halls.filter(h => {
-    const d = distFor(h);
-    return (!q || [h.name, h.memo, h.addr, h.phone].filter(Boolean).join(' ').toLowerCase().includes(q)) &&
-      (isNaN(mp) || total(h) <= mp) &&
-      (isNaN(md) || (d != null && d <= md)) &&
-      (!likedOnly || h.liked);
-  });
+  const q = query.toLowerCase();
+  let r = halls.filter(h => !q || [h.name, h.memo, h.addr, h.phone].filter(Boolean).join(' ').toLowerCase().includes(q));
   // 거리 미확인 항목은 거리순(가까운순·먼순 모두)에서 맨 뒤로
   const near = h => distFor(h) ?? Infinity;
   const far = h => distFor(h) ?? -1;
@@ -600,7 +607,7 @@ function visible() {
     expensive: (a, b) => total(b) - total(a),
     near: (a, b) => near(a) - near(b) || total(a) - total(b),
     far: (a, b) => far(b) - far(a) || total(a) - total(b),
-    recent: (a, b) => b.created - a.created,
+    all: (a, b) => b.created - a.created,          // 전체: 최근 등록한 순
   }[sort];
   return r.sort(by);
 }
@@ -621,7 +628,7 @@ function render() {
   const r = visible();
   const totals = halls.map(h => total(h));
   const min = Math.min(...totals), max = Math.max(...totals);
-  $('count').textContent = (halls.length ? `${r.length}곳 표시 (전체 ${halls.length}곳)` : '') + (busy ? ` · ${busy}` : '');
+  $('count').innerHTML = `총 <b>${halls.length}</b>건` + (query ? ` · 검색 ${r.length}건` : '') + (busy ? ` · ${esc(busy)}` : '');
   $('list').innerHTML = r.length ? r.map(h => {
     const t = total(h);
     return `
@@ -651,7 +658,7 @@ function render() {
       ${h.photos?.length ? `<div class="actions"><button class="btn wide" data-id="${h.id}" data-act="view">${icon('photo')} 사진 ${h.photos.length}장 보기</button></div>` : ''}
     </article>`;
   }).join('')
-    : `<div class="empty">${halls.length ? '조건에 맞는 예식장이 없어요.' : '아직 등록된 예식장이 없어요.<br><button class="btn primary" data-act="add">' + icon('plus') + ' 예식장 추가</button>'}</div>`;
+    : `<div class="empty">${halls.length ? '검색 결과가 없어요.' : '아직 등록된 예식장이 없어요.<br><button class="btn primary" data-act="add">' + icon('plus') + ' 예식장 추가</button>'}</div>`;
 }
 
 // ───────── 기준 위치 ─────────
@@ -851,12 +858,23 @@ function drawKeyHint() {
   $('keyState').textContent = has ? '카카오 키 설정됨 ·' : '이름만으로 정확히 찾으려면';
   $('keyBtn').textContent = has ? '키 변경' : '카카오 REST API 키 설정 (무료 발급)';
 }
-function openOrigins() { resetOForm(); $('kkey').value = kakaoKey(); setHint($('oHint'), ''); renderOrigins(); $('odlg').showModal(); }
+const KEY_HINT = '키가 없으면 무료 OpenStreetMap 검색을 쓰는데, 국내 상세주소·건물명은 못 찾는 경우가 많아요. 키는 이 브라우저에만 저장돼요.';
+function openOrigins() {
+  resetOForm(); $('kkey').value = kakaoKey(); setHint($('oHint'), '');
+  setHint($('kHint'), kakaoKey() ? '키가 저장돼 있어요. 다른 키로 바꾸려면 새로 입력하고 저장을 눌러 주세요.' : KEY_HINT, false, !!kakaoKey());
+  renderOrigins(); $('odlg').showModal();
+}
 $('originBtn').onclick = openOrigins;
-$('kkey').onchange = e => {
-  try { localStorage.setItem('wedding-kakao-key', e.target.value.trim()); } catch {}
-  drawKeyHint(); lastLook = '';
+function saveKey(v) {
+  v = v.trim();
+  try { if (v) localStorage.setItem('wedding-kakao-key', v); else localStorage.removeItem('wedding-kakao-key'); } catch {}
+  drawKeyHint(); lastLook = ''; return v;
+}
+$('kSave').onclick = () => {
+  const v = saveKey($('kkey').value);
+  setHint($('kHint'), v ? '키를 저장했어요. 이제 이름만으로도 주소를 찾을 수 있어요.' : '키를 삭제했어요. 무료 OpenStreetMap 검색으로 돌아가요.', false, true);
 };
+$('kkey').onchange = e => saveKey(e.target.value);       // 칸 밖을 눌러도 저장
 $('oclose').onclick = () => $('odlg').close();
 $('olist').onclick = e => {
   const b = e.target.closest('[data-oact]');
@@ -880,7 +898,7 @@ $('olist').onclick = e => {
 let editingO = null; // 수정 중인 위치 id (없으면 신규 추가)
 function resetOForm() {
   editingO = null; $('oform').reset();
-  $('oTitle').textContent = '새 위치 추가'; $('oadd').textContent = '추가'; $('oCancelEdit').hidden = true;
+  $('oTitle').textContent = '추가 주소지 등록'; $('oadd').textContent = '추가'; $('oCancelEdit').hidden = true;
 }
 $('oCancelEdit').onclick = () => { resetOForm(); setHint($('oHint'), ''); };
 $('oform').onsubmit = async e => {
@@ -934,7 +952,8 @@ $('cmpBtn').onclick = () => {
 $('cmpClose').onclick = () => $('cmp').close();
 
 $('sort').onchange = e => { sort = e.target.value; render(); };
-['q', 'maxPrice', 'maxDist', 'liked'].forEach(id => $(id).addEventListener('input', render));
+$('searchForm').onsubmit = e => { e.preventDefault(); query = $('q').value.trim(); render(); };
+$('q').addEventListener('input', () => { if (query && !$('q').value.trim()) { query = ''; render(); } });   // 검색어를 지우면 전체 목록
 
 $('sort').value = sort;
 renderOrigins();
