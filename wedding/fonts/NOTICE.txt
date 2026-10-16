@@ -1,0 +1,11 @@
+Wedding Sans (웹용 부분 추출·이름 변경본)
+
+원본 글꼴: 나눔바른고딕 (NanumBarunGothic) Regular / Bold
+  Copyright (c) 2013 NHN Corporation. All rights reserved. Font designed by FONTRIX Inc.
+  배포처: 네이버 글꼴 모음 https://hangeul.naver.com/font
+  라이선스: SIL Open Font License 1.1 (네이버 나눔글꼴 라이선스 안내)
+  https://help.naver.com/service/30016/contents/18088?osType=PC&lang=ko
+
+변경 사항: 웹 전송 용량을 줄이려고 KS X 1001 한글 2,350자와 영문·기호만 남겼고(부분 추출),
+원래 이름을 쓰지 않도록 글꼴 이름을 "Wedding Sans"로 바꿨습니다. 글자 모양은 수정하지 않았습니다.
+패키지 출처: npm @kfonts/nanum-barun-gothic 0.3.0 (OFL-1.1)
