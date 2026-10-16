@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+<defs>
+<linearGradient id="bg" x1="0" y1="0" x2="0.3" y2="1"><stop offset="0" stop-color="#ff8fa9"/><stop offset=".55" stop-color="#ff3d66"/><stop offset="1" stop-color="#cf163f"/></linearGradient>
+<radialGradient id="glow" cx=".28" cy=".08" r=".8"><stop offset="0" stop-color="#fff" stop-opacity=".6"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient>
+<linearGradient id="face" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset=".55" stop-color="#ffe6ec"/><stop offset="1" stop-color="#ffc0d0"/></linearGradient>
+<linearGradient id="hi" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".95"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>
+<filter id="soft" x="-30%" y="-80%" width="160%" height="260%"><feGaussianBlur stdDeviation="24"/></filter>
+<path id="h" d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/>
+<clipPath id="hc"><use href="#h" transform="translate(512 468) scale(27) translate(-12 -12)"/></clipPath>
+</defs>
+<rect width="1024" height="1024" fill="url(#bg)"/>
+<rect width="1024" height="1024" fill="url(#glow)"/>
+<ellipse cx="512" cy="790" rx="250" ry="38" fill="#6e0a26" opacity=".5" filter="url(#soft)"/>
+<use href="#h" transform="translate(512 516) scale(27) translate(-12 -12)" fill="#b0284e"/>
+<use href="#h" transform="translate(512 513) scale(27) translate(-12 -12)" fill="#b42f54"/>
+<use href="#h" transform="translate(512 510) scale(27) translate(-12 -12)" fill="#b8375b"/>
+<use href="#h" transform="translate(512 507) scale(27) translate(-12 -12)" fill="#bc3e61"/>
+<use href="#h" transform="translate(512 504) scale(27) translate(-12 -12)" fill="#c04567"/>
+<use href="#h" transform="translate(512 501) scale(27) translate(-12 -12)" fill="#c44d6d"/>
+<use href="#h" transform="translate(512 498) scale(27) translate(-12 -12)" fill="#c85474"/>
+<use href="#h" transform="translate(512 495) scale(27) translate(-12 -12)" fill="#cc5b7a"/>
+<use href="#h" transform="translate(512 492) scale(27) translate(-12 -12)" fill="#d06380"/>
+<use href="#h" transform="translate(512 489) scale(27) translate(-12 -12)" fill="#d46a86"/>
+<use href="#h" transform="translate(512 486) scale(27) translate(-12 -12)" fill="#d8718d"/>
+<use href="#h" transform="translate(512 483) scale(27) translate(-12 -12)" fill="#dc7993"/>
+<use href="#h" transform="translate(512 480) scale(27) translate(-12 -12)" fill="#e08099"/>
+<use href="#h" transform="translate(512 477) scale(27) translate(-12 -12)" fill="#e4879f"/>
+<use href="#h" transform="translate(512 474) scale(27) translate(-12 -12)" fill="#e88fa6"/>
+<use href="#h" transform="translate(512 471) scale(27) translate(-12 -12)" fill="#ec96ac"/>
+<use href="#h" transform="translate(512 468) scale(27) translate(-12 -12)" fill="url(#face)"/>
+<g clip-path="url(#hc)"><ellipse cx="470" cy="300" rx="260" ry="120" fill="url(#hi)" opacity=".85"/></g>
+<use href="#h" transform="translate(512 468) scale(27) translate(-12 -12)" fill="none" stroke="#fff" stroke-opacity=".7" stroke-width="0.35"/>
+<path d="M770 262 l16 44 44 16 -44 16 -16 44 -16 -44 -44 -16 44 -16z" fill="#fff" opacity=".95"/>
+<path d="M258 700 l9 24 24 9 -24 9 -9 24 -9 -24 -24 -9 24 -9z" fill="#fff" opacity=".7"/>
+</svg>
