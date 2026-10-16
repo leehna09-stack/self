@@ -170,6 +170,22 @@ dialog { border-radius:28px; }
 .lightbox { overflow:auto; width:min(560px, calc(100vw - 24px)); }
 .lightbox img + img { margin-top:6px; }
 .card .body { padding-top:12px; }
+.hint:empty { display:none; }
+.thumbs:empty { display:none; }
+#form.edit, #odlg .edit { padding:14px 16px 16px; gap:8px; }
+#form .edit h2, #form h2, #odlg .edit h2 { margin-bottom:2px; }
+#form input:not(.sr-only), #odlg .edit input { height:40px; padding-top:0; padding-bottom:0; }
+#form textarea { padding-top:8px; padding-bottom:8px; line-height:1.45; }
+#form .btn, #odlg .edit .btn { min-height:40px; padding-top:0; padding-bottom:0; }
+#form .btn.sm, #odlg .edit .btn.sm { min-height:36px; }
+#form label, #form .fld, #odlg .edit label { gap:3px; }
+#form .manual > summary { min-height:40px; padding-top:0; padding-bottom:0; }
+#form .manualbody { gap:8px; padding-bottom:12px; }
+#form .exrow { margin-top:0; }
+#form .exrow .x { min-height:40px; }
+.enterbtn { height:30px; width:34px; }
+.keybox { padding-bottom:10px; gap:4px; }
+.keyrow .btn { min-height:40px; }
 header { flex-wrap:nowrap; }
 .manual { border-radius:12px; background:var(--soft, #f2f2f7); box-shadow:inset 0 0 0 .5px rgba(60,60,67,.18); }
 .manual > summary { list-style:none; cursor:pointer; padding:11px 14px; min-height:44px; display:flex; align-items:center; justify-content:space-between; color:var(--accent); font-weight:700; }
@@ -329,11 +345,8 @@ header { flex-wrap:nowrap; }
       <label>보증인원(명)<input name="guests" type="number" min="0" inputmode="numeric"></label>
     </div>
     <div class="hint" id="totalHint" aria-live="polite"></div>
-    <label>메모<textarea name="memo" rows="4" placeholder="주차, 홀 분위기, 연회장 등"></textarea></label>
-    <div class="fld">
-      <span class="lbl">사진 (여러 장 가능)</span>
-      <button type="button" class="btn" id="photoBtn"><svg class="i" aria-hidden="true"><use href="#i-photo"/></svg> 사진 추가</button>
-    </div>
+    <label>메모<textarea name="memo" rows="3" placeholder="주차, 홀 분위기, 연회장 등"></textarea></label>
+    <button type="button" class="btn" id="photoBtn"><svg class="i" aria-hidden="true"><use href="#i-photo"/></svg> 사진 추가</button>
     <input id="files" class="sr-only" type="file" accept="image/*" multiple tabindex="-1" aria-hidden="true">
     <input id="camInput" class="sr-only" type="file" accept="image/*" capture="environment" tabindex="-1" aria-hidden="true">
     <div class="thumbs" id="thumbs"></div>
