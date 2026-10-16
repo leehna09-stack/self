@@ -171,6 +171,33 @@ dialog { border-radius:28px; }
 .lightbox img + img { margin-top:6px; }
 .card .body { padding-top:12px; }
 header { flex-wrap:nowrap; }
+.manual { border-radius:12px; background:var(--soft, #f2f2f7); box-shadow:inset 0 0 0 .5px rgba(60,60,67,.18); }
+.manual > summary { list-style:none; cursor:pointer; padding:11px 14px; min-height:44px; display:flex; align-items:center; justify-content:space-between; color:var(--accent); font-weight:700; }
+.manual > summary::-webkit-details-marker { display:none; }
+.manual > summary::after { content:""; width:8px; height:8px; border-right:2px solid currentColor; border-bottom:2px solid currentColor; transform:rotate(45deg) translateY(-2px); transition:transform .2s; }
+.manual[open] > summary::after { transform:rotate(-135deg) translateY(-2px); }
+.manualbody { display:grid; gap:10px; padding:0 14px 14px; }
+.namerow2 { display:grid; grid-template-columns:minmax(0, 1fr) auto; gap:8px; align-items:end; }
+.namerow2 .btn { min-height:44px; padding:0 16px; white-space:nowrap; color:var(--accent); font-weight:700; }
+.fld { display:grid; gap:4px; font-size:11px; color:var(--muted); }
+.inwrap { position:relative; }
+.inwrap input { padding-right:48px; }
+.enterbtn { position:absolute; right:5px; top:50%; transform:translateY(-50%); width:36px; height:34px; border:0; border-radius:8px; background:var(--accent-soft); color:var(--accent); display:grid; place-items:center; transition:transform .12s; }
+.enterbtn .i { width:18px; height:18px; vertical-align:0; stroke-width:2.4; }
+.enterbtn:active { transform:translateY(-50%) scale(.92); }
+.row2 { display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:8px; align-items:end; }
+.row2 .btn { width:100%; min-height:44px; white-space:nowrap; }
+.row2 input[type=number] { -moz-appearance:textfield; min-width:0; }
+.row2 input::-webkit-outer-spin-button, .row2 input::-webkit-inner-spin-button { -webkit-appearance:none; margin:0; }
+#extras:empty { display:none; }
+#photoBtn { justify-self:start; }
+.psheet { margin:auto auto 0; width:min(520px, 100%); max-width:100%; padding:10px 12px calc(12px + env(safe-area-inset-bottom)); border-radius:22px 22px 0 0; display:grid; gap:8px; }
+.psheet[open] { animation:sheetup .28s cubic-bezier(.2,.9,.25,1); }
+@keyframes sheetup { from { transform:translateY(100%); } to { transform:none; } }
+.pbtn { border:0; border-radius:14px; background:#f2f2f7; min-height:52px; font-size:16px; font-weight:700; display:flex; align-items:center; justify-content:center; gap:8px; color:var(--text); }
+.pbtn .i { width:20px; height:20px; color:var(--accent); vertical-align:0; }
+.pbtn.cancel { background:#fff; box-shadow:inset 0 0 0 1px var(--line); color:var(--muted); }
+.pbtn:active { background:var(--accent-soft); }
 .searchrow { grid-template-columns:1fr auto; }
 .searchrow .btn { min-height:44px; padding:0 16px; }
 .countrow { display:flex; align-items:center; justify-content:space-between; gap:8px; }
@@ -227,6 +254,8 @@ header { flex-wrap:nowrap; }
   <symbol id="i-trash" viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M10 11v6M14 11v6"/></symbol>
   <symbol id="i-map" viewBox="0 0 24 24"><path d="M3 6 9 3l6 3 6-3v15l-6 3-6-3-6 3Z"/><path d="M9 3v15M15 6v15"/></symbol>
   <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></symbol>
+  <symbol id="i-enter" viewBox="0 0 24 24"><path d="m9 10-5 5 5 5"/><path d="M20 4v7a4 4 0 0 1-4 4H4"/></symbol>
+  <symbol id="i-camera" viewBox="0 0 24 24"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></symbol>
   <symbol id="i-wallet" viewBox="0 0 24 24"><path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1"/><path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4"/></symbol>
 </svg>
 <main class="wrap">
@@ -265,28 +294,48 @@ header { flex-wrap:nowrap; }
 <dialog id="dlg" aria-labelledby="dlgTitle">
   <form class="edit" id="form">
     <h2 id="dlgTitle">예식장 추가</h2>
-    <label>예식장 이름 *<input name="name" required maxlength="60"></label>
-    <label>지도 링크 (카카오맵·네이버지도)<input name="link" maxlength="500" inputmode="url" autocomplete="off" placeholder="링크를 붙여넣으면 주소·전화번호·위치를 자동으로 채워요"></label>
-    <button type="button" class="btn" id="lookBtn">정보 자동 입력</button>
+    <div class="namerow2">
+      <label>예식장 이름 *<input name="name" required maxlength="60"></label>
+      <button type="button" class="btn" id="lookBtn">자동입력</button>
+    </div>
+    <div class="fld">
+      <span class="lbl">지도 링크 (카카오맵·네이버지도)</span>
+      <div class="inwrap">
+        <input name="link" maxlength="500" inputmode="url" autocomplete="off" aria-label="지도 링크" enterkeyhint="go" placeholder="링크를 붙여넣고 오른쪽 ↵ 를 눌러 주세요">
+        <button type="button" class="enterbtn" id="linkGo" aria-label="링크 적용" title="링크 적용"><svg class="i" aria-hidden="true"><use href="#i-enter"/></svg></button>
+      </div>
+    </div>
     <div class="hint" id="lookHint" aria-live="polite"></div>
     <div class="hint" id="keyHint"><span id="keyState"></span> <button type="button" class="linkbtn" id="keyBtn"></button></div>
     <div class="cands" id="cands"></div>
-    <label>주소 (자동 입력 · 직접 수정 가능)<input name="addr" maxlength="300" placeholder="자동으로 채워지지 않으면 직접 입력해 주세요"></label>
-    <label>전화번호<input name="phone" type="tel" inputmode="tel" maxlength="30"></label>
+    <details class="manual" id="manual">
+      <summary>직접 입력하기</summary>
+      <div class="manualbody">
+        <label>주소 (자동 입력 · 직접 수정 가능)<input name="addr" maxlength="300" placeholder="자동으로 채워지지 않으면 직접 입력해 주세요"></label>
+        <label>전화번호<input name="phone" type="tel" inputmode="tel" maxlength="30"></label>
+      </div>
+    </details>
     <div class="hint" id="distHint" aria-live="polite">입력하면 기준 위치에서의 거리가 자동 계산돼요</div>
-    <div class="row">
-      <label>대관료 (만원) *<input name="price" type="number" min="0" step="any" inputmode="decimal" required></label>
-      <label>식대 1인 (만원)<input name="meal" type="number" min="0" step="any" inputmode="decimal"></label>
+    <div class="row2">
+      <label>대관료(만원) *<input name="price" type="number" min="0" step="any" inputmode="decimal" required></label>
+      <div class="fld">
+        <span class="lbl">월별·요일별 대관료(선택)</span>
+        <button type="button" class="btn" id="addEx">+ 요금 추가</button>
+      </div>
     </div>
-    <label>보증인원 (명)<input name="guests" type="number" min="0" inputmode="numeric"></label>
+    <div id="extras"></div>
+    <div class="row2">
+      <label>식대 1인(만원)<input name="meal" type="number" min="0" step="any" inputmode="decimal"></label>
+      <label>보증인원(명)<input name="guests" type="number" min="0" inputmode="numeric"></label>
+    </div>
     <div class="hint" id="totalHint" aria-live="polite"></div>
-    <div>
-      <div class="sub">월별·요일별 대관료 (선택)</div>
-      <div id="extras"></div>
-      <button type="button" class="btn" id="addEx" style="margin-top:6px">+ 요금 추가</button>
-    </div>
     <label>메모<textarea name="memo" rows="4" placeholder="주차, 홀 분위기, 연회장 등"></textarea></label>
-    <label>사진 (여러 장 가능)<input id="files" type="file" accept="image/*" multiple></label>
+    <div class="fld">
+      <span class="lbl">사진 (여러 장 가능)</span>
+      <button type="button" class="btn" id="photoBtn"><svg class="i" aria-hidden="true"><use href="#i-photo"/></svg> 사진 추가</button>
+    </div>
+    <input id="files" class="sr-only" type="file" accept="image/*" multiple tabindex="-1" aria-hidden="true">
+    <input id="camInput" class="sr-only" type="file" accept="image/*" capture="environment" tabindex="-1" aria-hidden="true">
     <div class="thumbs" id="thumbs"></div>
     <div class="foot">
       <button type="button" class="btn" id="cancel">취소</button>
@@ -329,6 +378,12 @@ header { flex-wrap:nowrap; }
     <div id="cmpBody"></div>
     <div class="foot"><button type="button" class="btn" id="cmpClose">닫기</button></div>
   </div>
+</dialog>
+
+<dialog id="psheet" class="psheet" aria-label="사진 추가 방법">
+  <button type="button" class="pbtn" id="pCam"><svg class="i" aria-hidden="true"><use href="#i-camera"/></svg> 카메라로 촬영</button>
+  <button type="button" class="pbtn" id="pAlbum"><svg class="i" aria-hidden="true"><use href="#i-photo"/></svg> 앨범에서 선택</button>
+  <button type="button" class="pbtn cancel" id="pCancel">취소</button>
 </dialog>
 
 <dialog id="lb" class="lightbox" aria-label="사진 크게 보기"><div id="lbBody"></div></dialog>
@@ -509,6 +564,7 @@ function formLoc() {
 let lookJob = 0, lastLook = '', draftCands = [];
 function applyPlace(p) {
   const f = $('form');
+  $('manual').open = true;                                        // 자동 입력된 주소·전화번호를 보여 준다
   if (!f.name.value.trim()) f.name.value = p.name;
   f.addr.value = p.addr;
   if (p.phone) f.phone.value = p.phone;
@@ -636,9 +692,9 @@ function render() {
           <div class="nm">
             <div class="name">${esc(h.name)}</div>
             <button class="starbtn${h.liked ? ' on' : ''}" data-id="${h.id}" data-act="like" aria-pressed="${!!h.liked}" aria-label="관심" title="관심">${icon('star', h.liked ? 'on' : '')}</button>
-            <a class="tool navi" href="${esc(dirUrl(h))}" target="_blank" rel="noopener" aria-label="길찾기" title="길찾기">${icon('nav')}</a>
           </div>
           <div class="tools">
+            <a class="tool navi" href="${esc(dirUrl(h))}" target="_blank" rel="noopener" aria-label="길찾기" title="길찾기">${icon('nav')}</a>
             <button class="tool" data-id="${h.id}" data-act="edit" aria-label="수정" title="수정">${icon('edit')}</button>
             <button class="tool danger" data-id="${h.id}" data-act="del" aria-label="삭제" title="삭제">${icon('trash')}</button>
           </div>
@@ -729,13 +785,14 @@ function openEditor(id) {
   f.addr.value = h ? addrOf(h) : '';
   f.link.value = h ? linkOf(h) : '';
   f.phone.value = h?.phone ?? '';
+  $('manual').open = !!(h && (addrOf(h) || h.phone));             // 값이 있을 때만 펼쳐 둔다
   f.price.value = h?.price ?? '';
   f.meal.value = h?.meal ?? '';
   f.guests.value = h?.guests ?? '';
   f.memo.value = h?.memo ?? '';
   draftPhotos = [...(h?.photos ?? [])];
   draftExtras = (h?.extras ?? []).map(e => ({ ...e }));
-  draftGeo = null; warnedAddr = null; lastLook = ''; draftCands = [];
+  draftGeo = null; warnedAddr = null; lastLook = ''; draftCands = []; previewJob++; lookJob++;
   $('cands').innerHTML = ''; setHint($('lookHint'), '');
   drawKeyHint();
   setHint($('distHint'), '');
@@ -752,24 +809,25 @@ async function showDistance(geo) {
     setHint(hint, `${curOrigin().name}에서 ${d.km}km (${d.k === '직선' ? '직선거리' : '도로 기준'})`, false, true);
 }
 // 주소를 직접 고치고 칸을 벗어나면 다시 좌표를 찾는다
+let previewJob = 0;   // 창을 닫았다 다시 열어도 이전 검색 결과가 끼어들지 않게 한다
 async function previewDistance() {
-  const { gt } = formLoc(), hint = $('distHint');
+  const { gt } = formLoc(), hint = $('distHint'), my = ++previewJob;
   if (!gt) { setHint(hint, ''); return; }
   if (draftGeo?.addr === gt) return showDistance(draftGeo.geo);
   setHint(hint, '거리 계산 중…');
   try {
     const geo = await geocode(gt);
+    if (my !== previewJob) return;
     draftGeo = { addr: gt, geo };
     await showDistance(geo);
-  } catch (e) { setHint(hint, e.message, true); }
+  } catch (e) { if (my === previewJob) setHint(hint, e.message, true); }
 }
 
 $('addBtn').onclick = () => openEditor(null);
 $('cancel').onclick = () => $('dlg').close();
 $('form').addr.onchange = previewDistance;
-$('form').link.addEventListener('change', () => lookup(false));
-$('form').link.addEventListener('paste', () => setTimeout(() => lookup(false), 0));
 $('form').link.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); lookup(true); } });
+$('linkGo').onclick = () => lookup(true);
 $('lookBtn').onclick = () => lookup(true);
 $('cands').onclick = e => { const b = e.target.closest('.cand'); if (b) applyPlace(draftCands[+b.dataset.i]); };
 $('keyBtn').onclick = () => openOrigins();
@@ -777,13 +835,21 @@ $('keyBtn').onclick = () => openOrigins();
 $('addEx').onclick = () => { draftExtras.push({ label: '', price: '' }); drawExtras(); };
 $('extras').oninput = e => { const { i, k } = e.target.dataset; if (i != null) draftExtras[+i][k] = e.target.value; };
 $('extras').onclick = e => { const i = e.target.dataset.del; if (i != null) { draftExtras.splice(+i, 1); drawExtras(); } };
-$('files').onchange = async e => {
-  for (const f of e.target.files) {
+async function addPhotos(input) {
+  for (const f of input.files) {
     try { draftPhotos.push(await shrink(f)); } catch { alert(f.name + ' 파일을 읽을 수 없어요.'); }
   }
-  e.target.value = '';
+  input.value = '';
   drawThumbs();
-};
+}
+$('files').onchange = e => addPhotos(e.target);
+$('camInput').onchange = e => addPhotos(e.target);
+// 사진 추가: 카메라 촬영 / 앨범 선택 중에서 고른다
+$('photoBtn').onclick = () => $('psheet').showModal();
+$('pCancel').onclick = () => $('psheet').close();
+$('pCam').onclick = () => { $('psheet').close(); $('camInput').click(); };
+$('pAlbum').onclick = () => { $('psheet').close(); $('files').click(); };
+$('psheet').addEventListener('click', e => { if (e.target === $('psheet')) $('psheet').close(); });
 $('thumbs').onclick = e => {
   const i = e.target.dataset.i;
   if (i != null) { draftPhotos.splice(+i, 1); drawThumbs(); }
