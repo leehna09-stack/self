@@ -49,7 +49,7 @@ const STAGES = [
       { id: 't1d', t: '상견례 후 양가에 감사 연락 드리기', opt: true }
     ] },
   { id: 's2', icon: 'landmark', h: 340, title: '웨딩홀 계약 · 날짜 확정', when: 'D-12~10개월 (성수기 주말은 1년 전)', dueDays: 300, hall: true,
-    link: { href: 'hall.html', label: '웨딩홀 비교 앱 열기' },
+    link: { href: 'index.html', label: '웨딩홀 비교 앱 열기' },
     why: '결혼식 날짜가 정해져야 나머지 모든 일정을 역산할 수 있어요. 가장 먼저 확정해야 하는 핵심 단계예요.',
     tasks: [
       { id: 't2a', t: '희망 날짜·시간대 후보 2~3개 정하기', tip: '3~4월 좋은 날·점심 시간대는 1년 전에 마감되기도 해요. 비수기는 2~3개월 전에도 예약되는 경우가 있어요.' },
@@ -169,7 +169,7 @@ document.body.insertAdjacentHTML('beforeend', `
 </main>
 <nav class="tabbar" aria-label="메뉴">
   <button class="tab on" id="tabHome" aria-current="page">${gl('list')}<span>로드맵</span></button>
-  <a class="tab" href="hall.html">${gl('landmark')}<span>웨딩홀</span></a>
+  <a class="tab" href="index.html">${gl('landmark')}<span>웨딩홀</span></a>
   <button class="tab" id="tabSet">${gl('gear')}<span>설정</span></button>
 </nav>
 <dialog id="sdlg" aria-labelledby="sh">
