@@ -174,8 +174,8 @@ header { flex-wrap:nowrap; }
 .searchrow { grid-template-columns:1fr auto; }
 .searchrow .btn { min-height:44px; padding:0 16px; }
 .countrow { display:flex; align-items:center; justify-content:space-between; gap:8px; }
-.countrow .count { color:var(--muted); min-width:0; }
-.countrow .count b { color:var(--text); }
+.countrow .count { color:var(--muted); min-width:0; font-size:12px; font-weight:600; line-height:40px; }   /* 드롭다운과 같은 글자 크기·굵기·높이 */
+.countrow .count b { color:var(--text); font-weight:700; }
 .countrow .sortsel { width:auto; min-width:0; min-height:40px; padding:4px 36px 4px 12px; background-position:right 10px center; }
 .keybox { display:grid; gap:6px; padding-bottom:12px; border-bottom:1px solid var(--line); }
 .keybox > label { font-weight:700; color:var(--text); }
@@ -200,8 +200,6 @@ header { flex-wrap:nowrap; }
 .starbtn .i, .tool .i { width:15px; height:15px; vertical-align:0; }
 .starbtn.on { background:none; color:#b45309; }
 .tools { display:flex; gap:2px; flex:none; margin-right:-6px; }
-.pricerow { display:flex; align-items:center; justify-content:space-between; gap:8px; }
-.pricerow .tool { margin-right:-6px; }
 .tool.danger { color:#b91c1c; }
 .tool.navi { color:var(--accent); }
 @media (hover:hover){ .starbtn:hover, .tool:hover { background:var(--accent-soft); } .tool.danger:hover { background:#fef2f2; } }
@@ -638,16 +636,14 @@ function render() {
           <div class="nm">
             <div class="name">${esc(h.name)}</div>
             <button class="starbtn${h.liked ? ' on' : ''}" data-id="${h.id}" data-act="like" aria-pressed="${!!h.liked}" aria-label="관심" title="관심">${icon('star', h.liked ? 'on' : '')}</button>
+            <a class="tool navi" href="${esc(dirUrl(h))}" target="_blank" rel="noopener" aria-label="길찾기" title="길찾기">${icon('nav')}</a>
           </div>
           <div class="tools">
             <button class="tool" data-id="${h.id}" data-act="edit" aria-label="수정" title="수정">${icon('edit')}</button>
             <button class="tool danger" data-id="${h.id}" data-act="del" aria-label="삭제" title="삭제">${icon('trash')}</button>
           </div>
         </div>
-        <div class="pricerow">
-          <div class="price">${fmtPrice(t)}${halls.length > 1 && t === min ? '<span class="badge">최저가</span>' : ''}${halls.length > 1 && t === max && max !== min ? '<span class="badge">최고가</span>' : ''}</div>
-          <a class="tool navi" href="${esc(dirUrl(h))}" target="_blank" rel="noopener" aria-label="길찾기" title="길찾기">${icon('nav')}</a>
-        </div>
+        <div class="price">${fmtPrice(t)}${halls.length > 1 && t === min ? '<span class="badge">최저가</span>' : ''}${halls.length > 1 && t === max && max !== min ? '<span class="badge">최고가</span>' : ''}</div>
         ${h.meal && h.guests ? `<div class="meta">대관료 ${fmtPrice(h.price)} + 식대 ${h.meal}만×${h.guests}명</div>` : ''}
         ${h.extras?.length ? `<ul class="ex">${h.extras.map(e => `<li>${esc(e.label)}: ${fmtPrice(total(h, e.price))}</li>`).join('')}</ul>` : ''}
         <div class="meta locrow"><span class="dist">${distText(h)}</span>${addrOf(h) ? `<span class="addr">${esc(addrOf(h))}</span>` : ''}</div>
