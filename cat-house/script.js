@@ -307,6 +307,7 @@ function connectCloud(code) {
   document.getElementById("codeInfo").textContent = "🔑 " + code.slice(0, 4) + "…";
   window.cloud.start(code, onCloudData, onCloudStatus);
   cloudConnected = true;
+  watchedMonthKey = "";
   watchMonthPhotos();
   activity = [];
   window.cloud.watchActivity(Math.max(getSeen(), Date.now() - NOTIF_KEEP_MS), onActivityData);
@@ -590,12 +591,23 @@ function photoCollection() {
 }
 
 // 지금 보고 있는 달의 사진을 받아오기 시작
+// 지금 받고 있는 달·장소 표시 / 사진·한줄평을 서버에서 처음 받아왔는지
+let watchedMonthKey = "";
+let photosLoaded = false;
+let notesLoaded = false;
+
 function watchMonthPhotos() {
   if (!cloudConnected) {
     return;
   }
-  photos = {};
-  days = {};
+  // 같은 달·같은 장소를 다시 불러올 때는 보던 데이터를 비우지 않음 (빈 화면이 깜빡이지 않게)
+  const key = photoCollection() + viewYear + "-" + viewMonth;
+  if (key !== watchedMonthKey) {
+    photos = {};
+    days = {};
+    photosLoaded = false;
+    watchedMonthKey = key;
+  }
   const start = makeDateString(viewYear, viewMonth, 1);
   const end = makeDateString(viewYear, viewMonth, 31);
   window.cloud.watchPhotos(photoCollection(), start, end, onPhotoData);
@@ -605,6 +617,7 @@ function watchMonthPhotos() {
 // 사진이 도착하거나 바뀌면 실행
 function onPhotoData(map) {
   photos = map;
+  photosLoaded = true;
   drawCalendar();
   if (!document.getElementById("detailModal").classList.contains("hidden")) {
     drawDetailPhoto();
@@ -650,21 +663,119 @@ function onCloudData(list) {
   }
 }
 
-// 연결 상태를 화면 아래 줄에 표시
-function onCloudStatus(status, errorCode) {
-  const box = document.getElementById("syncStatus");
-  if (status === "online") {
-    box.textContent = "✓ 가족과 공유 중";
-  } else if (status === "syncing") {
-    box.textContent = "동기화 중…";
-  } else if (status === "connecting") {
-    box.textContent = "연결 중…";
-  } else if (errorCode === "permission-denied") {
-    box.textContent = "⚠ 접근이 거부됐어요 (규칙 확인 필요)";
+// ===== 연결 상태 (헤더 오른쪽 아이콘, 누르면 자세한 내용) =====
+
+const SYNC_ICONS = { ok: "🟢", wait: "🔄", error: "⚠️" };
+let syncTipTimer = null;
+
+let syncWaitTimer = null;
+let syncLevel = "wait";
+let syncStale = false;
+
+// 아이콘과 자세한 설명을 함께 바꿈 (level: ok / wait / error)
+// 오류이거나 30초 넘게 불러오는 중이면 말풍선에 "다시 불러오기" 버튼을 보여줌
+function setSync(level, text) {
+  const icon = document.getElementById("syncIcon");
+  icon.textContent = SYNC_ICONS[level];
+  icon.dataset.level = level;
+  icon.setAttribute("aria-label", "연결 상태: " + text);
+  document.getElementById("syncTipText").textContent = text;
+
+  syncLevel = level;
+  if (level === "wait") {
+    if (syncWaitTimer === null) {
+      syncWaitTimer = setTimeout(function () {
+        syncStale = true;
+        updateSyncReload();
+      }, 30000);
+    }
   } else {
-    box.textContent = "⚠ 연결 오류 (" + (errorCode || "알 수 없음") + ")";
+    clearTimeout(syncWaitTimer);
+    syncWaitTimer = null;
+    syncStale = false;
+  }
+  updateSyncReload();
+}
+
+// "다시 불러오기" 버튼 표시 여부
+function updateSyncReload() {
+  document.getElementById("syncReloadBtn").hidden = !(syncLevel === "error" || syncStale);
+}
+
+// 앱을 새로고침하지 않고 일정·사진·한줄평·소식 연결을 다시 맺음
+function reloadCloud() {
+  const code = getSavedCode();
+  if (code === "") {
+    openCodeModal();
+    return;
+  }
+  document.getElementById("syncTip").hidden = true;
+  clearTimeout(syncTipTimer);
+  connectCloud(code);
+  if (!document.getElementById("detailModal").classList.contains("hidden")) {
+    window.cloud.watchNotes(currentDetailDate, onNotesData);
   }
 }
+
+// 아이콘을 누르면 자세한 상태를 말풍선으로 보여주고, 잠시 뒤 닫음
+function toggleSyncTip() {
+  const tip = document.getElementById("syncTip");
+  clearTimeout(syncTipTimer);
+  tip.hidden = !tip.hidden;
+  if (!tip.hidden) {
+    // 다시 불러오기 버튼이 보일 때는 누를 시간을 더 줌
+    syncTipTimer = setTimeout(function () {
+      tip.hidden = true;
+    }, (syncLevel === "error" || syncStale) ? 10000 : 4000);
+  }
+}
+
+// 말풍선 바깥을 누르면 닫음
+document.addEventListener("click", function (e) {
+  const tip = document.getElementById("syncTip");
+  if (!tip.hidden && !e.target.closest("#syncIcon") && !e.target.closest("#syncTip")) {
+    tip.hidden = true;
+  }
+});
+
+// 연결 상태를 아이콘으로 표시
+function onCloudStatus(status, errorCode) {
+  if (status === "online") {
+    setSync("ok", "✓ 가족과 공유 중");
+  } else if (status === "syncing") {
+    setSync("wait", "동기화 중…");
+  } else if (status === "connecting") {
+    setSync("wait", "연결 중…");
+  } else if (errorCode === "permission-denied") {
+    setSync("error", "접근이 거부됐어요 (규칙 확인 필요)");
+  } else {
+    setSync("error", "연결 오류 (" + (errorCode || "알 수 없음") + ")");
+  }
+}
+
+// 사진·한줄평 등을 못 읽으면 아이콘이 경고로 바뀌고, 눌러서 이유를 볼 수 있음
+window.addEventListener("cloud-read-error", function (e) {
+  const code = e.detail.code;
+  setSync("error", e.detail.what + "을(를) 못 불러왔어요" + (code ? " (" + code + ")" : ""));
+});
+
+// 앱을 오래 백그라운드에 두었다가 다시 열면 사진·한줄평 연결을 새로 맺음
+let hiddenAt = 0;
+document.addEventListener("visibilitychange", function () {
+  if (document.visibilityState === "hidden") {
+    hiddenAt = Date.now();
+    return;
+  }
+  if (!cloudConnected || hiddenAt === 0 || Date.now() - hiddenAt < 30000) {
+    return;
+  }
+  hiddenAt = 0;
+  watchMonthPhotos();
+  window.cloud.watchActivity(Math.max(getSeen(), Date.now() - NOTIF_KEEP_MS), onActivityData);
+  if (!document.getElementById("detailModal").classList.contains("hidden")) {
+    window.cloud.watchNotes(currentDetailDate, onNotesData);
+  }
+});
 
 // 앱이 열리면 가족 코드 확인 후 연결
 function startSync() {
@@ -1092,6 +1203,14 @@ function drawDetailPhoto() {
 
   const list = photos[currentDetailDate] || [];
   const user = getUser();
+
+  // 사진을 아직 다 받아오지 못했으면 "없음"으로 오해하지 않게 안내
+  if (list.length === 0 && !photosLoaded && cloudConnected) {
+    const loading = document.createElement("div");
+    loading.className = "photo-by";
+    loading.textContent = "사진 불러오는 중이에요…";
+    box.appendChild(loading);
+  }
 
   if (list.length > 0) {
     // 좌우로 밀어서 넘기는 사진 띠
@@ -1574,6 +1693,7 @@ function chooseWeather(key) {
 function startNotes() {
   notes = [];
   rawNotes = [];
+  notesLoaded = false;
   resetNoteForm();
   drawDetailNotes();
   if (cloudConnected) {
@@ -1587,6 +1707,7 @@ let rawNotes = [];
 // 한줄평이 도착하거나 바뀌면 실행
 function onNotesData(list) {
   rawNotes = list;
+  notesLoaded = true;
   buildNotes();
   drawDetailNotes();
 }
@@ -1649,7 +1770,7 @@ function drawDetailNotes() {
   if (notes.length === 0) {
     const li = document.createElement("li");
     li.className = "note-empty";
-    li.textContent = "아직 한줄평이 없어요";
+    li.textContent = (!notesLoaded && cloudConnected) ? "한줄평 불러오는 중이에요…" : "아직 한줄평이 없어요";
     list.appendChild(li);
     return;
   }
@@ -1927,8 +2048,7 @@ if (window.cloud) {
   // 10초가 지나도 준비가 안 되면 안내
   setTimeout(function () {
     if (!window.cloud) {
-      document.getElementById("syncStatus").textContent =
-        "⚠ 연결할 수 없어요. 인터넷을 확인해 주세요.";
+      setSync("error", "연결할 수 없어요. 인터넷을 확인해 주세요.");
     }
   }, 10000);
 }
