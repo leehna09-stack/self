@@ -723,8 +723,8 @@ const ORN = () => `<div class="orn">${ic('i-glass')}${ic('i-bottle')}${ic('i-dra
 
 function viewList() {
   const total = logs.length;
-  /* 다른 위스키: 다이어리 기록 + 가격 탭에서 적은 기록에 나온 위스키를 이름 기준으로 중복 없이 세요 */
-  const uniq = new Set([...logs, ...prices].map(l => norm(l.name))).size;
+  /* 가격 기록: 가격 탭 목록의 '기록 N건'과 같은 숫자 (가격 탭에서 적은 건 + 다이어리에 구매가격을 적은 건) */
+  const priceCount = priceEntries().length;
   const rated = logs.filter(l => l.rating);
   const avg = rated.length ? fmtNum(rated.reduce((s, l) => s + l.rating, 0) / rated.length) : '-';
   const arr = filtered();
@@ -750,7 +750,7 @@ function viewList() {
   return header('우리가 마신 위스키 다이어리') + `
     <div class="hero"><div class="hero-t">우리의 위스키 기록</div><div class="hero-g">
       <div>${ic('i-glass')}<b>${total}</b><span>마신 기록</span></div>
-      <div>${ic('i-bottle')}<b>${uniq}</b><span>다른 위스키</span></div>
+      <div>${ic('i-won')}<b>${priceCount}</b><span>가격 기록</span></div>
       <div>${ic('i-dram')}<b>${avg}</b><span>평균 점수</span></div></div></div>
     <input class="search" id="q" placeholder="이름·메모·맛·구매처로 검색 (초성 가능: ㅁㅋㄹ)" value="${esc(state.q)}" enterkeyhint="search">
     <div class="filters">${chips}</div>
