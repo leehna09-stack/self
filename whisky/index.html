@@ -322,6 +322,17 @@ textarea.field { min-height: 140px; resize: vertical; line-height: 28px; padding
 .hr .hl b { display: block; font-size: 14px; }
 .hr .hl small { color: var(--muted); font-size: 12px; overflow-wrap: anywhere; }
 .hr .hp { display: flex; flex-direction: column; align-items: flex-end; gap: 3px; font-weight: 700; white-space: nowrap; }
+
+/* 사진이 있으면 아이콘 자리에 사진 */
+.tile.img { padding: 0; overflow: hidden; background: #fff; border: 2px solid #fff; border-radius: 12px; box-shadow: 0 1px 4px #3b2f2340; }
+.tile.img img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.pg .tile { width: 54px; height: 54px; }
+.pd-title .tile.big { width: 72px; height: 72px; border-radius: 14px; cursor: zoom-in; }
+.hr .hl { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.hth { width: 40px; height: 40px; flex: none; border-radius: 8px; object-fit: cover; border: 2px solid #fff; box-shadow: 0 1px 3px #3b2f2340; }
+.pth { width: 26px; height: 26px; flex: none; border-radius: 6px; object-fit: cover; }
+.padd { font: inherit; }
+.btn-sub .ic { font-size: 20px; }
 </style>
 </head>
 
@@ -346,6 +357,7 @@ textarea.field { min-height: 140px; resize: vertical; line-height: 28px; padding
   <symbol id="i-tag" viewBox="0 0 24 24"><path d="M3.5 12.2V4.5a1 1 0 0 1 1-1h7.7l8.3 8.3a1.5 1.5 0 0 1 0 2.1l-6.1 6.1a1.5 1.5 0 0 1-2.1 0z"/><circle cx="8" cy="8" r="1.4"/></symbol>
   <symbol id="i-shop" viewBox="0 0 24 24"><path d="M4 9.5V20h16V9.5"/><path d="M3 9.5 5 4h14l2 5.5a3 3 0 0 1-6 0 3 3 0 0 1-6 0 3 3 0 0 1-6 0z"/><path d="M10 20v-5h4v5"/></symbol>
   <symbol id="i-camera" viewBox="0 0 24 24"><path d="M4 8h3l1.6-2.5h6.8L17 8h3a1 1 0 0 1 1 1v9.5a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13.5" r="3.6"/></symbol>
+  <symbol id="i-image" viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="14" rx="2.2"/><circle cx="9" cy="10" r="1.6"/><path d="M4 17l5-4.5 4 3.5 2.5-2L20 17"/></symbol>
   <symbol id="i-cheers" viewBox="0 0 24 24"><path d="M3.5 6.5l4-1.2 2.4 7.6a2.4 2.4 0 0 1-1.6 3l-.9.3a2.4 2.4 0 0 1-3-1.6z"/><path d="M20.5 6.5l-4-1.2-2.4 7.6a2.4 2.4 0 0 0 1.6 3l.9.3a2.4 2.4 0 0 0 3-1.6z"/><path d="M12 2.5v2M9.2 3.2l.7 1.4M14.8 3.2l-.7 1.4"/></symbol>
 </defs></svg>
 <div class="app" id="app"></div>
@@ -358,6 +370,16 @@ textarea.field { min-height: 140px; resize: vertical; line-height: 28px; padding
   <button class="tab" data-tab="settings"><svg class="ic"><use href="#i-gear"/></svg>설정</button>
 </div></nav>
 <div id="sheetRoot"></div>
+<div id="srcModal" class="modal" role="dialog" aria-modal="true" aria-label="사진 추가" hidden>
+  <div class="modal-box">
+    <h2><svg class="ic" aria-hidden="true"><use href="#i-camera"/></svg> 사진 추가</h2>
+    <button type="button" class="btn-sub" id="srcCam" style="margin-top:6px"><svg class="ic" aria-hidden="true"><use href="#i-camera"/></svg> 카메라로 촬영</button>
+    <button type="button" class="btn-sub" id="srcAlbum"><svg class="ic" aria-hidden="true"><use href="#i-image"/></svg> 앨범에서 선택</button>
+    <button type="button" class="btn-sub" id="srcCancel" style="color:var(--muted)">취소</button>
+  </div>
+</div>
+<input type="file" id="phCam" accept="image/*" capture="environment" hidden>
+<input type="file" id="phAlbum" accept="image/*" multiple hidden>
 <div id="installModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="installTitle" hidden>
   <div class="modal-box">
     <h2 id="installTitle"><svg class="ic" aria-hidden="true"><use href="#i-glass"/></svg> 앱으로 설치하기</h2>
@@ -548,20 +570,82 @@ let photoMap = {};            /* 기록 id → [{full, thumb}] (최대 3장) */
 const MAX_PHOTOS = 3;
 const isImg = v => typeof v === 'string' && v.startsWith('data:image/') && v.length < 4e6;
 
-/* 올린 사진을 줄여서 저장 (원본은 보관하지 않아요) */
+/* 사진은 최대한 작게 줄여서 저장해요 (원본은 보관하지 않아요)
+   - 큰 사진: 긴 변 800px, 목표 약 60KB 이하 / 작은 사진(목록용): 긴 변 176px, 목표 약 8KB 이하
+   - WebP를 지원하는 브라우저는 WebP(같은 화질에서 훨씬 작음), 아니면 JPEG. 목표보다 크면 품질→크기 순으로 더 줄여요 */
+const WEBP = (() => { try { return document.createElement('canvas').toDataURL('image/webp').startsWith('data:image/webp'); } catch { return false; } })();
+const PHOTO_SIZES = { full: { max: 800, target: 60e3 }, thumb: { max: 176, target: 8e3 } };
+const loadImg = src => new Promise((ok, no) => { const i = new Image(); i.onload = () => ok(i); i.onerror = no; i.src = src; });
+function scaled(img, max) {
+  const k = Math.min(1, max / Math.max(img.naturalWidth, img.naturalHeight));
+  const c = document.createElement('canvas'); c.width = Math.max(1, Math.round(img.naturalWidth * k)); c.height = Math.max(1, Math.round(img.naturalHeight * k));
+  const g = c.getContext('2d'); g.fillStyle = '#fff'; g.fillRect(0, 0, c.width, c.height); g.drawImage(img, 0, 0, c.width, c.height);
+  return c;
+}
+function encodeUnder(canvas, target) {
+  const type = WEBP ? 'image/webp' : 'image/jpeg'; let out = '';
+  for (const q of [0.62, 0.52, 0.44, 0.36]) { out = canvas.toDataURL(type, q); if (out.length * 0.75 <= target) break; }
+  return out;
+}
+function compressImg(img) {
+  const { full, thumb } = PHOTO_SIZES; let f = '';
+  for (const max of [full.max, 640, 520]) { f = encodeUnder(scaled(img, max), full.target); if (f.length * 0.75 <= full.target) break; }
+  return { full: f, thumb: encodeUnder(scaled(img, thumb.max), thumb.target) };
+}
 async function shrink(file) {
   const url = URL.createObjectURL(file);
-  try {
-    const img = await new Promise((ok, no) => { const i = new Image(); i.onload = () => ok(i); i.onerror = no; i.src = url; });
-    const make = (max, q) => {
-      const k = Math.min(1, max / Math.max(img.naturalWidth, img.naturalHeight));
-      const c = document.createElement('canvas'); c.width = Math.max(1, Math.round(img.naturalWidth * k)); c.height = Math.max(1, Math.round(img.naturalHeight * k));
-      const g = c.getContext('2d'); g.fillStyle = '#fff'; g.fillRect(0, 0, c.width, c.height); g.drawImage(img, 0, 0, c.width, c.height);
-      return c.toDataURL('image/jpeg', q);
-    };
-    return { full: make(1280, 0.75), thumb: make(240, 0.72) };
-  } finally { URL.revokeObjectURL(url); }
+  try { return compressImg(await loadImg(url)); } finally { URL.revokeObjectURL(url); }
 }
+const photoBytes = p => Math.round((p.full.length + p.thumb.length) * 0.75);
+const fmtBytes = n => n >= 1e6 ? (n / 1e6).toFixed(1) + 'MB' : Math.max(1, Math.round(n / 1e3)) + 'KB';
+/* 이미 저장된 사진도 새 기준으로 다시 줄이기 (더 작아지는 경우에만 바꿔요) */
+async function recompressAll() {
+  let before = 0, after = 0, n = 0;
+  for (const [id, list] of Object.entries(photoMap)) {
+    const next = [];
+    for (const ph of list) {
+      before += photoBytes(ph);
+      let keep = ph;
+      try { const c = compressImg(await loadImg(ph.full)); if (photoBytes(c) < photoBytes(ph)) keep = c; n++; } catch {}
+      next.push(keep); after += photoBytes(keep);
+    }
+    if (await PH.set(id, next)) photoMap[id] = next;
+  }
+  return { n, before, after };
+}
+
+/* 사진 추가: 카메라로 촬영 / 앨범에서 선택 */
+function addPhotoFlow(onFiles) {
+  const m = $('#srcModal'), cam = $('#phCam'), alb = $('#phAlbum');
+  m.hidden = false;
+  const hook = inp => { inp.onchange = () => { const files = [...inp.files]; inp.value = ''; if (files.length) onFiles(files); }; };
+  hook(cam); hook(alb);
+  $('#srcCam').onclick = () => { m.hidden = true; cam.click(); };
+  $('#srcAlbum').onclick = () => { m.hidden = true; alb.click(); };
+  $('#srcCancel').onclick = () => { m.hidden = true; };
+  m.onclick = e => { if (e.target === m) m.hidden = true; };
+}
+/* 사진 칸(미리보기·삭제·추가). 다이어리와 가격 입력 화면이 함께 써요 */
+function mountPhotos(el, list) {
+  const draw = () => {
+    el.innerHTML = list.map((ph, n) => `<div class="pbox"><img src="${ph.thumb}" data-view="${n}" alt="사진 ${n + 1}"><button type="button" class="px" data-pdel="${n}" aria-label="사진 ${n + 1} 지우기">×</button></div>`).join('') +
+      (!PH.ok ? `<div class="pnote">이 브라우저에서는 사진을 저장할 수 없어요.</div>` :
+        list.length < MAX_PHOTOS ? `<button type="button" class="padd" data-padd>${ic('i-camera')}<span>사진 추가</span><small>${list.length}/${MAX_PHOTOS}</small></button>` : '');
+    el.querySelectorAll('[data-view]').forEach(im => im.onclick = () => openViewer(list, +im.dataset.view));
+    el.querySelectorAll('[data-pdel]').forEach(b => b.onclick = () => { list.splice(+b.dataset.pdel, 1); draw(); });
+    const add = el.querySelector('[data-padd]');
+    if (add) add.onclick = () => addPhotoFlow(async files => {
+      const room = MAX_PHOTOS - list.length;
+      if (files.length > room) toast(`사진은 최대 ${MAX_PHOTOS}장까지 올릴 수 있어요`);
+      for (const file of files.slice(0, Math.max(0, room))) {
+        try { list.push(await shrink(file)); draw(); } catch { toast('사진을 불러오지 못했어요'); }
+      }
+    });
+  };
+  draw();
+}
+/* 한 위스키(가격 묶음)의 사진: 최근 기록의 사진부터 */
+const groupPhotos = list => { const out = []; for (let i = list.length - 1; i >= 0; i--) (photoMap[list[i].id] || []).forEach(p => out.push(p)); return out; };
 
 /* 사진 크게 보기 (좌우 버튼·스와이프·방향키) */
 function openViewer(list, start) {
@@ -681,7 +765,7 @@ function viewStats() {
         ${gList.map(g => {
           const best = g.length > 1 ? bestOf(g) : null;
           const rows = g.slice().sort((a, b) => buyDateOf(b).localeCompare(buyDateOf(a)));
-          return `<div class="pc"><div class="pc-h">${ic(typeStyle(g[0].name)[0])}${esc(g[0].name)}</div>${rows.map(l => `<div class="pc-r ${best && best.id === l.id ? 'best' : ''}"><span>${fmtDate(buyDateOf(l))} · ${esc(l.shop || '구매처 미입력')}<small>${l.ml ? volLabel(l.ml) : ''}${per100(l).replace(/^ · /, l.ml ? ' · ' : '')}</small></span><span class="pr">${won(l.price)}${best && best.id === l.id ? ' <span class="low">최저가</span>' : ''}</span></div>`).join('')}</div>`;
+          return `<div class="pc"><div class="pc-h">${groupPhotos(g.slice().sort(byTime)).length ? `<img class="pth" src="${groupPhotos(g.slice().sort(byTime))[0].thumb}" alt="">` : ic(typeStyle(g[0].name)[0])}${esc(g[0].name)}</div>${rows.map(l => `<div class="pc-r ${best && best.id === l.id ? 'best' : ''}"><span>${fmtDate(buyDateOf(l))} · ${esc(l.shop || '구매처 미입력')}<small>${l.ml ? volLabel(l.ml) : ''}${per100(l).replace(/^ · /, l.ml ? ' · ' : '')}</small></span><span class="pr">${won(l.price)}${best && best.id === l.id ? ' <span class="low">최저가</span>' : ''}</span></div>`).join('')}</div>`;
         }).join('')}</div>`;
   return header('내 취향 노트') + `
     ${priceBox}
@@ -701,11 +785,12 @@ function viewSettings() {
       <button class="btn-sub" id="exp" style="margin-top:0">${ic('i-bottle')} 기록 파일로 내보내기 (JSON)</button>
       <button class="btn-sub" id="expcsv">${ic('i-book')} 엑셀용 CSV로 내보내기</button>
       <button class="btn-sub" id="expprice">${ic('i-won')} 가격 기록 CSV로 내보내기</button>
+      <button class="btn-sub" id="recomp">${ic('i-camera')} 저장된 사진 다시 압축하기</button>
       <button class="btn-sub" id="imp">${ic('i-flask')} 백업 파일 불러오기</button>
       <input type="file" id="file" accept=".json,application/json" hidden>
     </div>
     <div class="box tape1"><h3>${ic('i-dram')} 정보</h3>
-      <p>내장 위스키 ${DB.length}종 · 내 기록 ${logs.length}건 · 가격 기록 ${prices.length}건<br>목록에 없는 위스키는 이름을 직접 쓰면 다음부터 자동완성에 나와요.<br>내장 정보는 시판 제품 기준 참고값이라 자유롭게 수정할 수 있어요.</p>
+      <p>내장 위스키 ${DB.length}종 · 내 기록 ${logs.length}건 · 가격 기록 ${prices.length}건<br>사진 ${Object.values(photoMap).flat().length}장 · 약 ${fmtBytes(Object.values(photoMap).flat().reduce((t, p) => t + photoBytes(p), 0))} 사용 중<br>목록에 없는 위스키는 이름을 직접 쓰면 다음부터 자동완성에 나와요.<br>내장 정보는 시판 제품 기준 참고값이라 자유롭게 수정할 수 있어요.</p>
     </div>
     <div class="box"><h3>${ic('i-glass')} 위험 구역</h3><button class="btn-sub" id="wipe" style="margin-top:0;color:var(--red)">모든 기록 삭제</button></div>
   </div>`;
@@ -736,7 +821,7 @@ function installApp() {
   $('#installModal').hidden = false;
 }
 function exportJson() {
-  download('whisky-notes-backup-' + today() + '.json', JSON.stringify({ app: 'whisky-notes', version: 3, logs: logs.map(l => photoMap[l.id] ? { ...l, photos: photoMap[l.id] } : l), prices }, null, 2), 'application/json');
+  download('whisky-notes-backup-' + today() + '.json', JSON.stringify({ app: 'whisky-notes', version: 3, logs: logs.map(l => photoMap[l.id] ? { ...l, photos: photoMap[l.id] } : l), prices: prices.map(p => photoMap[p.id] ? { ...p, photos: photoMap[p.id] } : p) }, null, 2), 'application/json');
   toast('백업 파일을 내려받았어요.');
 }
 
@@ -762,6 +847,11 @@ function bindView() {
       const csv = '\ufeff' + rows.map(r => r.map(v => '"' + String(v ?? '').replace(/"/g, '""') + '"').join(',')).join('\r\n');
       download('whisky-prices-' + today() + '.csv', csv, 'text/csv');
     };
+    $('#recomp').onclick = async e => {
+      const btn = e.currentTarget; btn.disabled = true; btn.textContent = '압축하는 중…';
+      const r = await recompressAll();
+      toast(r.n ? `사진 ${r.n}장 · ${fmtBytes(r.before)} → ${fmtBytes(r.after)}` : '압축할 사진이 없어요'); render();
+    };
     $('#imp').onclick = () => $('#file').click();
     $('#file').onchange = async e => {
       const f = e.target.files[0]; if (!f) return;
@@ -783,6 +873,11 @@ function bindView() {
           if (p && p.name && +p.price > 0 && !pids.has(p.id)) { prices.push({ id: p.id || uid(), name: String(p.name), ml: +p.ml || 0, abv: +p.abv || 0, price: Math.round(+p.price), shop: p.shop || '', date: p.date || today(), created: p.created || Date.now() }); addP++; }
         });
         if (addP) savePrices();
+        for (const p of (!Array.isArray(data) && Array.isArray(data.prices) ? data.prices : [])) {
+          if (!p || !p.id || !Array.isArray(p.photos) || photoMap[p.id] || !prices.some(x => x.id === p.id)) continue;
+          const ph = p.photos.filter(x => x && isImg(x.full) && isImg(x.thumb)).slice(0, MAX_PHOTOS);
+          if (ph.length && await PH.set(p.id, ph)) photoMap[p.id] = ph;
+        }
         store.save(logs); toast((add + addP) + '건을 불러왔어요'); render();
       } catch { toast('올바른 백업 파일이 아니에요'); }
     };
@@ -848,8 +943,9 @@ function viewPrice() {
     const last = list[list.length - 1], prev = list.length > 1 ? list[list.length - 2] : null;
     const vals = list.map(e => e.price), mn = Math.min(...vals), mx = Math.max(...vals);
     const [icon, color] = typeStyle(last.name);
+    const gp = groupPhotos(list);
     return `<button class="pg" data-pg="${esc(gkey(last))}">
-      <span class="tile ${color}">${ic(icon)}</span>
+      ${gp.length ? `<span class="tile img"><img src="${gp[0].thumb}" alt=""></span>` : `<span class="tile ${color}">${ic(icon)}</span>`}
       <div class="pg-b"><h3>${esc(last.name)}</h3>
         <div class="sub">${[last.ml ? volLabel(last.ml) : '', last.abv ? last.abv + '%' : ''].filter(Boolean).join(' · ')}</div>
         <div class="sub">${last.shop ? esc(last.shop) + ' · ' : ''}${fmtDate(last.date)}</div>
@@ -916,20 +1012,22 @@ function openPriceDetail(key) {
   const mx = Math.max(...vals), mn = Math.min(...vals), avg = Math.round(vals.reduce((a, b) => a + b, 0) / vals.length);
   const hiE = list.filter(e => e.price === mx).pop(), loE = list.filter(e => e.price === mn).pop();
   const [icon, color] = typeStyle(last.name);
+  const gp = groupPhotos(list);
   const info = e => `${e.shop ? esc(e.shop) + ' · ' : ''}${fmtDate(e.date)}`;
   const rows = list.map((e, i) => ({ e, c: changeBetween(e, i ? list[i - 1] : null) })).reverse();
   root.innerHTML = `<div class="sheet"><div class="sheet-in">
     <div class="sheet-head"><button class="link" id="dclose">닫기</button><h2>${ic('i-won')} 가격 기록</h2><button class="link" id="dadd" style="color:var(--amber-ink);font-weight:700">+ 추가</button></div>
-    <div class="pd-title"><span class="tile ${color}">${ic(icon)}</span><div><h3>${esc(last.name)}</h3><div class="sub">${[last.ml ? volLabel(last.ml) : '', last.abv ? last.abv + '%' : ''].filter(Boolean).join(' · ')}</div></div></div>
+    <div class="pd-title">${gp.length ? `<button type="button" class="tile img big" id="dimg" aria-label="사진 크게 보기"><img src="${gp[0].thumb}" alt=""></button>` : `<span class="tile ${color}">${ic(icon)}</span>`}<div><h3>${esc(last.name)}</h3><div class="sub">${[last.ml ? volLabel(last.ml) : '', last.abv ? last.abv + '%' : ''].filter(Boolean).join(' · ')}</div></div></div>
     <div class="chart-box">${priceChart(list)}</div>
     <div class="sumrows">
       <div class="sr hi"><span class="mk">▲</span><span class="k">최고가<small>${info(hiE)}</small></span><span class="v">${won(mx)}</span></div>
       <div class="sr avg"><span class="mk">━</span><span class="k">평균가<small>${list.length}건 기준</small></span><span class="v">${won(avg)}</span></div>
       <div class="sr lo"><span class="mk">▼</span><span class="k">최저가<small>${info(loE)}</small></span><span class="v">${won(mn)}</span></div>
     </div>
-    <div class="box"><h3>${ic('i-book')} 가격 기록 ${list.length}건</h3>${rows.map(({ e, c }) => `<button type="button" class="hr" data-hid="${esc(e.id)}" data-hsrc="${e.src}"><span class="hl"><b>${fmtDate(e.date)}</b><small>${e.shop ? esc(e.shop) : '구매처 미입력'}${e.src === 'diary' ? ' · 다이어리 기록' : ''}</small></span><span class="hp">${won(e.price)}${chgHtml(c)}</span></button>`).join('')}</div>
+    <div class="box"><h3>${ic('i-book')} 가격 기록 ${list.length}건</h3>${rows.map(({ e, c }) => `<button type="button" class="hr" data-hid="${esc(e.id)}" data-hsrc="${e.src}"><span class="hl">${(photoMap[e.id] || []).length ? `<img class="hth" src="${photoMap[e.id][0].thumb}" alt="">` : ''}<span><b>${fmtDate(e.date)}</b><small>${e.shop ? esc(e.shop) : '구매처 미입력'}${e.src === 'diary' ? ' · 다이어리 기록' : ''}</small></span></span><span class="hp">${won(e.price)}${chgHtml(c)}</span></button>`).join('')}</div>
   </div></div>`;
   $('#dclose').onclick = close;
+  const dimg = $('#dimg'); if (dimg) dimg.onclick = () => openViewer(gp, 0);
   $('#dadd').onclick = () => openPriceForm({ preset: { name: last.name, ml: last.ml, abv: last.abv }, back: key });
   root.querySelectorAll('[data-hid]').forEach(b => b.onclick = () => {
     if (b.dataset.hsrc === 'price') openPriceForm({ id: b.dataset.hid, back: key });
@@ -941,6 +1039,7 @@ function openPriceDetail(key) {
 function openPriceForm(opts = {}) {
   const old = opts.id ? prices.find(p => p.id === opts.id) : null;
   const g = old ? { ...old } : { name: '', ml: 700, abv: '', price: '', shop: '', date: today(), ...(opts.preset || {}) };
+  g.photos = ((old && photoMap[old.id]) || []).slice();
   const root = $('#sheetRoot'); document.body.style.overflow = 'hidden';
   let note = '';
   const close = () => { root.innerHTML = ''; document.body.style.overflow = ''; };
@@ -971,6 +1070,9 @@ function openPriceForm(opts = {}) {
       <input class="field" id="pshop" placeholder="예: 코스트코 양재점, 면세점, 쿠팡" value="${esc(g.shop)}" maxlength="40" autocomplete="off">
       <div class="quick">${shopChoices().map(sh => `<button type="button" class="chip ${g.shop === sh ? 'on' : ''}" data-pshop="${esc(sh)}">${esc(sh)}</button>`).join('')}</div>
 
+      <label class="lb">${ic('i-camera')} 사진 <span style="color:var(--muted);font:12px var(--hand)">(최대 ${MAX_PHOTOS}장)</span></label>
+      <div class="photos" id="pphotos"></div>
+
       <button class="btn-main" id="psave">${ic('i-won')} ${old ? '수정 저장' : '가격 기록'}</button>
     </div></div>`;
     bind();
@@ -978,9 +1080,10 @@ function openPriceForm(opts = {}) {
 
   const bind = () => {
     $('#pcancel').onclick = back;
+    mountPhotos($('#pphotos'), g.photos);
     if (old) $('#pdel').onclick = () => {
       if (!confirm(`"${old.name}" 가격 기록을 삭제할까요?`)) return;
-      prices = prices.filter(p => p.id !== old.id); savePrices(); toast('삭제했어요');
+      prices = prices.filter(p => p.id !== old.id); savePrices(); PH.set(old.id, null); delete photoMap[old.id]; toast('삭제했어요');
       close(); render(); if (opts.back && priceGroups().some(l => gkey(l[0]) === opts.back)) openPriceDetail(opts.back);
     };
     /* 이전 가격과 비교해서 바로 알려주기 */
@@ -1028,7 +1131,7 @@ function openPriceForm(opts = {}) {
       bs.forEach((b, i) => b.classList.toggle('hi', i === hi));
     });
 
-    $('#psave').onclick = () => {
+    $('#psave').onclick = async () => {
       read();
       const nm = g.name.trim();
       if (!nm) { toast('위스키 이름을 입력해주세요'); $('#pname').focus(); return; }
@@ -1040,9 +1143,14 @@ function openPriceForm(opts = {}) {
       if (old) prices = prices.map(p => p.id === old.id ? rec : p); else prices.push(rec);
       savePrices();
       const c = changeBetween(rec, prev);
+      let photoFail = false;
+      if (g.photos.length || photoMap[rec.id]) {
+        photoFail = !(await PH.set(rec.id, g.photos));
+        if (!photoFail) { if (g.photos.length) { photoMap[rec.id] = g.photos; try { navigator.storage && navigator.storage.persist && navigator.storage.persist(); } catch {} } else delete photoMap[rec.id]; }
+      }
       close(); state.tab = 'price'; render();
       if (opts.back) openPriceDetail(gkey(rec));
-      toast(chgText(c));
+      toast(photoFail ? '가격은 저장했지만 사진은 저장하지 못했어요' : chgText(c));
     };
     if (!old && !g.name) setTimeout(() => { const n = $('#pname'), a = document.activeElement; if (n && !n.value && (!a || a === document.body)) n.focus(); }, 60);
   };
@@ -1089,7 +1197,6 @@ function openForm(id) {
 
       <label class="lb">${ic('i-camera')} 사진 <span style="color:var(--muted);font:12px var(--hand)">(최대 ${MAX_PHOTOS}장)</span></label>
       <div class="photos" id="photos"></div>
-      <input type="file" id="photoIn" accept="image/*" multiple hidden>
 
       <label class="lb">${ic('i-tag')} 구매 정보 <span style="color:var(--muted);font:12px var(--hand)">(선택)</span></label>
       <div class="buy">
@@ -1136,24 +1243,8 @@ function openForm(id) {
       el.className = 'fl-sel' + (f.flavors.length ? '' : ' none');
       el.textContent = f.flavors.length ? `선택 ${f.flavors.length}개: ` + f.flavors.map(x => (FICON[x] || '') + ' ' + x).join(' · ') : '위아래로 밀어서 맛을 골라보세요';
     };
-    /* 사진 올리기/지우기 (화면 전체를 다시 그리지 않고 사진 영역만 갱신) */
-    const photosEl = $('#photos'), photoIn = $('#photoIn');
-    const drawPhotos = () => {
-      photosEl.innerHTML = f.photos.map((ph, n) => `<div class="pbox"><img src="${ph.thumb}" data-view="${n}" alt="사진 ${n + 1}"><button type="button" class="px" data-pdel="${n}" aria-label="사진 ${n + 1} 지우기">×</button></div>`).join('') +
-        (!PH.ok ? `<div class="pnote">이 브라우저에서는 사진을 저장할 수 없어요.</div>` :
-          f.photos.length < MAX_PHOTOS ? `<label class="padd" for="photoIn">${ic('i-camera')}<span>사진 추가</span><small>${f.photos.length}/${MAX_PHOTOS}</small></label>` : '');
-      photosEl.querySelectorAll('[data-view]').forEach(im => im.onclick = () => openViewer(f.photos, +im.dataset.view));
-      photosEl.querySelectorAll('[data-pdel]').forEach(b => b.onclick = () => { f.photos.splice(+b.dataset.pdel, 1); drawPhotos(); });
-    };
-    drawPhotos();
-    photoIn.onchange = async () => {
-      const files = [...photoIn.files]; photoIn.value = '';
-      const room = MAX_PHOTOS - f.photos.length;
-      if (files.length > room) toast(`사진은 최대 ${MAX_PHOTOS}장까지 올릴 수 있어요`);
-      for (const file of files.slice(0, Math.max(0, room))) {
-        try { f.photos.push(await shrink(file)); drawPhotos(); } catch { toast('사진을 불러오지 못했어요'); }
-      }
-    };
+    /* 사진: 카메라 촬영 또는 앨범 선택 (화면 전체를 다시 그리지 않고 사진 영역만 갱신) */
+    mountPhotos($('#photos'), f.photos);
     /* 같은 위스키의 이전 최저가와 비교해서 알려주기 */
     const hintEl = $('#pricehint');
     const updateHint = () => {
