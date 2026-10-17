@@ -663,27 +663,59 @@ function onCloudData(list) {
   }
 }
 
-// 연결 상태를 화면 아래 줄에 표시
-function onCloudStatus(status, errorCode) {
-  const box = document.getElementById("syncStatus");
-  if (status === "online") {
-    box.textContent = "✓ 가족과 공유 중";
-  } else if (status === "syncing") {
-    box.textContent = "동기화 중…";
-  } else if (status === "connecting") {
-    box.textContent = "연결 중…";
-  } else if (errorCode === "permission-denied") {
-    box.textContent = "⚠ 접근이 거부됐어요 (규칙 확인 필요)";
-  } else {
-    box.textContent = "⚠ 연결 오류 (" + (errorCode || "알 수 없음") + ")";
+// ===== 연결 상태 (헤더 오른쪽 아이콘, 누르면 자세한 내용) =====
+
+const SYNC_ICONS = { ok: "🟢", wait: "🔄", error: "⚠️" };
+let syncTipTimer = null;
+
+// 아이콘과 자세한 설명을 함께 바꿈 (level: ok / wait / error)
+function setSync(level, text) {
+  const icon = document.getElementById("syncIcon");
+  icon.textContent = SYNC_ICONS[level];
+  icon.dataset.level = level;
+  icon.setAttribute("aria-label", "연결 상태: " + text);
+  document.getElementById("syncTip").textContent = text;
+}
+
+// 아이콘을 누르면 자세한 상태를 말풍선으로 보여주고, 잠시 뒤 닫음
+function toggleSyncTip() {
+  const tip = document.getElementById("syncTip");
+  clearTimeout(syncTipTimer);
+  tip.hidden = !tip.hidden;
+  if (!tip.hidden) {
+    syncTipTimer = setTimeout(function () {
+      tip.hidden = true;
+    }, 4000);
   }
 }
 
-// 사진·한줄평 등을 못 읽으면 아래 상태줄에 이유를 알려줌
+// 말풍선 바깥을 누르면 닫음
+document.addEventListener("click", function (e) {
+  const tip = document.getElementById("syncTip");
+  if (!tip.hidden && !e.target.closest("#syncIcon") && !e.target.closest("#syncTip")) {
+    tip.hidden = true;
+  }
+});
+
+// 연결 상태를 아이콘으로 표시
+function onCloudStatus(status, errorCode) {
+  if (status === "online") {
+    setSync("ok", "✓ 가족과 공유 중");
+  } else if (status === "syncing") {
+    setSync("wait", "동기화 중…");
+  } else if (status === "connecting") {
+    setSync("wait", "연결 중…");
+  } else if (errorCode === "permission-denied") {
+    setSync("error", "접근이 거부됐어요 (규칙 확인 필요)");
+  } else {
+    setSync("error", "연결 오류 (" + (errorCode || "알 수 없음") + ")");
+  }
+}
+
+// 사진·한줄평 등을 못 읽으면 아이콘이 경고로 바뀌고, 눌러서 이유를 볼 수 있음
 window.addEventListener("cloud-read-error", function (e) {
   const code = e.detail.code;
-  document.getElementById("syncStatus").textContent =
-    "⚠ " + e.detail.what + "을(를) 못 불러왔어요" + (code ? " (" + code + ")" : "");
+  setSync("error", e.detail.what + "을(를) 못 불러왔어요" + (code ? " (" + code + ")" : ""));
 });
 
 // 앱을 오래 백그라운드에 두었다가 다시 열면 사진·한줄평 연결을 새로 맺음
@@ -1975,8 +2007,7 @@ if (window.cloud) {
   // 10초가 지나도 준비가 안 되면 안내
   setTimeout(function () {
     if (!window.cloud) {
-      document.getElementById("syncStatus").textContent =
-        "⚠ 연결할 수 없어요. 인터넷을 확인해 주세요.";
+      setSync("error", "연결할 수 없어요. 인터넷을 확인해 주세요.");
     }
   }, 10000);
 }

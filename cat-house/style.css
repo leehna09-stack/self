@@ -49,6 +49,7 @@ h1, h2, h3 {
 
 /* ===== 제목 카드 ===== */
 .hero {
+  position: relative;
   background-color: var(--card);
   border-radius: 28px;
   box-shadow: var(--shadow);
@@ -60,6 +61,52 @@ h1, h2, h3 {
 .hero h1 {
   font-size: 26px;
   margin: 0 0 4px 0;
+}
+
+/* 헤더 오른쪽 연결 상태 아이콘 */
+.sync-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  min-height: 0;
+  padding: 0;
+  margin-left: 2px;
+  border: none;
+  background: transparent;
+  font-size: 13px;
+  line-height: 1;
+  vertical-align: middle;
+}
+
+.sync-icon[data-level="wait"] {
+  animation: spin 1.2s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* 아이콘을 누르면 나오는 말풍선 */
+.sync-tip {
+  position: absolute;
+  left: 50%;
+  top: 58px;
+  transform: translateX(-50%);
+  max-width: calc(100% - 24px);
+  padding: 7px 12px;
+  border-radius: 12px;
+  background-color: var(--ink);
+  color: #ffffff;
+  font-size: 12px;
+  line-height: 1.4;
+  z-index: 5;
+  box-shadow: var(--shadow);
+}
+
+.sync-tip[hidden] {
+  display: none;
 }
 
 .hero p {
