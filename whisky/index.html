@@ -723,8 +723,8 @@ const ORN = () => `<div class="orn">${ic('i-glass')}${ic('i-bottle')}${ic('i-dra
 
 function viewList() {
   const total = logs.length;
-  /* 가격 기록: 가격 탭 목록의 '기록 N건'과 같은 숫자 (가격 탭에서 적은 건 + 다이어리에 구매가격을 적은 건) */
-  const priceCount = priceEntries().length;
+  /* 가격 기록: 가격 탭에서 직접 입력한 건수만 세요 (다이어리에 적은 구매가격은 포함하지 않아요) */
+  const priceCount = prices.length;
   const rated = logs.filter(l => l.rating);
   const avg = rated.length ? fmtNum(rated.reduce((s, l) => s + l.rating, 0) / rated.length) : '-';
   const arr = filtered();
