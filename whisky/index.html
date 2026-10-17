@@ -278,12 +278,19 @@ textarea.field { min-height: 140px; resize: vertical; line-height: 28px; padding
 
 /* 가격 기록 */
 .pg { position: relative; display: flex; gap: 12px; width: 100%; text-align: left; background: var(--paper); border: 1.5px solid var(--line); border-radius: 14px; padding: 14px; margin-bottom: 12px; box-shadow: 0 2px 0 var(--line); }
+.pg { cursor: pointer; }
 .pg:active { transform: translateY(1px); box-shadow: none; }
+.pg:focus-visible { outline: 2px solid var(--amber); outline-offset: 2px; }
 .pg-b { flex: 1; min-width: 0; }
 .pg h3 { margin: 0; font-size: 15.5px; letter-spacing: -.01em; overflow-wrap: anywhere; }
 .pg .sub, .pd-title .sub { color: var(--muted); font-size: 12.5px; margin-top: 1px; }
 .pg-r { text-align: right; white-space: nowrap; display: flex; flex-direction: column; align-items: flex-end; gap: 3px; }
 .pg-p { font: 700 21px/1.1 var(--hand); }
+.pg .mm { font-size: 13px; font-weight: 700; margin-top: 7px; gap: 1px 12px; }
+.pa { display: flex; gap: 6px; align-items: flex-start; flex: none; }
+.pg .eic, .eic.sm { width: 30px; height: 30px; }
+.pg .eic .ic, .eic.sm .ic { font-size: 15px; }
+.ha { display: flex; gap: 6px; }
 .mm { margin-top: 6px; font-size: 11.5px; color: var(--muted); display: flex; flex-wrap: wrap; gap: 1px 9px; }
 .mm span { white-space: nowrap; }
 .mm .hi { color: var(--hi); } .mm .lo { color: var(--lo); }
@@ -314,7 +321,7 @@ textarea.field { min-height: 140px; resize: vertical; line-height: 28px; padding
 .sr .k small { display: block; font-size: 11.5px; color: var(--muted); overflow-wrap: anywhere; }
 .sr .v { font-size: 20px; font-weight: 800; white-space: nowrap; }
 .sr.hi .mk, .sr.hi .v { color: var(--hi); } .sr.avg .mk { color: var(--avg); font-size: 15px; } .sr.avg .v { color: var(--text); } .sr.lo .mk, .sr.lo .v { color: var(--lo); }
-.hr { display: grid; grid-template-columns: 1fr auto; gap: 10px; align-items: center; width: 100%; text-align: left; padding: 11px 0; border-top: 1.5px dotted var(--line); }
+.hr { display: grid; grid-template-columns: 1fr auto auto; gap: 10px; align-items: center; width: 100%; text-align: left; padding: 11px 0; border-top: 1.5px dotted var(--line); }
 .hr:first-of-type { border-top: 0; }
 .hr .hl b { display: block; font-size: 14px; }
 .hr .hl small { color: var(--muted); font-size: 12px; overflow-wrap: anywhere; }
@@ -965,19 +972,21 @@ function viewPrice() {
   const groups = priceGroups().sort((a, b) => byTime(b[b.length - 1], a[a.length - 1]));
   const shown = state.pq ? groups.filter(l => textHit(l[0].name + ' ' + l.map(e => e.shop).join(' '), state.pq)) : groups;
   const cards = shown.map(list => {
-    const last = list[list.length - 1], prev = list.length > 1 ? list[list.length - 2] : null;
+    const last = list[list.length - 1];
     const vals = list.map(e => e.price), mn = Math.min(...vals), mx = Math.max(...vals);
     const [icon, color] = typeStyle(last.name);
     const gp = groupPhotos(list);
-    return `<button class="pg" data-pg="${esc(gkey(last))}">
+    return `<div class="pg" role="button" tabindex="0" data-pg="${esc(gkey(last))}" aria-label="${esc(last.name)} 가격 기록 보기">
       ${gp.length ? `<span class="tile img"><img src="${gp[0].thumb}" alt=""></span>` : `<span class="tile ${color}">${ic(icon)}</span>`}
       <div class="pg-b"><h3>${esc(last.name)}</h3>
         <div class="sub">${[last.ml ? volLabel(last.ml) : '', last.abv ? last.abv + '%' : ''].filter(Boolean).join(' · ')}</div>
-        <div class="sub">${last.shop ? esc(last.shop) + ' · ' : ''}${fmtDate(last.date)}</div>
-        ${list.length > 1 ? `<div class="mm"><span class="lo">최저 ${won(mn)}</span><span class="hi">최고 ${won(mx)}</span><span>${list.length}건</span></div>` : ''}
+        <div class="mm"><span class="hi">최고 ${won(mx)}</span><span class="lo">최저 ${won(mn)}</span></div>
       </div>
-      <div class="pg-r"><div class="pg-p">${won(last.price)}</div>${chgHtml(changeBetween(last, prev))}</div>
-    </button>`;
+      <div class="pa">
+        <button type="button" class="eic" data-pcam="${esc(last.id)}" aria-label="${esc(last.name)} 최근 기록에 사진 추가" title="사진 추가">${ic('i-camera')}</button>
+        <button type="button" class="eic" data-pedit="${esc(last.id)}" data-psrc="${last.src}" aria-label="${esc(last.name)} 최근 기록 수정" title="최근 기록 수정">${ic('i-pen')}</button>
+      </div>
+    </div>`;
   }).join('');
   const empty = groups.length
     ? `<div class="empty">${ic('i-flask')}<br>조건에 맞는 위스키가 없어요</div>`
@@ -991,7 +1000,32 @@ function viewPrice() {
 function bindPrice() {
   const add = $('#padd'); if (add) add.onclick = () => openPriceForm();
   const q = $('#pq'); if (q) q.addEventListener('input', e => { state.pq = e.target.value; const pos = e.target.selectionStart; render(); const n = $('#pq'); n.focus(); n.setSelectionRange(pos, pos); });
-  document.querySelectorAll('[data-pg]').forEach(b => b.onclick = () => openPriceDetail(b.dataset.pg));
+  document.querySelectorAll('[data-pg]').forEach(c => {
+    c.onclick = () => openPriceDetail(c.dataset.pg);
+    c.onkeydown = e => { if (e.target === c && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); openPriceDetail(c.dataset.pg); } };
+  });
+  document.querySelectorAll('[data-pedit]').forEach(b => b.onclick = e => { e.stopPropagation(); editPriceEntry(b.dataset.pedit, b.dataset.psrc); });
+  document.querySelectorAll('[data-pcam]').forEach(b => b.onclick = e => { e.stopPropagation(); quickPhoto(b.dataset.pcam); });
+}
+/* 가격 기록 한 건 수정: 가격 탭에서 적은 건 가격 입력 화면, 다이어리에 적은 건 다이어리 수정 화면 */
+function editPriceEntry(id, src, key) {
+  if (src === 'price') openPriceForm({ id, back: key }); else openForm(id);
+}
+/* 입력 화면을 열지 않고 사진만 바로 추가 (카메라 촬영 / 앨범 선택) */
+function quickPhoto(id, key) {
+  const list = (photoMap[id] || []).slice();
+  if (!PH.ok) { toast('이 브라우저에서는 사진을 저장할 수 없어요'); return; }
+  if (list.length >= MAX_PHOTOS) { toast(`사진은 최대 ${MAX_PHOTOS}장이에요. 수정에서 지운 뒤 추가해 주세요`); return; }
+  addPhotoFlow(async files => {
+    const room = MAX_PHOTOS - list.length;
+    if (files.length > room) toast(`사진은 최대 ${MAX_PHOTOS}장까지 올릴 수 있어요`);
+    let added = 0;
+    for (const file of files.slice(0, Math.max(0, room))) { try { list.push(await shrink(file)); added++; } catch { toast('사진을 불러오지 못했어요'); } }
+    if (!added) return;
+    if (await PH.set(id, list)) { photoMap[id] = list; try { navigator.storage && navigator.storage.persist && navigator.storage.persist(); } catch {} toast(`사진 ${added}장을 추가했어요`); }
+    else toast('사진을 저장하지 못했어요');
+    render(); if (key) openPriceDetail(key);
+  });
 }
 
 /* 가격 그래프: 초록 = 최고가, 빨강 = 최저가 (같은 날 기록이 하나면 선이 겹쳐요), 점선 = 최고가·평균가·최저가 */
@@ -1049,15 +1083,14 @@ function openPriceDetail(key) {
       <div class="sr avg"><span class="mk">━</span><span class="k">평균가<small>${list.length}건 기준</small></span><span class="v">${won(avg)}</span></div>
       <div class="sr lo"><span class="mk">▼</span><span class="k">최저가<small>${info(loE)}</small></span><span class="v">${won(mn)}</span></div>
     </div>
-    <div class="box"><h3>${ic('i-book')} 가격 기록 ${list.length}건</h3>${rows.map(({ e, c }) => `<button type="button" class="hr" data-hid="${esc(e.id)}" data-hsrc="${e.src}"><span class="hl">${(photoMap[e.id] || []).length ? `<img class="hth" src="${photoMap[e.id][0].thumb}" alt="">` : ''}<span><b>${fmtDate(e.date)}</b><small>${e.shop ? esc(e.shop) : '구매처 미입력'}${e.src === 'diary' ? ' · 다이어리 기록' : ''}</small></span></span><span class="hp">${won(e.price)}${chgHtml(c)}</span></button>`).join('')}</div>
+    <div class="box"><h3>${ic('i-book')} 가격 기록 ${list.length}건</h3>${rows.map(({ e, c }) => `<div class="hr" data-hid="${esc(e.id)}"><span class="hl">${(photoMap[e.id] || []).length ? `<img class="hth" src="${photoMap[e.id][0].thumb}" data-hthumb="${esc(e.id)}" alt="사진 보기">` : ''}<span><b>${fmtDate(e.date)}</b><small>${e.shop ? esc(e.shop) : '구매처 미입력'}${e.src === 'diary' ? ' · 다이어리 기록' : ''}</small></span></span><span class="hp">${won(e.price)}${chgHtml(c)}</span><span class="ha"><button type="button" class="eic sm" data-hcam="${esc(e.id)}" aria-label="${fmtDate(e.date)} 기록에 사진 추가" title="사진 추가">${ic('i-camera')}</button><button type="button" class="eic sm" data-hedit="${esc(e.id)}" data-hsrc="${e.src}" aria-label="${fmtDate(e.date)} 기록 수정" title="수정">${ic('i-pen')}</button></span></div>`).join('')}</div>
   </div></div>`;
   $('#dclose').onclick = close;
   const dimg = $('#dimg'); if (dimg) dimg.onclick = () => openViewer(gp, 0);
   $('#dadd').onclick = () => openPriceForm({ preset: { name: last.name, ml: last.ml, abv: last.abv }, back: key });
-  root.querySelectorAll('[data-hid]').forEach(b => b.onclick = () => {
-    if (b.dataset.hsrc === 'price') openPriceForm({ id: b.dataset.hid, back: key });
-    else { close(); openForm(b.dataset.hid); }
-  });
+  root.querySelectorAll('[data-hedit]').forEach(b => b.onclick = () => editPriceEntry(b.dataset.hedit, b.dataset.hsrc, key));
+  root.querySelectorAll('[data-hcam]').forEach(b => b.onclick = () => quickPhoto(b.dataset.hcam, key));
+  root.querySelectorAll('[data-hthumb]').forEach(im => im.onclick = () => openViewer(photoMap[im.dataset.hthumb], 0));
 }
 
 /* 가격 입력/수정 화면 */
