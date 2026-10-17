@@ -35,6 +35,9 @@
   --peach: #fbd9cf; --peach-ink: #b4533e;
   --sky: #d9e6f5;   --sky-ink: #3f6aa0;
   --red: #c9483d;
+  --hi: #4aa24c;          /* 최고가·상승(초록) */
+  --lo: #e1706a;          /* 최저가·하락(빨강) */
+  --avg: #4a8be8;         /* 평균가(파랑) */
   --hand: "Gaegu", "Nanum Pen Script", "Pretendard Variable", cursive;
   --radius: 14px;
   --safe-b: env(safe-area-inset-bottom, 0px);
@@ -141,7 +144,7 @@ input, textarea, select { font: inherit; color: var(--text); }
 
 /* 하단 탭 */
 .tabbar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 20; background: #fffdf7f2; backdrop-filter: blur(10px); border-top: 1.5px solid var(--line); padding-bottom: var(--safe-b); }
-.tabbar-in { max-width: 560px; margin: 0 auto; display: grid; grid-template-columns: repeat(4, 1fr); align-items: center; }
+.tabbar-in { max-width: 560px; margin: 0 auto; display: grid; grid-template-columns: repeat(5, 1fr); align-items: center; }
 .tab { padding: 9px 0 8px; color: var(--muted); font-size: 11px; display: flex; flex-direction: column; align-items: center; gap: 2px; }
 .tab .ic { width: 24px; height: 24px; }
 .tab.on { color: var(--amber-ink); }
@@ -275,6 +278,50 @@ textarea.field { min-height: 140px; resize: vertical; line-height: 28px; padding
 .viewer .vx { top: calc(14px + var(--safe-t)); right: 14px; }
 .viewer .vp { left: 10px; top: 50%; margin-top: -22px; } .viewer .vn { right: 10px; top: 50%; margin-top: -22px; }
 .viewer .vc { position: absolute; bottom: calc(18px + var(--safe-b)); color: #fff; font-size: 13px; }
+
+/* 가격 기록 */
+.pg { position: relative; display: flex; gap: 12px; width: 100%; text-align: left; background: var(--paper); border: 1.5px solid var(--line); border-radius: 14px; padding: 14px; margin-bottom: 12px; box-shadow: 0 2px 0 var(--line); }
+.pg:active { transform: translateY(1px); box-shadow: none; }
+.pg-b { flex: 1; min-width: 0; }
+.pg h3 { margin: 0; font-size: 15.5px; letter-spacing: -.01em; overflow-wrap: anywhere; }
+.pg .sub, .pd-title .sub { color: var(--muted); font-size: 12.5px; margin-top: 1px; }
+.pg-r { text-align: right; white-space: nowrap; display: flex; flex-direction: column; align-items: flex-end; gap: 3px; }
+.pg-p { font: 700 21px/1.1 var(--hand); }
+.mm { margin-top: 6px; font-size: 11.5px; color: var(--muted); display: flex; flex-wrap: wrap; gap: 1px 9px; }
+.mm span { white-space: nowrap; }
+.mm .hi { color: var(--hi); } .mm .lo { color: var(--lo); }
+.chg { display: inline-block; padding: 1px 8px; border-radius: 999px; font-size: 11.5px; font-weight: 700; white-space: nowrap; }
+.chg.up { background: #e2f2e2; color: #2e7d32; }
+.chg.down { background: #fbe2e0; color: #c0443d; }
+.chg.same { background: #efe9dc; color: var(--muted); }
+.chg.first { background: var(--amber-soft); color: var(--amber-ink); }
+.pd-title { display: flex; gap: 12px; align-items: center; margin: 4px 0 12px; }
+.pd-title h3 { margin: 0; font-size: 18px; overflow-wrap: anywhere; }
+.chart-box { background: var(--paper); border: 1.5px solid var(--line); border-radius: 14px; padding: 8px 6px 4px; }
+.chart-box svg { display: block; width: 100%; height: auto; }
+.ch-grid { stroke: #ece3cf; stroke-width: 1; }
+.ch-x { fill: var(--text); font-size: 13px; }
+.ch-d { stroke-width: 1.6; stroke-dasharray: 3 6; }
+.ch-d.hi { stroke: var(--hi); opacity: .45; } .ch-d.lo { stroke: var(--lo); opacity: .45; } .ch-d.avg { stroke: #bdb6a8; }
+.ch-l { font-size: 13px; font-weight: 700; }
+.ch-l.hi { fill: var(--hi); } .ch-l.lo { fill: var(--lo); } .ch-l.avg { fill: var(--muted); }
+.ch-line { fill: none; stroke-width: 3; stroke-linejoin: round; stroke-linecap: round; }
+.ch-line.hi { stroke: var(--hi); } .ch-line.lo { stroke: var(--lo); }
+.ch-dot { stroke: #fff; stroke-width: 1.5; }
+.ch-dot.hi { fill: var(--hi); } .ch-dot.lo { fill: var(--lo); }
+.sumrows { background: var(--paper); border: 1.5px solid var(--line); border-radius: 14px; padding: 2px 16px; margin: 12px 0; }
+.sr { display: flex; align-items: center; gap: 12px; padding: 13px 0; border-top: 1.5px dotted var(--line); }
+.sr:first-child { border-top: 0; }
+.sr .mk { width: 18px; text-align: center; font-size: 12px; line-height: 1; }
+.sr .k { flex: 1; font-size: 16px; min-width: 0; }
+.sr .k small { display: block; font-size: 11.5px; color: var(--muted); overflow-wrap: anywhere; }
+.sr .v { font-size: 20px; font-weight: 800; white-space: nowrap; }
+.sr.hi .mk, .sr.hi .v { color: var(--hi); } .sr.avg .mk { color: var(--avg); font-size: 15px; } .sr.avg .v { color: var(--text); } .sr.lo .mk, .sr.lo .v { color: var(--lo); }
+.hr { display: grid; grid-template-columns: 1fr auto; gap: 10px; align-items: center; width: 100%; text-align: left; padding: 11px 0; border-top: 1.5px dotted var(--line); }
+.hr:first-of-type { border-top: 0; }
+.hr .hl b { display: block; font-size: 14px; }
+.hr .hl small { color: var(--muted); font-size: 12px; overflow-wrap: anywhere; }
+.hr .hp { display: flex; flex-direction: column; align-items: flex-end; gap: 3px; font-weight: 700; white-space: nowrap; }
 </style>
 </head>
 
@@ -305,8 +352,9 @@ textarea.field { min-height: 140px; resize: vertical; line-height: 28px; padding
 
 <nav class="tabbar"><div class="tabbar-in">
   <button class="tab" data-tab="list"><svg class="ic"><use href="#i-book"/></svg>다이어리</button>
-  <button class="tab" data-tab="stats"><svg class="ic"><use href="#i-chart"/></svg>취향</button>
+  <button class="tab" data-tab="price"><svg class="ic"><use href="#i-won"/></svg>가격</button>
   <button class="tab add" data-tab="add" aria-label="한 잔 기록하기"><span class="plus"><svg class="ic"><use href="#i-glass"/></svg><i>+</i></span></button>
+  <button class="tab" data-tab="stats"><svg class="ic"><use href="#i-chart"/></svg>취향</button>
   <button class="tab" data-tab="settings"><svg class="ic"><use href="#i-gear"/></svg>설정</button>
 </div></nav>
 <div id="sheetRoot"></div>
@@ -353,7 +401,7 @@ const store = {
   save(list) { try { localStorage.setItem(KEY, JSON.stringify(list)); } catch { toast('저장 공간이 부족해요'); } },
 };
 let logs = store.load();
-let state = { tab: 'list', q: '', flavor: '', sort: 'new' };
+let state = { tab: 'list', q: '', pq: '', flavor: '', sort: 'new' };
 
 const today = () => { const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
 const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
@@ -399,7 +447,7 @@ const norm = s => s.toLowerCase().replace(/[\s'’·.\-]/g, '');
 function candidates() {
   const list = DB.map(([ko, en, type, ml, abv, fl]) => ({ ko, en, type, ml, abv, fl, src: 'db' }));
   const seen = new Set(list.map(x => norm(x.ko)));
-  [...logs].reverse().forEach(l => {
+  [...logs].reverse().concat([...prices].reverse()).forEach(l => {
     if (!seen.has(norm(l.name))) { seen.add(norm(l.name)); list.push({ ko: l.name, en: '', type: '내 기록', ml: l.ml, abv: l.abv, fl: l.flavors || [], src: 'mine' }); }
   });
   return list;
@@ -451,7 +499,7 @@ const LOGO = `<div class="logo">${ic('i-glass')}</div>`;
 function render() {
   document.querySelectorAll('.tab').forEach(t => t.classList.toggle('on', t.dataset.tab === state.tab));
   const app = $('#app');
-  app.innerHTML = { list: viewList, stats: viewStats, settings: viewSettings }[state.tab]() + viewFoot();
+  app.innerHTML = { list: viewList, price: viewPrice, stats: viewStats, settings: viewSettings }[state.tab]() + viewFoot();
   bindView();
 }
 
@@ -652,11 +700,12 @@ function viewSettings() {
       <p>기록과 사진은 이 기기의 브라우저에 저장돼요. 폰을 바꾸거나 가족과 나눌 땐 파일로 내보내서 옮기세요. (JSON 백업에는 사진도 들어가요. CSV에는 글 기록만 들어가요.)</p>
       <button class="btn-sub" id="exp" style="margin-top:0">${ic('i-bottle')} 기록 파일로 내보내기 (JSON)</button>
       <button class="btn-sub" id="expcsv">${ic('i-book')} 엑셀용 CSV로 내보내기</button>
+      <button class="btn-sub" id="expprice">${ic('i-won')} 가격 기록 CSV로 내보내기</button>
       <button class="btn-sub" id="imp">${ic('i-flask')} 백업 파일 불러오기</button>
       <input type="file" id="file" accept=".json,application/json" hidden>
     </div>
     <div class="box tape1"><h3>${ic('i-dram')} 정보</h3>
-      <p>내장 위스키 ${DB.length}종 · 내 기록 ${logs.length}건<br>목록에 없는 위스키는 이름을 직접 쓰면 다음부터 자동완성에 나와요.<br>내장 정보는 시판 제품 기준 참고값이라 자유롭게 수정할 수 있어요.</p>
+      <p>내장 위스키 ${DB.length}종 · 내 기록 ${logs.length}건 · 가격 기록 ${prices.length}건<br>목록에 없는 위스키는 이름을 직접 쓰면 다음부터 자동완성에 나와요.<br>내장 정보는 시판 제품 기준 참고값이라 자유롭게 수정할 수 있어요.</p>
     </div>
     <div class="box"><h3>${ic('i-glass')} 위험 구역</h3><button class="btn-sub" id="wipe" style="margin-top:0;color:var(--red)">모든 기록 삭제</button></div>
   </div>`;
@@ -687,13 +736,14 @@ function installApp() {
   $('#installModal').hidden = false;
 }
 function exportJson() {
-  download('whisky-notes-backup-' + today() + '.json', JSON.stringify({ app: 'whisky-notes', version: 2, logs: logs.map(l => photoMap[l.id] ? { ...l, photos: photoMap[l.id] } : l) }, null, 2), 'application/json');
+  download('whisky-notes-backup-' + today() + '.json', JSON.stringify({ app: 'whisky-notes', version: 3, logs: logs.map(l => photoMap[l.id] ? { ...l, photos: photoMap[l.id] } : l), prices }, null, 2), 'application/json');
   toast('백업 파일을 내려받았어요.');
 }
 
 function bindView() {
   $('#installBtn').onclick = installApp;
   $('#backupBtn').onclick = exportJson;
+  bindPrice();
   document.querySelectorAll('[data-ph]').forEach(img => img.onclick = e => { e.stopPropagation(); const [id, n] = img.dataset.ph.split(':'); openViewer(photoMap[id], +n); });
   const q = $('#q');
   if (q) q.addEventListener('input', e => { state.q = e.target.value; const pos = e.target.selectionStart; render(); const n = $('#q'); n.focus(); n.setSelectionRange(pos, pos); });
@@ -706,6 +756,11 @@ function bindView() {
       const rows = [['날짜', '오픈일', '위스키', '용량(ml)', '도수(%)', '맛', '점수', '구매가격(원)', '구매일', '구매처', '메모']].concat(logs.slice().sort((a, b) => (a.date || '').localeCompare(b.date || '')).map(l => [l.date, l.openDate || '', l.name, l.ml, l.abv, (l.flavors || []).join('/'), l.rating || '', l.price || '', l.price > 0 ? buyDateOf(l) : '', l.shop || '', l.memo || '']));
       const csv = '﻿' + rows.map(r => r.map(v => '"' + String(v ?? '').replace(/"/g, '""') + '"').join(',')).join('\r\n');
       download('whisky-notes-' + today() + '.csv', csv, 'text/csv');
+    };
+    $('#expprice').onclick = () => {
+      const rows = [['구매일', '위스키', '용량(ml)', '도수(%)', '가격(원)', '구매처', '출처']].concat(priceEntries().sort(byTime).map(e => [e.date, e.name, e.ml || '', e.abv || '', e.price, e.shop || '', e.src === 'diary' ? '다이어리' : '가격 기록']));
+      const csv = '\ufeff' + rows.map(r => r.map(v => '"' + String(v ?? '').replace(/"/g, '""') + '"').join(',')).join('\r\n');
+      download('whisky-prices-' + today() + '.csv', csv, 'text/csv');
     };
     $('#imp').onclick = () => $('#file').click();
     $('#file').onchange = async e => {
@@ -722,14 +777,276 @@ function bindView() {
           const ph = l.photos.filter(x => x && isImg(x.full) && isImg(x.thumb)).slice(0, MAX_PHOTOS);
           if (ph.length && await PH.set(l.id, ph)) photoMap[l.id] = ph;
         }
-        store.save(logs); toast(add + '건을 불러왔어요'); render();
+        let addP = 0;
+        const pids = new Set(prices.map(p => p.id));
+        (!Array.isArray(data) && Array.isArray(data.prices) ? data.prices : []).forEach(p => {
+          if (p && p.name && +p.price > 0 && !pids.has(p.id)) { prices.push({ id: p.id || uid(), name: String(p.name), ml: +p.ml || 0, abv: +p.abv || 0, price: Math.round(+p.price), shop: p.shop || '', date: p.date || today(), created: p.created || Date.now() }); addP++; }
+        });
+        if (addP) savePrices();
+        store.save(logs); toast((add + addP) + '건을 불러왔어요'); render();
       } catch { toast('올바른 백업 파일이 아니에요'); }
     };
-    $('#wipe').onclick = () => { if (confirm('모든 기록을 삭제할까요?\n(백업하지 않았다면 되돌릴 수 없어요)') && confirm('정말 삭제합니다.')) { logs = []; store.save(logs); PH.clear(); photoMap = {}; toast('삭제했어요'); render(); } };
+    $('#wipe').onclick = () => { if (confirm('모든 기록을 삭제할까요?\n(백업하지 않았다면 되돌릴 수 없어요)') && confirm('정말 삭제합니다.')) { logs = []; store.save(logs); prices = []; savePrices(); PH.clear(); photoMap = {}; toast('삭제했어요'); render(); } };
   }
 }
 function download(name, text, type) {
   const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([text], { type })); a.download = name; document.body.appendChild(a); a.click(); a.remove();
+}
+
+/* ============================================================
+  [4-2] 가격 기록 (위스키명·용량·도수·가격·구매처) + 상승/하락 비교
+  - 가격 탭에서 적은 기록 + 다이어리에 적은 구매가격을 합쳐서 보여줘요
+  - 위스키 이름 + 용량이 같은 것끼리 묶어서 이전 가격과 비교해요
+============================================================= */
+const PKEY = 'whisky-prices-v1';
+let prices = (() => { try { return JSON.parse(localStorage.getItem(PKEY)) || []; } catch { return []; } })();
+const savePrices = () => { try { localStorage.setItem(PKEY, JSON.stringify(prices)); } catch { toast('저장 공간이 부족해요'); } };
+
+const gkey = e => norm(e.name) + '|' + (e.ml || 0);
+const byTime = (a, b) => (a.date || '').localeCompare(b.date || '') || (a.created || 0) - (b.created || 0);
+function priceEntries() {
+  const a = prices.map(p => ({ ...p, src: 'price' }));
+  const b = logs.filter(l => l.price > 0).map(l => ({ id: l.id, name: l.name, ml: l.ml, abv: l.abv, price: l.price, shop: l.shop || '', date: buyDateOf(l), created: l.created || 0, src: 'diary' }));
+  return a.concat(b);
+}
+function priceGroups() {
+  const m = new Map();
+  priceEntries().forEach(e => { const k = gkey(e); if (!m.has(k)) m.set(k, []); m.get(k).push(e); });
+  return [...m.values()].map(list => list.sort(byTime));
+}
+/* 새 가격과 같은 위스키의 직전 가격 찾기 (같은 용량이 없으면 다른 용량 중 가장 최근 것) */
+function prevEntry(name, ml, date, exceptId) {
+  const all = priceEntries().filter(e => e.id !== exceptId && norm(e.name) === norm(name) && (e.date || '') <= date);
+  const same = all.filter(e => (e.ml || 0) === (ml || 0)).sort(byTime);
+  if (same.length) return same[same.length - 1];
+  all.sort(byTime);
+  return all.length ? all[all.length - 1] : null;
+}
+/* 이전 가격과 비교. 용량이 다르면 100ml당 가격으로 비교해요 */
+function changeBetween(cur, prev) {
+  if (!prev) return { kind: 'first' };
+  const same = !cur.ml || !prev.ml || cur.ml === prev.ml;
+  const a = same ? cur.price : cur.price / cur.ml * 100, b = same ? prev.price : prev.price / prev.ml * 100;
+  const diff = Math.round(a - b), pct = b ? Math.round((a / b - 1) * 1000) / 10 : 0;
+  return { kind: diff > 0 ? 'up' : diff < 0 ? 'down' : 'same', diff, pct, perMl: !same };
+}
+const chgHtml = c => c.kind === 'first' ? '<span class="chg first">첫 기록</span>'
+  : c.kind === 'same' ? '<span class="chg same">변동 없음</span>'
+  : `<span class="chg ${c.kind}">${c.kind === 'up' ? '▲' : '▼'} ${won(Math.abs(c.diff))}${c.perMl ? ' (100ml당)' : ''} · ${Math.abs(c.pct)}%</span>`;
+const chgText = c => c.kind === 'first' ? '첫 가격을 기록했어요'
+  : c.kind === 'same' ? '이전과 같은 가격이에요'
+  : `${c.kind === 'up' ? '▲ 상승' : '▼ 하락'} ${won(Math.abs(c.diff))}${c.perMl ? '(100ml당)' : ''} · ${Math.abs(c.pct)}%`;
+const textHit = (text, raw) => {
+  const t = norm(text), jt = jamo(t);
+  return raw.toLowerCase().split(/\s+/).map(norm).filter(Boolean).every(w => t.includes(w) || jt.includes(jamo(w)) || (/^[ㄱ-ㅎ]+$/.test(w) && cho(t).includes(w)));
+};
+
+function viewPrice() {
+  const groups = priceGroups().sort((a, b) => byTime(b[b.length - 1], a[a.length - 1]));
+  const shown = state.pq ? groups.filter(l => textHit(l[0].name + ' ' + l.map(e => e.shop).join(' '), state.pq)) : groups;
+  const cards = shown.map(list => {
+    const last = list[list.length - 1], prev = list.length > 1 ? list[list.length - 2] : null;
+    const vals = list.map(e => e.price), mn = Math.min(...vals), mx = Math.max(...vals);
+    const [icon, color] = typeStyle(last.name);
+    return `<button class="pg" data-pg="${esc(gkey(last))}">
+      <span class="tile ${color}">${ic(icon)}</span>
+      <div class="pg-b"><h3>${esc(last.name)}</h3>
+        <div class="sub">${[last.ml ? volLabel(last.ml) : '', last.abv ? last.abv + '%' : ''].filter(Boolean).join(' · ')}</div>
+        <div class="sub">${last.shop ? esc(last.shop) + ' · ' : ''}${fmtDate(last.date)}</div>
+        ${list.length > 1 ? `<div class="mm"><span class="lo">최저 ${won(mn)}</span><span class="hi">최고 ${won(mx)}</span><span>${list.length}건</span></div>` : ''}
+      </div>
+      <div class="pg-r"><div class="pg-p">${won(last.price)}</div>${chgHtml(changeBetween(last, prev))}</div>
+    </button>`;
+  }).join('');
+  const empty = groups.length
+    ? `<div class="empty">${ic('i-flask')}<br>조건에 맞는 위스키가 없어요</div>`
+    : `<div class="empty">${ic('i-won')}<br>아직 가격 기록이 없어요<br>위스키를 살 때마다 가격과 구매처를 남기면<br>오르고 내린 걸 한눈에 볼 수 있어요</div>`;
+  return header('가격 기록·비교') + `
+    <button type="button" class="btn-main" id="padd" style="margin-top:0">${ic('i-won')} 가격 기록하기</button>
+    ${groups.length ? `<input class="search" id="pq" style="margin-top:12px" placeholder="위스키·구매처 검색 (초성 가능)" value="${esc(state.pq)}" enterkeyhint="search">
+    <div class="sortrow"><span>${shown.length}종 · 기록 ${priceEntries().length}건</span><span>최근 기록순</span></div>` : ''}
+    ${shown.length ? cards + ORN() : empty}`;
+}
+function bindPrice() {
+  const add = $('#padd'); if (add) add.onclick = () => openPriceForm();
+  const q = $('#pq'); if (q) q.addEventListener('input', e => { state.pq = e.target.value; const pos = e.target.selectionStart; render(); const n = $('#pq'); n.focus(); n.setSelectionRange(pos, pos); });
+  document.querySelectorAll('[data-pg]').forEach(b => b.onclick = () => openPriceDetail(b.dataset.pg));
+}
+
+/* 가격 그래프: 초록 = 최고가, 빨강 = 최저가 (같은 날 기록이 하나면 선이 겹쳐요), 점선 = 최고가·평균가·최저가 */
+function priceChart(list) {
+  const W = 340, H = 214, L = 14, R = 14, T = 46, PH = 108;
+  const byDay = {}; list.forEach(e => (byDay[e.date] = byDay[e.date] || []).push(e.price));
+  const pts = Object.keys(byDay).sort().map(d => ({ t: new Date(d + 'T00:00:00').getTime(), hi: Math.max(...byDay[d]), lo: Math.min(...byDay[d]) }));
+  const all = list.map(e => e.price), mx = Math.max(...all), mn = Math.min(...all), avg = all.reduce((a, b) => a + b, 0) / all.length;
+  const t0 = pts[0].t, t1 = pts[pts.length - 1].t, span = mx - mn, wp = W - L - R, one = t1 === t0;
+  const X = t => one ? L + wp / 2 : L + (t - t0) / (t1 - t0) * wp;
+  const Y = v => span === 0 ? T + PH / 2 : T + PH - (v - mn) / span * PH;
+  const f = n => n.toFixed(1);
+  const md = t => { const d = new Date(t); return String(d.getMonth() + 1).padStart(2, '0') + '/' + String(d.getDate()).padStart(2, '0'); };
+  const nt = one ? 1 : 5;
+  let s = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="가격 변동 그래프">`;
+  for (let i = 0; i < nt; i++) {
+    const t = one ? t0 : t0 + (t1 - t0) * i / (nt - 1), x = X(t);
+    s += `<line class="ch-grid" x1="${f(x)}" x2="${f(x)}" y1="${T - 26}" y2="${T + PH + 24}"/>`;
+    s += `<text class="ch-x" x="${f(x)}" y="${H - 8}" text-anchor="${one ? 'middle' : i === 0 ? 'start' : i === nt - 1 ? 'end' : 'middle'}">${md(t)}</text>`;
+  }
+  const hline = (v, cls) => `<line class="ch-d ${cls}" x1="${L}" x2="${W - R}" y1="${f(Y(v))}" y2="${f(Y(v))}"/>`;
+  if (span > 0) {
+    s += hline(mx, 'hi') + hline(avg, 'avg') + hline(mn, 'lo');
+    s += `<text class="ch-l hi" x="${W - R}" y="${f(Y(mx) - 9)}" text-anchor="end">최고가 ${won(mx)}</text>`;
+    s += `<text class="ch-l lo" x="${W - R}" y="${f(Y(mn) + 21)}" text-anchor="end">최저가 ${won(mn)}</text>`;
+  } else {
+    s += hline(mx, 'avg') + `<text class="ch-l avg" x="${W - R}" y="${f(Y(mx) - 9)}" text-anchor="end">가격 ${won(mx)}</text>`;
+  }
+  if (pts.length > 1) {
+    const line = k => pts.map(p => f(X(p.t)) + ',' + f(Y(p[k]))).join(' ');
+    s += `<polyline class="ch-line hi" points="${line('hi')}"/><polyline class="ch-line lo" points="${line('lo')}"/>`;
+  }
+  if (pts.length <= 14) pts.forEach(p => { s += `<circle class="ch-dot hi" cx="${f(X(p.t))}" cy="${f(Y(p.hi))}" r="3.6"/><circle class="ch-dot lo" cx="${f(X(p.t))}" cy="${f(Y(p.lo))}" r="3.6"/>`; });
+  return s + '</svg>';
+}
+
+/* 위스키 한 종의 가격 상세: 그래프 + 최고/평균/최저 + 기록 목록 */
+function openPriceDetail(key) {
+  const list = priceGroups().find(l => gkey(l[0]) === key); if (!list) return;
+  const root = $('#sheetRoot'); document.body.style.overflow = 'hidden';
+  const close = () => { root.innerHTML = ''; document.body.style.overflow = ''; };
+  const last = list[list.length - 1], vals = list.map(e => e.price);
+  const mx = Math.max(...vals), mn = Math.min(...vals), avg = Math.round(vals.reduce((a, b) => a + b, 0) / vals.length);
+  const hiE = list.filter(e => e.price === mx).pop(), loE = list.filter(e => e.price === mn).pop();
+  const [icon, color] = typeStyle(last.name);
+  const info = e => `${e.shop ? esc(e.shop) + ' · ' : ''}${fmtDate(e.date)}`;
+  const rows = list.map((e, i) => ({ e, c: changeBetween(e, i ? list[i - 1] : null) })).reverse();
+  root.innerHTML = `<div class="sheet"><div class="sheet-in">
+    <div class="sheet-head"><button class="link" id="dclose">닫기</button><h2>${ic('i-won')} 가격 기록</h2><button class="link" id="dadd" style="color:var(--amber-ink);font-weight:700">+ 추가</button></div>
+    <div class="pd-title"><span class="tile ${color}">${ic(icon)}</span><div><h3>${esc(last.name)}</h3><div class="sub">${[last.ml ? volLabel(last.ml) : '', last.abv ? last.abv + '%' : ''].filter(Boolean).join(' · ')}</div></div></div>
+    <div class="chart-box">${priceChart(list)}</div>
+    <div class="sumrows">
+      <div class="sr hi"><span class="mk">▲</span><span class="k">최고가<small>${info(hiE)}</small></span><span class="v">${won(mx)}</span></div>
+      <div class="sr avg"><span class="mk">━</span><span class="k">평균가<small>${list.length}건 기준</small></span><span class="v">${won(avg)}</span></div>
+      <div class="sr lo"><span class="mk">▼</span><span class="k">최저가<small>${info(loE)}</small></span><span class="v">${won(mn)}</span></div>
+    </div>
+    <div class="box"><h3>${ic('i-book')} 가격 기록 ${list.length}건</h3>${rows.map(({ e, c }) => `<button type="button" class="hr" data-hid="${esc(e.id)}" data-hsrc="${e.src}"><span class="hl"><b>${fmtDate(e.date)}</b><small>${e.shop ? esc(e.shop) : '구매처 미입력'}${e.src === 'diary' ? ' · 다이어리 기록' : ''}</small></span><span class="hp">${won(e.price)}${chgHtml(c)}</span></button>`).join('')}</div>
+  </div></div>`;
+  $('#dclose').onclick = close;
+  $('#dadd').onclick = () => openPriceForm({ preset: { name: last.name, ml: last.ml, abv: last.abv }, back: key });
+  root.querySelectorAll('[data-hid]').forEach(b => b.onclick = () => {
+    if (b.dataset.hsrc === 'price') openPriceForm({ id: b.dataset.hid, back: key });
+    else { close(); openForm(b.dataset.hid); }
+  });
+}
+
+/* 가격 입력/수정 화면 */
+function openPriceForm(opts = {}) {
+  const old = opts.id ? prices.find(p => p.id === opts.id) : null;
+  const g = old ? { ...old } : { name: '', ml: 700, abv: '', price: '', shop: '', date: today(), ...(opts.preset || {}) };
+  const root = $('#sheetRoot'); document.body.style.overflow = 'hidden';
+  let note = '';
+  const close = () => { root.innerHTML = ''; document.body.style.overflow = ''; };
+  const back = () => { close(); if (opts.back && priceGroups().some(l => gkey(l[0]) === opts.back)) openPriceDetail(opts.back); };
+  const read = () => { g.name = $('#pname').value; g.ml = +$('#pml').value || 0; g.abv = +$('#pabv').value || 0; g.price = Math.round(+$('#pprice').value) || 0; g.shop = $('#pshop').value.trim(); g.date = $('#pdate').value; };
+
+  const draw = () => {
+    root.innerHTML = `<div class="sheet"><div class="sheet-in">
+      <div class="sheet-head"><button class="link" id="pcancel">취소</button><h2>${ic('i-won')} ${old ? '가격 수정' : '가격 기록'}</h2><button class="link" id="pdel" style="${old ? '' : 'visibility:hidden'}"><span style="color:var(--red)">삭제</span></button></div>
+
+      <label class="lb">${ic('i-bottle')} 위스키 이름</label>
+      <div class="ac-wrap"><input class="field" id="pname" placeholder="예: 맥캘란, glenfiddich, ㄱㄹㅍㄷ" value="${esc(g.name)}" autocomplete="off" autocapitalize="off"><div class="ac" id="pac" hidden></div></div>
+      <div class="autonote" id="pnote">${esc(note)}</div>
+
+      <div class="grid2">
+        <div><label class="lb">${ic('i-bottle')} 용량</label><div class="unit"><input class="field" id="pml" type="number" inputmode="numeric" min="0" value="${g.ml || ''}"><em>ml</em></div></div>
+        <div><label class="lb">${ic('i-drop')} 알콜 도수</label><div class="unit"><input class="field" id="pabv" type="number" inputmode="decimal" step="0.1" min="0" max="100" value="${g.abv || ''}"><em>%</em></div></div>
+      </div>
+      <div class="quick vols" id="pvols">${VOLS.map(v => `<button type="button" class="chip ${+g.ml === v ? 'on' : ''}" data-pvol="${v}">${volLabel(v)}</button>`).join('')}</div>
+
+      <div class="grid2">
+        <div><label class="lb">${ic('i-won')} 가격</label><div class="unit"><input class="field" id="pprice" type="number" inputmode="numeric" min="0" step="100" value="${g.price || ''}" placeholder="0"><em>원</em></div></div>
+        <div><label class="lb">${ic('i-cal')} 구매일</label><input class="field dt" id="pdate" type="date" value="${esc(g.date)}"></div>
+      </div>
+      <div class="hint" id="phint"></div>
+
+      <label class="lb">${ic('i-shop')} 구매 장소</label>
+      <input class="field" id="pshop" placeholder="예: 코스트코 양재점, 면세점, 쿠팡" value="${esc(g.shop)}" maxlength="40" autocomplete="off">
+      <div class="quick">${shopChoices().map(sh => `<button type="button" class="chip ${g.shop === sh ? 'on' : ''}" data-pshop="${esc(sh)}">${esc(sh)}</button>`).join('')}</div>
+
+      <button class="btn-main" id="psave">${ic('i-won')} ${old ? '수정 저장' : '가격 기록'}</button>
+    </div></div>`;
+    bind();
+  };
+
+  const bind = () => {
+    $('#pcancel').onclick = back;
+    if (old) $('#pdel').onclick = () => {
+      if (!confirm(`"${old.name}" 가격 기록을 삭제할까요?`)) return;
+      prices = prices.filter(p => p.id !== old.id); savePrices(); toast('삭제했어요');
+      close(); render(); if (opts.back && priceGroups().some(l => gkey(l[0]) === opts.back)) openPriceDetail(opts.back);
+    };
+    /* 이전 가격과 비교해서 바로 알려주기 */
+    const hintEl = $('#phint');
+    const updateHint = () => {
+      const nm = $('#pname').value.trim();
+      const ml = +$('#pml').value || 0, price = Math.round(+$('#pprice').value) || 0, date = $('#pdate').value || today();
+      const prev = nm ? prevEntry(nm, ml, date, old && old.id) : null;
+      if (!prev) { hintEl.innerHTML = ''; return; }
+      const t = `이전 가격 ${won(prev.price)}${prev.ml && prev.ml !== ml ? ' (' + volLabel(prev.ml) + ')' : ''} · ${prev.shop || '구매처 미입력'} · ${fmtDate(prev.date)}`;
+      hintEl.innerHTML = esc(t) + (price > 0 ? ' ' + chgHtml(changeBetween({ price, ml }, prev)) : '');
+    };
+    ['pname', 'pml', 'pprice', 'pdate'].forEach(id => $('#' + id).addEventListener('input', updateHint));
+    updateHint();
+    /* 용량: 좌우로 밀어서 고르기 */
+    const vols = $('#pvols');
+    const markVol = () => vols.querySelectorAll('[data-pvol]').forEach(x => x.classList.toggle('on', +x.dataset.pvol === (+$('#pml').value || 0)));
+    vols.querySelectorAll('[data-pvol]').forEach(b => b.onclick = () => { $('#pml').value = b.dataset.pvol; markVol(); updateHint(); });
+    $('#pml').addEventListener('input', markVol);
+    const on = vols.querySelector('.on');
+    if (on) { const v = vols.getBoundingClientRect(), c = on.getBoundingClientRect(); vols.scrollLeft += (c.left + c.width / 2) - (v.left + v.width / 2); }
+    root.querySelectorAll('[data-pshop]').forEach(b => b.onclick = () => { $('#pshop').value = b.dataset.pshop; root.querySelectorAll('[data-pshop]').forEach(x => x.classList.toggle('on', x === b)); });
+
+    /* 위스키 이름 자동완성: 고르면 용량·도수가 채워져요 */
+    const name = $('#pname'), ac = $('#pac'); let res = [], hi = -1;
+    const pick = c => { read(); g.name = c.ko; g.ml = c.ml; g.abv = c.abv; note = `✨ ${c.en || c.type} · 용량·도수를 채웠어요. 가격과 구매처를 적어주세요.`; draw(); setTimeout(() => { const a = document.activeElement, p = $('#pprice'); if (p && (!a || a === document.body || a.id === 'pname')) p.focus(); }, 30); };
+    const showAc = () => {
+      res = searchWords(name.value); hi = -1;
+      if (!res.length || (note && res.length === 1 && norm(res[0].ko) === norm(name.value))) { ac.hidden = true; return; }
+      ac.hidden = false;
+      ac.innerHTML = res.map((c, i) => `<button type="button" data-i="${i}">${ic((TYPE_STYLE[c.type] || TYPE_STYLE['기타·직접입력'])[0])}<span><b>${hl(c.ko, name.value)}</b><small>${esc(c.en ? c.en + ' · ' : '')}${esc(c.type)} · ${volLabel(c.ml)} · ${c.abv}%</small></span></button>`).join('');
+      ac.querySelectorAll('button').forEach(b => b.onmousedown = e => { e.preventDefault(); pick(res[+b.dataset.i]); });
+    };
+    name.addEventListener('input', () => { note = ''; $('#pnote').textContent = ''; showAc(); });
+    name.addEventListener('focus', showAc);
+    name.addEventListener('blur', () => setTimeout(() => ac.hidden = true, 120));
+    name.addEventListener('keydown', e => {
+      if (ac.hidden) return;
+      const bs = ac.querySelectorAll('button');
+      if (e.key === 'ArrowDown') { hi = Math.min(bs.length - 1, hi + 1); e.preventDefault(); }
+      else if (e.key === 'ArrowUp') { hi = Math.max(0, hi - 1); e.preventDefault(); }
+      else if (e.key === 'Enter' && hi >= 0) { e.preventDefault(); pick(res[hi]); return; }
+      else if (e.key === 'Escape') { ac.hidden = true; return; }
+      else return;
+      bs.forEach((b, i) => b.classList.toggle('hi', i === hi));
+    });
+
+    $('#psave').onclick = () => {
+      read();
+      const nm = g.name.trim();
+      if (!nm) { toast('위스키 이름을 입력해주세요'); $('#pname').focus(); return; }
+      if (!(g.price > 0)) { toast('가격을 입력해주세요'); $('#pprice').focus(); return; }
+      if (g.abv > 100 || g.abv < 0) { toast('도수를 확인해주세요'); return; }
+      const date = g.date || today();
+      const prev = prevEntry(nm, g.ml, date, old && old.id);
+      const rec = { id: old ? old.id : uid(), name: nm, ml: g.ml, abv: g.abv, price: g.price, shop: g.shop, date, created: old ? old.created : Date.now() };
+      if (old) prices = prices.map(p => p.id === old.id ? rec : p); else prices.push(rec);
+      savePrices();
+      const c = changeBetween(rec, prev);
+      close(); state.tab = 'price'; render();
+      if (opts.back) openPriceDetail(gkey(rec));
+      toast(chgText(c));
+    };
+    if (!old && !g.name) setTimeout(() => { const n = $('#pname'), a = document.activeElement; if (n && !n.value && (!a || a === document.body)) n.focus(); }, 60);
+  };
+  draw();
 }
 
 /* ============================================================
@@ -939,7 +1256,7 @@ function openForm(id) {
     };
   };
   draw();
-  if (!old) setTimeout(() => { const n = $('#name'); n && n.focus(); }, 60);
+  if (!old) setTimeout(() => { const n = $('#name'), a = document.activeElement; if (n && !n.value && (!a || a === document.body)) n.focus(); }, 60);
 }
 
 /* ============================================================
