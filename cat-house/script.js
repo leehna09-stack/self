@@ -668,13 +668,53 @@ function onCloudData(list) {
 const SYNC_ICONS = { ok: "🟢", wait: "🔄", error: "⚠️" };
 let syncTipTimer = null;
 
+let syncWaitTimer = null;
+let syncLevel = "wait";
+let syncStale = false;
+
 // 아이콘과 자세한 설명을 함께 바꿈 (level: ok / wait / error)
+// 오류이거나 30초 넘게 불러오는 중이면 말풍선에 "다시 불러오기" 버튼을 보여줌
 function setSync(level, text) {
   const icon = document.getElementById("syncIcon");
   icon.textContent = SYNC_ICONS[level];
   icon.dataset.level = level;
   icon.setAttribute("aria-label", "연결 상태: " + text);
-  document.getElementById("syncTip").textContent = text;
+  document.getElementById("syncTipText").textContent = text;
+
+  syncLevel = level;
+  if (level === "wait") {
+    if (syncWaitTimer === null) {
+      syncWaitTimer = setTimeout(function () {
+        syncStale = true;
+        updateSyncReload();
+      }, 30000);
+    }
+  } else {
+    clearTimeout(syncWaitTimer);
+    syncWaitTimer = null;
+    syncStale = false;
+  }
+  updateSyncReload();
+}
+
+// "다시 불러오기" 버튼 표시 여부
+function updateSyncReload() {
+  document.getElementById("syncReloadBtn").hidden = !(syncLevel === "error" || syncStale);
+}
+
+// 앱을 새로고침하지 않고 일정·사진·한줄평·소식 연결을 다시 맺음
+function reloadCloud() {
+  const code = getSavedCode();
+  if (code === "") {
+    openCodeModal();
+    return;
+  }
+  document.getElementById("syncTip").hidden = true;
+  clearTimeout(syncTipTimer);
+  connectCloud(code);
+  if (!document.getElementById("detailModal").classList.contains("hidden")) {
+    window.cloud.watchNotes(currentDetailDate, onNotesData);
+  }
 }
 
 // 아이콘을 누르면 자세한 상태를 말풍선으로 보여주고, 잠시 뒤 닫음
@@ -683,9 +723,10 @@ function toggleSyncTip() {
   clearTimeout(syncTipTimer);
   tip.hidden = !tip.hidden;
   if (!tip.hidden) {
+    // 다시 불러오기 버튼이 보일 때는 누를 시간을 더 줌
     syncTipTimer = setTimeout(function () {
       tip.hidden = true;
-    }, 4000);
+    }, (syncLevel === "error" || syncStale) ? 10000 : 4000);
   }
 }
 
