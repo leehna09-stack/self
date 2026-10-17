@@ -307,6 +307,7 @@ function connectCloud(code) {
   document.getElementById("codeInfo").textContent = "🔑 " + code.slice(0, 4) + "…";
   window.cloud.start(code, onCloudData, onCloudStatus);
   cloudConnected = true;
+  watchedMonthKey = "";
   watchMonthPhotos();
   activity = [];
   window.cloud.watchActivity(Math.max(getSeen(), Date.now() - NOTIF_KEEP_MS), onActivityData);
@@ -590,12 +591,23 @@ function photoCollection() {
 }
 
 // 지금 보고 있는 달의 사진을 받아오기 시작
+// 지금 받고 있는 달·장소 표시 / 사진·한줄평을 서버에서 처음 받아왔는지
+let watchedMonthKey = "";
+let photosLoaded = false;
+let notesLoaded = false;
+
 function watchMonthPhotos() {
   if (!cloudConnected) {
     return;
   }
-  photos = {};
-  days = {};
+  // 같은 달·같은 장소를 다시 불러올 때는 보던 데이터를 비우지 않음 (빈 화면이 깜빡이지 않게)
+  const key = photoCollection() + viewYear + "-" + viewMonth;
+  if (key !== watchedMonthKey) {
+    photos = {};
+    days = {};
+    photosLoaded = false;
+    watchedMonthKey = key;
+  }
   const start = makeDateString(viewYear, viewMonth, 1);
   const end = makeDateString(viewYear, viewMonth, 31);
   window.cloud.watchPhotos(photoCollection(), start, end, onPhotoData);
@@ -605,6 +617,7 @@ function watchMonthPhotos() {
 // 사진이 도착하거나 바뀌면 실행
 function onPhotoData(map) {
   photos = map;
+  photosLoaded = true;
   drawCalendar();
   if (!document.getElementById("detailModal").classList.contains("hidden")) {
     drawDetailPhoto();
@@ -665,6 +678,31 @@ function onCloudStatus(status, errorCode) {
     box.textContent = "⚠ 연결 오류 (" + (errorCode || "알 수 없음") + ")";
   }
 }
+
+// 사진·한줄평 등을 못 읽으면 아래 상태줄에 이유를 알려줌
+window.addEventListener("cloud-read-error", function (e) {
+  const code = e.detail.code;
+  document.getElementById("syncStatus").textContent =
+    "⚠ " + e.detail.what + "을(를) 못 불러왔어요" + (code ? " (" + code + ")" : "");
+});
+
+// 앱을 오래 백그라운드에 두었다가 다시 열면 사진·한줄평 연결을 새로 맺음
+let hiddenAt = 0;
+document.addEventListener("visibilitychange", function () {
+  if (document.visibilityState === "hidden") {
+    hiddenAt = Date.now();
+    return;
+  }
+  if (!cloudConnected || hiddenAt === 0 || Date.now() - hiddenAt < 30000) {
+    return;
+  }
+  hiddenAt = 0;
+  watchMonthPhotos();
+  window.cloud.watchActivity(Math.max(getSeen(), Date.now() - NOTIF_KEEP_MS), onActivityData);
+  if (!document.getElementById("detailModal").classList.contains("hidden")) {
+    window.cloud.watchNotes(currentDetailDate, onNotesData);
+  }
+});
 
 // 앱이 열리면 가족 코드 확인 후 연결
 function startSync() {
@@ -1092,6 +1130,14 @@ function drawDetailPhoto() {
 
   const list = photos[currentDetailDate] || [];
   const user = getUser();
+
+  // 사진을 아직 다 받아오지 못했으면 "없음"으로 오해하지 않게 안내
+  if (list.length === 0 && !photosLoaded && cloudConnected) {
+    const loading = document.createElement("div");
+    loading.className = "photo-by";
+    loading.textContent = "사진 불러오는 중이에요…";
+    box.appendChild(loading);
+  }
 
   if (list.length > 0) {
     // 좌우로 밀어서 넘기는 사진 띠
@@ -1574,6 +1620,7 @@ function chooseWeather(key) {
 function startNotes() {
   notes = [];
   rawNotes = [];
+  notesLoaded = false;
   resetNoteForm();
   drawDetailNotes();
   if (cloudConnected) {
@@ -1587,6 +1634,7 @@ let rawNotes = [];
 // 한줄평이 도착하거나 바뀌면 실행
 function onNotesData(list) {
   rawNotes = list;
+  notesLoaded = true;
   buildNotes();
   drawDetailNotes();
 }
@@ -1649,7 +1697,7 @@ function drawDetailNotes() {
   if (notes.length === 0) {
     const li = document.createElement("li");
     li.className = "note-empty";
-    li.textContent = "아직 한줄평이 없어요";
+    li.textContent = (!notesLoaded && cloudConnected) ? "한줄평 불러오는 중이에요…" : "아직 한줄평이 없어요";
     list.appendChild(li);
     return;
   }

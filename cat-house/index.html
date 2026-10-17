@@ -16,7 +16,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Jua&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=20261015a">
+  <link rel="stylesheet" href="style.css?v=20261017a">
 </head>
 <body>
   <main class="app">
@@ -213,7 +213,8 @@
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
     import {
-      getFirestore, collection, doc, onSnapshot, writeBatch, deleteDoc,
+      getFirestore, initializeFirestore, persistentLocalCache, persistentMultipleTabManager,
+      collection, doc, onSnapshot, writeBatch, deleteDoc,
       setDoc, updateDoc, query, where, documentId, getDocs
     } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
 
@@ -227,7 +228,27 @@
     };
 
     const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
+    // 사진·한줄평을 이 기기에 저장해 두고 다음에 열 때 바로 보여줌 (저장소를 못 쓰면 기본 방식)
+    let db;
+    try {
+      db = initializeFirestore(app, {
+        localCache: persistentLocalCache({
+          tabManager: persistentMultipleTabManager(),
+          cacheSizeBytes: 150 * 1024 * 1024
+        })
+      });
+    } catch (e) {
+      console.log("기기 저장 캐시를 못 써서 기본 방식으로 연결해요", e);
+      db = getFirestore(app);
+    }
+
+    // 읽기 오류를 화면 아래 상태줄에 알려주기 위한 함수
+    function reportReadError(what, error) {
+      console.log(what + " 읽기 실패", error);
+      window.dispatchEvent(new CustomEvent("cloud-read-error", {
+        detail: { what: what, code: error && error.code ? error.code : "" }
+      }));
+    }
 
     // 푸시 알림용 웹 푸시 인증서 공개키 (Firebase 콘솔 > 프로젝트 설정 > 클라우드 메시징 > 웹 푸시 인증서)
     const VAPID_KEY = "BKEedAKgQ322XrOYRjLy8jb-_TUxLZ6feGiQJwvbH6uv-s30UJsxiDxm1Otmr9vJgXWLCLCyfnxGB31XIYcTIHI";
@@ -314,7 +335,7 @@
           });
           onData(map);
         }, function (error) {
-          console.log("사진 읽기 실패", error);
+          reportReadError("사진", error);
         });
       },
 
@@ -364,7 +385,7 @@
           });
           onData(list);
         }, function (error) {
-          console.log("새 소식 읽기 실패", error);
+          reportReadError("새 소식", error);
         });
       },
 
@@ -385,7 +406,7 @@
           });
           onData(map);
         }, function (error) {
-          console.log("날씨·한줄평 읽기 실패", error);
+          reportReadError("날씨·표시", error);
         });
       },
 
@@ -406,7 +427,7 @@
           });
           onData(list);
         }, function (error) {
-          console.log("한줄평 읽기 실패", error);
+          reportReadError("한줄평", error);
         });
       },
 
@@ -519,6 +540,6 @@
     window.dispatchEvent(new Event("cloud-ready"));
   </script>
 
-  <script src="script.js?v=20261015a"></script>
+  <script src="script.js?v=20261017a"></script>
 </body>
 </html>
