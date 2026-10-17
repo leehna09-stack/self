@@ -261,9 +261,6 @@ textarea.field { min-height: 140px; resize: vertical; line-height: 28px; padding
 .sum b { color: var(--amber-ink); font: 700 18px var(--hand); }
 
 /* 사진 */
-.phs { display: flex; gap: 8px; margin-top: 10px; }
-.ph { width: 62px; height: 62px; object-fit: cover; border: 3px solid #fff; border-radius: 4px; box-shadow: 0 1px 4px #3b2f2340; cursor: zoom-in; background: #fff; }
-.ph:nth-child(1) { transform: rotate(-2deg); } .ph:nth-child(2) { transform: rotate(1.5deg); } .ph:nth-child(3) { transform: rotate(-1deg); }
 .photos { display: flex; gap: 10px; flex-wrap: wrap; }
 .pbox { position: relative; width: 92px; height: 92px; }
 .pbox img { width: 100%; height: 100%; object-fit: cover; border: 4px solid #fff; border-radius: 4px; box-shadow: 0 2px 6px #3b2f2340; cursor: zoom-in; background: #fff; }
@@ -333,6 +330,30 @@ textarea.field { min-height: 140px; resize: vertical; line-height: 28px; padding
 .pth { width: 26px; height: 26px; flex: none; border-radius: 6px; object-fit: cover; }
 .padd { font: inherit; }
 .btn-sub .ic { font-size: 20px; }
+
+/* 다이어리 카드는 눌러서 보기, 수정은 연필 아이콘 */
+.card { cursor: pointer; }
+.card:focus-visible { outline: 2px solid var(--amber); outline-offset: 2px; }
+.rt { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; flex: none; }
+.eic { width: 34px; height: 34px; flex: none; display: grid; place-items: center; border-radius: 50%; background: var(--paper); border: 1.5px solid var(--line); color: var(--amber-ink); box-shadow: 0 1px 0 var(--line); }
+.eic .ic { font-size: 17px; }
+.eic:active { transform: translateY(1px); box-shadow: none; }
+.card .eic { width: 30px; height: 30px; }
+.card .eic .ic { font-size: 15px; }
+.dph { display: flex; gap: 8px; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; margin: 4px 0 14px; padding: 2px; }
+.dph::-webkit-scrollbar { display: none; }
+.dph img { flex: 0 0 100%; width: 100%; aspect-ratio: 4 / 3; object-fit: cover; scroll-snap-align: center; border: 4px solid #fff; border-radius: 6px; box-shadow: 0 2px 8px #3b2f2340; background: #fff; cursor: zoom-in; }
+.dph.multi img { flex-basis: 86%; }
+.vt { margin: 0 0 12px; }
+.vt h3 { margin: 0; font-size: 20px; letter-spacing: -.01em; overflow-wrap: anywhere; }
+.vt .sub { color: var(--muted); font-size: 13px; margin-top: 2px; }
+.dr { display: flex; gap: 12px; align-items: baseline; padding: 11px 0; border-top: 1.5px dotted var(--line); }
+.dr:first-of-type { border-top: 0; }
+.dk { width: 76px; flex: none; color: var(--muted); font-size: 13px; }
+.dv { flex: 1; min-width: 0; overflow-wrap: anywhere; font-size: 15px; }
+.vmemo { white-space: pre-wrap; overflow-wrap: anywhere; font-size: 15px; line-height: 1.7; }
+.vbox .tags { margin-top: 0; }
+.box.plain { padding-top: 4px; padding-bottom: 4px; }
 </style>
 </head>
 
@@ -702,18 +723,18 @@ function viewList() {
   const chips = ['', ...FILTER_FLAVORS].map(f => `<button class="chip ${state.flavor === f ? 'on' : ''}" data-flavor="${esc(f)}">${f ? (FICON[f] || '🍎') + ' ' + f : '전체'}</button>`).join('');
   const cards = arr.map((l, i) => {
     const [icon, color] = typeStyle(l.name);
+    const ph = (photoMap[l.id] || [])[0];
     return `
-    <button class="card tape${i % 3}" data-edit="${l.id}">
-      <span class="tile ${color}">${ic(icon)}</span>
+    <div class="card tape${i % 3}" role="button" tabindex="0" data-view="${l.id}" aria-label="${esc(l.name)} 기록 보기">
+      ${ph ? `<span class="tile img"><img src="${ph.thumb}" alt=""></span>` : `<span class="tile ${color}">${ic(icon)}</span>`}
       <div class="cbody">
-        <div class="row1"><h3>${esc(l.name)}</h3><div class="date">${fmtDate(l.date)}</div></div>
+        <div class="row1"><h3>${esc(l.name)}</h3><div class="rt"><div class="date">${fmtDate(l.date)}</div><button type="button" class="eic" data-edit="${l.id}" aria-label="${esc(l.name)} 수정" title="수정">${ic('i-pen')}</button></div></div>
         <div class="meta">${l.ml ? `<span>${ic('i-bottle', 'sm')} ${volLabel(l.ml)}</span>` : ''}${l.abv ? `<span>${ic('i-drop', 'sm')} ${l.abv}%</span>` : ''}${l.openDate ? `<span>${ic('i-cal', 'sm')} ${fmtDate(l.openDate)} 오픈</span>` : ''}${l.rating ? stars(l.rating) : ''}</div>
         ${(l.price > 0 || l.shop) ? `<div class="meta buyline">${l.price > 0 ? `<span>${ic('i-won', 'sm')} <b>${won(l.price)}</b>${isLowest(l) ? ' <span class="low">최저가</span>' : ''}</span>` : ''}${l.shop ? `<span>${ic('i-shop', 'sm')} ${esc(l.shop)}</span>` : ''}${l.price > 0 ? `<span>${fmtDate(buyDateOf(l))} 구매</span>` : ''}</div>` : ''}
-        ${(photoMap[l.id] || []).length ? `<div class="phs">${photoMap[l.id].map((ph, n) => `<img class="ph" src="${ph.thumb}" data-ph="${l.id}:${n}" alt="사진 ${n + 1}">`).join('')}</div>` : ''}
         ${(l.flavors || []).length ? `<div class="tags">${l.flavors.map(f => `<span class="tag">${FICON[f] || ''} ${esc(f)}</span>`).join('')}</div>` : ''}
         ${l.memo ? `<div class="memo">${esc(l.memo)}</div>` : ''}
       </div>
-    </button>`;
+    </div>`;
   }).join('');
   const empty = logs.length
     ? `<div class="empty">${ic('i-flask')}<br>조건에 맞는 기록이 없어요</div>`
@@ -774,7 +795,7 @@ function viewStats() {
     <div class="box"><h3>${ic('i-dram')} 자주 고른 맛 TOP</h3>${top.length ? top.map(([f, n]) => bar((FICON[f] || '') + ' ' + esc(f), n, topMax)).join('') : '<span style="color:var(--muted)">맛 특징을 선택하면 집계돼요</span>'}</div>
     <div class="box"><h3>${ic('i-cal')} 최근 6개월 마신 횟수</h3>${mc.map(([m, n]) => bar(m.slice(2).replace('-', '.'), n, mMax)).join('')}</div>
     <div class="box"><h3>${ic('i-bottle')} 종류별</h3>${tEntries.map(([t, n]) => bar(esc(t), n, tMax)).join('')}</div>
-    <div class="box"><h3>${ic('i-glass')} 4점 이상 최애 위스키</h3>${favs.length ? favs.map(l => `<div class="fav"><span>${ic(typeStyle(l.name)[0])}${esc(l.name)}</span>${stars(l.rating)}</div>`).join('') : '<span style="color:var(--muted)">4점 이상을 주면 여기에 모여요</span>'}</div>
+    <div class="box"><h3>${ic('i-glass')} 4점 이상 최애 위스키</h3>${favs.length ? favs.map(l => `<div class="fav"><span>${(photoMap[l.id] || []).length ? `<img class="pth" src="${photoMap[l.id][0].thumb}" alt="">` : ic(typeStyle(l.name)[0])}${esc(l.name)}</span>${stars(l.rating)}</div>`).join('') : '<span style="color:var(--muted)">4점 이상을 주면 여기에 모여요</span>'}</div>
     ${ORN()}`;
 }
 
@@ -834,7 +855,11 @@ function bindView() {
   if (q) q.addEventListener('input', e => { state.q = e.target.value; const pos = e.target.selectionStart; render(); const n = $('#q'); n.focus(); n.setSelectionRange(pos, pos); });
   const so = $('#sort'); if (so) so.onchange = e => { state.sort = e.target.value; render(); };
   document.querySelectorAll('[data-flavor]').forEach(b => b.onclick = () => { state.flavor = b.dataset.flavor; render(); });
-  document.querySelectorAll('[data-edit]').forEach(b => b.onclick = () => openForm(b.dataset.edit));
+  document.querySelectorAll('[data-view]').forEach(c => {
+    c.onclick = () => openDiaryDetail(c.dataset.view);
+    c.onkeydown = e => { if (e.target === c && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); openDiaryDetail(c.dataset.view); } };
+  });
+  document.querySelectorAll('[data-edit]').forEach(b => b.onclick = e => { e.stopPropagation(); openForm(b.dataset.edit); });
   if ($('#exp')) {
     $('#exp').onclick = exportJson;
     $('#expcsv').onclick = () => {
@@ -1160,7 +1185,38 @@ function openPriceForm(opts = {}) {
 /* ============================================================
   [5] 기록 입력/수정 화면
 ============================================================= */
-function openForm(id) {
+/* 다이어리 기록 보기 (읽기 전용). 수정은 위쪽 연필 아이콘 */
+function openDiaryDetail(id) {
+  const l = logs.find(x => x.id === id); if (!l) return;
+  const root = $('#sheetRoot'); document.body.style.overflow = 'hidden';
+  const close = () => { root.innerHTML = ''; document.body.style.overflow = ''; };
+  const photos = photoMap[l.id] || [];
+  const [icon, color] = typeStyle(l.name);
+  const sub = [typeOfName(l.name) !== '기타·직접입력' ? typeOfName(l.name) : '', l.ml ? volLabel(l.ml) : '', l.abv ? l.abv + '%' : ''].filter(Boolean).join(' · ');
+  const row = (k, v) => `<div class="dr"><span class="dk">${k}</span><span class="dv">${v}</span></div>`;
+  const rows = [row('마신 날짜', fmtDate(l.date))];
+  if (l.openDate) rows.push(row('오픈한 날짜', fmtDate(l.openDate)));
+  if (l.rating) rows.push(row('나의 점수', stars(l.rating)));
+  const buy = [];
+  if (l.price > 0) buy.push(row('구매가격', `<b>${won(l.price)}</b>${isLowest(l) ? ' <span class="low">최저가</span>' : ''}`));
+  if (l.price > 0) buy.push(row('구매일', fmtDate(buyDateOf(l))));
+  if (l.shop) buy.push(row('구매 장소', esc(l.shop)));
+  root.innerHTML = `<div class="sheet"><div class="sheet-in">
+    <div class="sheet-head"><button class="link" id="vclose">닫기</button><h2>${ic('i-book')} 기록 보기</h2><button type="button" class="eic" id="vedit" aria-label="수정" title="수정">${ic('i-pen')}</button></div>
+    ${photos.length ? `<div class="dph ${photos.length > 1 ? 'multi' : ''}" id="vph">${photos.map((p, n) => `<img src="${p.full}" data-vi="${n}" alt="사진 ${n + 1}">`).join('')}</div>` : ''}
+    <div class="pd-title vt">${photos.length ? '' : `<span class="tile ${color}">${ic(icon)}</span>`}<div><h3>${esc(l.name)}</h3>${sub ? `<div class="sub">${esc(sub)}</div>` : ''}</div></div>
+    <div class="box vbox plain">${rows.join('')}</div>
+    ${(l.flavors || []).length ? `<div class="box vbox"><h3>${ic('i-dram')} 맛의 특징</h3><div class="tags">${l.flavors.map(f => `<span class="tag">${FICON[f] || ''} ${esc(f)}</span>`).join('')}</div></div>` : ''}
+    ${buy.length ? `<div class="box vbox"><h3>${ic('i-tag')} 구매 정보</h3>${buy.join('')}${l.price > 0 ? `<button type="button" class="btn-sub" id="vprice">${ic('i-won')} 가격 변동 보기</button>` : ''}</div>` : ''}
+    ${l.memo ? `<div class="box vbox"><h3>${ic('i-pen')} 메모</h3><div class="vmemo">${esc(l.memo)}</div></div>` : ''}
+  </div></div>`;
+  $('#vclose').onclick = close;
+  $('#vedit').onclick = () => openForm(l.id, { fromDetail: true });
+  root.querySelectorAll('[data-vi]').forEach(im => im.onclick = () => openViewer(photos, +im.dataset.vi));
+  const vp = $('#vprice'); if (vp) vp.onclick = () => openPriceDetail(gkey(l));
+}
+
+function openForm(id, opts = {}) {
   const old = id ? logs.find(l => l.id === id) : null;
   const f = old ? { price: '', shop: '', buyDate: old.buyDate || old.date, ...old, flavors: [...(old.flavors || [])], photos: (photoMap[old.id] || []).slice() } : { name: '', ml: 700, abv: '', flavors: [], memo: '', date: today(), rating: 0, price: '', shop: '', buyDate: today(), photos: [] };
   let pre = new Set(); // 자동으로 채워진 맛 (표시용)
@@ -1225,7 +1281,7 @@ function openForm(id) {
   };
 
   const bindForm = () => {
-    $('#cancel').onclick = close;
+    $('#cancel').onclick = () => { close(); if (opts.fromDetail && old && logs.some(l => l.id === old.id)) openDiaryDetail(old.id); };
     /* 맛 칸은 칩 높이를 재서 정확히 두 줄만 보이게 맞춰요 (글꼴이 늦게 불러와져도 다시 맞춤) */
     const fitFlavors = () => {
       const fl = $('#fl'); if (!fl) return;
@@ -1344,6 +1400,7 @@ function openForm(id) {
       }
       close(); toast(photoFail ? '기록은 저장했지만 사진은 저장하지 못했어요' : old ? '수정했어요' : '다이어리에 기록했어요');
       state.tab = 'list'; render();
+      if (opts.fromDetail) openDiaryDetail(rec.id);
     };
   };
   draw();
