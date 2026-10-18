@@ -74,6 +74,7 @@ a.btn { text-decoration: none; color: inherit; }
 .photo .n { position: absolute; right: 8px; bottom: 8px; background: rgba(0,0,0,.55); color: #fff; font-size: 10px; padding: 2px 8px; border-radius: 999px; }
 .body { padding: 12px 14px 14px; display: grid; gap: 4px; flex: 1; align-content: start; }
 .name { font-weight: 600; font-size: 14px; letter-spacing: -0.02em; }
+.price.pending { color: var(--muted); }
 .price { color: var(--accent); font-weight: 700; font-size: 17px; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
 .meta { color: var(--muted); font-size: 11px; }
 .ex { margin: 2px 0; padding-left: 18px; font-size: 10px; color: var(--muted); }
@@ -170,6 +171,22 @@ dialog { border-radius:28px; }
 .lightbox { overflow:auto; width:min(560px, calc(100vw - 24px)); }
 .lightbox img + img { margin-top:6px; }
 .card .body { padding-top:12px; }
+.hint:empty { display:none; }
+.thumbs:empty { display:none; }
+#form.edit, #odlg .edit { padding:14px 16px 16px; gap:8px; }
+#form .edit h2, #form h2, #odlg .edit h2 { margin-bottom:2px; }
+#form input:not(.sr-only), #odlg .edit input { height:40px; padding-top:0; padding-bottom:0; }
+#form textarea { padding-top:8px; padding-bottom:8px; line-height:1.45; }
+#form .btn, #odlg .edit .btn { min-height:40px; padding-top:0; padding-bottom:0; }
+#form .btn.sm, #odlg .edit .btn.sm { min-height:36px; }
+#form label, #form .fld, #odlg .edit label { gap:3px; }
+#form .manual > summary { min-height:40px; padding-top:0; padding-bottom:0; }
+#form .manualbody { gap:8px; padding-bottom:12px; }
+#form .exrow { margin-top:0; }
+#form .exrow .x { min-height:40px; }
+.enterbtn { height:30px; width:34px; }
+.keybox { padding-bottom:10px; gap:4px; }
+.keyrow .btn { min-height:40px; }
 header { flex-wrap:nowrap; }
 .manual { border-radius:12px; background:var(--soft, #f2f2f7); box-shadow:inset 0 0 0 .5px rgba(60,60,67,.18); }
 .manual > summary { list-style:none; cursor:pointer; padding:11px 14px; min-height:44px; display:flex; align-items:center; justify-content:space-between; color:var(--accent); font-weight:700; }
@@ -191,8 +208,8 @@ header { flex-wrap:nowrap; }
 .row2 input::-webkit-outer-spin-button, .row2 input::-webkit-inner-spin-button { -webkit-appearance:none; margin:0; }
 #extras:empty { display:none; }
 #photoBtn { justify-self:start; }
-.psheet { margin:auto auto 0; width:min(520px, 100%); max-width:100%; padding:10px 12px calc(12px + env(safe-area-inset-bottom)); border-radius:22px 22px 0 0; display:grid; gap:8px; }
-.psheet[open] { animation:sheetup .28s cubic-bezier(.2,.9,.25,1); }
+.psheet { margin:auto auto 0; width:min(520px, 100%); max-width:100%; padding:10px 12px calc(12px + env(safe-area-inset-bottom)); border-radius:22px 22px 0 0; gap:8px; }
+.psheet[open] { display:grid; animation:sheetup .28s cubic-bezier(.2,.9,.25,1); }   /* 닫혀 있을 때는 기본 규칙대로 숨김 */
 @keyframes sheetup { from { transform:translateY(100%); } to { transform:none; } }
 .pbtn { border:0; border-radius:14px; background:#f2f2f7; min-height:52px; font-size:16px; font-weight:700; display:flex; align-items:center; justify-content:center; gap:8px; color:var(--text); }
 .pbtn .i { width:20px; height:20px; color:var(--accent); vertical-align:0; }
@@ -317,7 +334,7 @@ header { flex-wrap:nowrap; }
     </details>
     <div class="hint" id="distHint" aria-live="polite">입력하면 기준 위치에서의 거리가 자동 계산돼요</div>
     <div class="row2">
-      <label>대관료(만원) *<input name="price" type="number" min="0" step="any" inputmode="decimal" required></label>
+      <label>대관료(만원)<input name="price" type="number" min="0" step="any" inputmode="decimal" placeholder="상담전"></label>
       <div class="fld">
         <span class="lbl">월별·요일별 대관료(선택)</span>
         <button type="button" class="btn" id="addEx">+ 요금 추가</button>
@@ -329,11 +346,8 @@ header { flex-wrap:nowrap; }
       <label>보증인원(명)<input name="guests" type="number" min="0" inputmode="numeric"></label>
     </div>
     <div class="hint" id="totalHint" aria-live="polite"></div>
-    <label>메모<textarea name="memo" rows="4" placeholder="주차, 홀 분위기, 연회장 등"></textarea></label>
-    <div class="fld">
-      <span class="lbl">사진 (여러 장 가능)</span>
-      <button type="button" class="btn" id="photoBtn"><svg class="i" aria-hidden="true"><use href="#i-photo"/></svg> 사진 추가</button>
-    </div>
+    <label>메모<textarea name="memo" rows="3" placeholder="주차, 홀 분위기, 연회장 등"></textarea></label>
+    <button type="button" class="btn" id="photoBtn"><svg class="i" aria-hidden="true"><use href="#i-photo"/></svg> 사진 추가</button>
     <input id="files" class="sr-only" type="file" accept="image/*" multiple tabindex="-1" aria-hidden="true">
     <input id="camInput" class="sr-only" type="file" accept="image/*" capture="environment" tabindex="-1" aria-hidden="true">
     <div class="thumbs" id="thumbs"></div>
@@ -424,11 +438,14 @@ function loadOrigins() {
 const saveO = () => { try { localStorage.setItem(OKEY, JSON.stringify(O)); } catch {} };
 const curOrigin = () => O.list.find(o => o.id === cur) || O.list[0];
 
-const fmtPrice = m => { m = Math.round(m); return m >= 10000 ? (m / 10000).toFixed(m % 10000 ? 1 : 0) + '억' : m.toLocaleString() + '만원'; };
+const fmtPrice = m => { if (m == null || isNaN(m)) return '상담전'; m = Math.round(m); return m >= 10000 ? (m / 10000).toFixed(m % 10000 ? 1 : 0) + '억' : m.toLocaleString() + '만원'; };
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const isUrl = s => /^https?:/i.test(s || '');
 // 총액 = 대관료 + 식대 × 보증인원
-const total = (h, base = h.price) => base + (h.meal && h.guests ? h.meal * h.guests : 0);
+// 총액 = 대관료 + 식대 × 보증인원 (대관료를 안 적었으면 null = 상담전)
+const total = (h, base = h.price) => base == null || isNaN(base) ? null : base + (h.meal && h.guests ? h.meal * h.guests : 0);
+// 금액순 비교: 상담전(null)은 저가순·고가순 모두 맨 뒤로
+const byPrice = dir => (a, b) => { const x = total(a), y = total(b); if (x == null && y == null) return 0; if (x == null) return 1; if (y == null) return -1; return dir * (x - y); };
 // 현재 기준 위치에서의 거리(km). 옛 수동 입력값은 기본 위치(집)에서만 사용
 function distFor(h) {
   const d = h.dists?.[cur];
@@ -657,10 +674,10 @@ function visible() {
   const near = h => distFor(h) ?? Infinity;
   const far = h => distFor(h) ?? -1;
   const by = {
-    cheap: (a, b) => total(a) - total(b),
-    expensive: (a, b) => total(b) - total(a),
-    near: (a, b) => near(a) - near(b) || total(a) - total(b),
-    far: (a, b) => far(b) - far(a) || total(a) - total(b),
+    cheap: byPrice(1),
+    expensive: byPrice(-1),
+    near: (a, b) => near(a) - near(b) || byPrice(1)(a, b),
+    far: (a, b) => far(b) - far(a) || byPrice(1)(a, b),
     all: (a, b) => b.created - a.created,          // 전체: 최근 등록한 순
   }[sort];
   return r.sort(by);
@@ -680,8 +697,8 @@ function distText(h) {
 
 function render() {
   const r = visible();
-  const totals = halls.map(h => total(h));
-  const min = Math.min(...totals), max = Math.max(...totals);
+  const priced = halls.map(h => total(h)).filter(n => n != null);          // 상담전은 최저가·최고가 비교에서 제외
+  const min = Math.min(...priced), max = Math.max(...priced);
   $('count').innerHTML = `총 <b>${halls.length}</b>건` + (query ? ` · 검색 ${r.length}건` : '') + (busy ? ` · ${esc(busy)}` : '');
   $('list').innerHTML = r.length ? r.map(h => {
     const t = total(h);
@@ -699,7 +716,7 @@ function render() {
             <button class="tool danger" data-id="${h.id}" data-act="del" aria-label="삭제" title="삭제">${icon('trash')}</button>
           </div>
         </div>
-        <div class="price">${fmtPrice(t)}${halls.length > 1 && t === min ? '<span class="badge">최저가</span>' : ''}${halls.length > 1 && t === max && max !== min ? '<span class="badge">최고가</span>' : ''}</div>
+        <div class="price${t == null ? ' pending' : ''}">${fmtPrice(t)}${priced.length > 1 && t === min ? '<span class="badge">최저가</span>' : ''}${priced.length > 1 && t === max && max !== min ? '<span class="badge">최고가</span>' : ''}</div>
         ${h.meal && h.guests ? `<div class="meta">대관료 ${fmtPrice(h.price)} + 식대 ${h.meal}만×${h.guests}명</div>` : ''}
         ${h.extras?.length ? `<ul class="ex">${h.extras.map(e => `<li>${esc(e.label)}: ${fmtPrice(total(h, e.price))}</li>`).join('')}</ul>` : ''}
         <div class="meta locrow"><span class="dist">${distText(h)}</span>${addrOf(h) ? `<span class="addr">${esc(addrOf(h))}</span>` : ''}</div>
@@ -766,7 +783,11 @@ function drawExtras() {
 }
 function updateTotal() {
   const f = $('form'), price = parseFloat(f.price.value);
-  if (isNaN(price)) { $('totalHint').textContent = ''; return; }
+  if (isNaN(price)) {                                              // 대관료를 안 적었으면 상담전
+    const meal = (parseFloat(f.meal.value) || 0) * (parseInt(f.guests.value) || 0);
+    $('totalHint').innerHTML = meal ? `${icon('wallet')} 대관료 상담전 · 식대 합계 ${fmtPrice(meal)}` : '';
+    return;
+  }
   const t = total({ price, meal: parseFloat(f.meal.value) || 0, guests: parseInt(f.guests.value) || 0 });
   $('totalHint').innerHTML = `${icon('wallet')} 총 예상 ${fmtPrice(t)} (대관료 + 식대×보증인원)`;
 }
@@ -880,7 +901,7 @@ $('form').onsubmit = async e => {
       addr,
       link,
       phone: f.phone.value.trim(),
-      price: Number(f.price.value),
+      price: f.price.value === '' ? null : Number(f.price.value),   // 비워 두면 상담전
       meal: f.meal.value === '' ? null : Number(f.meal.value),
       guests: f.guests.value === '' ? null : Math.round(Number(f.guests.value)),
       extras: draftExtras.filter(x => x.label.trim() && x.price !== '' && !isNaN(x.price)).map(x => ({ label: x.label.trim(), price: Number(x.price) })),
@@ -988,7 +1009,7 @@ $('oform').onsubmit = async e => {
 
 // ───────── 비교표 ─────────
 $('cmpBtn').onclick = () => {
-  const L = halls.filter(h => h.liked).sort((a, b) => total(a) - total(b));
+  const L = halls.filter(h => h.liked).sort(byPrice(1));
   $('cmpBody').innerHTML = L.length < 2
     ? '<div class="empty">비교하려면 “관심” 표시한 예식장이 2곳 이상 필요해요.</div>'
     : (() => {
@@ -998,7 +1019,7 @@ $('cmpBtn').onclick = () => {
       const row = (label, cell) => `<tr><th class="rl">${label}</th>${L.map(cell).join('')}</tr>`;
       return `<div class="tblwrap"><table>
         <tr><th class="rl"></th>${L.map(h => `<th>${esc(h.name)}</th>`).join('')}</tr>
-        ${row('총액', h => `<td class="${total(h) === bt ? 'best' : ''}">${fmtPrice(total(h))}</td>`)}
+        ${row('총액', h => `<td class="${total(h) != null && total(h) === bt ? 'best' : ''}">${fmtPrice(total(h))}</td>`)}
         ${row('대관료', h => `<td>${fmtPrice(h.price)}</td>`)}
         ${row('식대 1인', h => `<td>${h.meal ? h.meal + '만원' : '-'}</td>`)}
         ${row('보증인원', h => `<td>${h.guests ? h.guests + '명' : '-'}</td>`)}
