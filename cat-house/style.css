@@ -53,7 +53,7 @@ h1, h2, h3 {
   background-color: var(--card);
   border-radius: 28px;
   box-shadow: var(--shadow);
-  padding: 20px;
+  padding: 18px 54px 18px 16px;
   margin-bottom: 16px;
   text-align: center;
 }
@@ -72,21 +72,49 @@ h1, h2, h3 {
   margin-right: 2px;
 }
 
-/* 헤더 오른쪽 연결 상태 아이콘 */
-.sync-icon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 24px;
-  height: 24px;
-  min-height: 0;
+/* 헤더 오른쪽 위의 알림 종 (테두리 없음) */
+.hero .bell-btn {
+  position: absolute;
+  top: 50%;
+  right: 8px;
+  width: 42px;
+  height: 42px;
+  min-height: 42px;
+  margin-top: -21px;
   padding: 0;
-  margin-left: 2px;
   border: none;
   background: transparent;
-  font-size: 13px;
+  font-size: 22px;
   line-height: 1;
-  vertical-align: middle;
+}
+
+.hero .bell-btn:hover {
+  background: transparent;
+}
+
+/* 연결 상태 (버그제보 옆, 테두리 없음) */
+.sync-chip {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 46px;
+  padding: 0 4px;
+  border: none;
+  background: transparent;
+  color: var(--sub);
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.sync-chip:hover {
+  background: transparent;
+}
+
+.sync-icon {
+  display: inline-block;
+  font-size: 12px;
+  line-height: 1;
 }
 
 .sync-icon[data-level="wait"] {
@@ -97,12 +125,11 @@ h1, h2, h3 {
   to { transform: rotate(360deg); }
 }
 
-/* 아이콘을 누르면 나오는 말풍선 */
+/* 연결 상태를 누르면 나오는 말풍선 */
 .sync-tip {
   position: absolute;
-  left: 50%;
-  top: 58px;
-  transform: translateX(-50%);
+  right: 12px;
+  top: calc(100% + 6px);
   max-width: calc(100% - 24px);
   padding: 7px 12px;
   border-radius: 12px;
@@ -110,6 +137,7 @@ h1, h2, h3 {
   color: #ffffff;
   font-size: 12px;
   line-height: 1.4;
+  text-align: left;
   z-index: 5;
   box-shadow: var(--shadow);
 }
@@ -206,11 +234,23 @@ button:active {
 
 /* 일정 입력 카드 */
 .add-card {
+  position: relative;
   display: flex;
   flex-wrap: nowrap;
   align-items: center;
   gap: 12px;
   margin-bottom: 16px;
+}
+
+/* 일정 입력 버튼도 다른 버튼과 같은 배경 */
+.add-card .add-btn {
+  background-color: var(--card);
+  border-color: var(--line);
+  color: var(--ink);
+}
+
+.add-card .add-btn:hover {
+  background-color: var(--soft);
 }
 
 .add-card .add-btn {
@@ -227,54 +267,87 @@ button:active {
   outline-offset: 2px;
 }
 
-/* ===== 한 줄 도구막대: 장소 전환 + 월 이동 ===== */
+/* ===== 도구막대: 장소 탭(밑줄) + 월 이동 ===== */
 .toolbar {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: nowrap;
-  gap: 8px;
+  flex-direction: column;
+  gap: 6px;
   margin-bottom: 12px;
 }
 
-.toolbar .round-btn {
-  width: 38px;
-  height: 38px;
-  min-height: 38px;
+.place-tabs {
+  display: flex;
+  align-items: center;
+  border-bottom: 1px solid var(--line);
 }
 
-.place-switch,
+.place-tab {
+  position: relative;
+  flex: 1 1 0;
+  min-width: 0;
+  min-height: 44px;
+  padding: 0 8px;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  font-size: 15px;
+  color: var(--sub);
+  white-space: nowrap;
+}
+
+.place-tab:hover {
+  background: transparent;
+}
+
+/* 선택된 탭 아래 밑줄이 옆에서 펼쳐지며 나타남 */
+.place-tab::after {
+  content: "";
+  position: absolute;
+  left: 14%;
+  right: 14%;
+  bottom: -1px;
+  height: 3px;
+  border-radius: 3px 3px 0 0;
+  background-color: var(--ink);
+  transform: scaleX(0);
+  transition: transform 0.25s ease;
+}
+
+.place-tab[aria-selected="true"] {
+  color: var(--ink);
+  font-weight: bold;
+}
+
+.place-tab[aria-selected="true"]::after {
+  transform: scaleX(1);
+}
+
 .calendar-header {
   display: flex;
   align-items: center;
-  gap: 4px;
-  margin: 0;
+  justify-content: space-between;
+  gap: 8px;
 }
 
-.place-switch h2 {
-  margin: 0;
-  min-width: 80px;
-  text-align: center;
-  font-size: 17px;
-  white-space: nowrap;
+.calendar-header .round-btn {
+  width: 44px;
+  height: 44px;
+  min-height: 44px;
 }
 
-#monthTitle {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  min-width: 44px;
+/* 가운데 월 글자 (누르면 이번 달로) */
+.month-title {
+  flex: 1 1 auto;
+  min-height: 44px;
+  padding: 0 8px;
+  border: none;
+  border-radius: 12px;
+  background: transparent;
   font-family: var(--font-title);
-  font-size: 17px;
+  font-size: 18px;
   line-height: 1.1;
   white-space: nowrap;
   font-variant-numeric: tabular-nums;
-}
-
-#monthTitle small {
-  font-family: var(--font-body);
-  font-size: 11px;
-  color: var(--sub);
 }
 
 /* ===== 달력 ===== */
@@ -785,20 +858,30 @@ fieldset.people-check {
   position: relative;
 }
 
+.bell-icon {
+  display: inline-block;
+  transform-origin: 50% 10%;
+}
+
+/* 안 읽은 소식이 있으면 종이 살짝 흔들림 (헤더 마스코트와 같은 움직임) */
+.bell-btn.has-news .bell-icon {
+  animation: wiggle 3s ease-in-out infinite;
+}
+
 .badge {
   position: absolute;
-  top: -4px;
-  right: -4px;
-  min-width: 18px;
-  height: 18px;
-  padding: 0 4px;
+  top: 3px;
+  right: 3px;
+  min-width: 14px;
+  height: 14px;
+  padding: 0 3px;
   box-sizing: border-box;
   border-radius: 999px;
   background-color: #d92d20;
   color: #ffffff;
   font-family: var(--font-body);
-  font-size: 11px;
-  line-height: 18px;
+  font-size: 9px;
+  line-height: 14px;
   text-align: center;
 }
 
@@ -1035,11 +1118,25 @@ fieldset.people-check {
   }
 
   .hero {
-    padding: 16px;
+    padding: 14px 50px 14px 12px;
+  }
+
+  .hero .bell-btn {
+    right: 6px;
   }
 
   .hero h1 {
     font-size: 18px;
+  }
+
+  /* 버튼 3개 + 연결 상태가 한 줄에 들어가게 */
+  .add-card-buttons {
+    gap: 6px;
+  }
+
+  .add-card .add-btn,
+  .sub-btn {
+    padding: 0 4px;
   }
 
   .hero-mascot {
@@ -1050,64 +1147,32 @@ fieldset.people-check {
     gap: 4px;
   }
 
-  /* 종 알림 버튼이 들어가도 장소·월 이동이 한 줄에 들어가게 */
-  .toolbar {
-    gap: 4px;
-  }
-
-  .toolbar .round-btn {
-    width: 32px;
-    height: 32px;
-    min-height: 32px;
-  }
-
-  .place-switch h2 {
-    min-width: 0;
-    padding: 0 2px;
-    font-size: 15px;
-  }
-
-  #monthTitle {
-    min-width: 36px;
-  }
 }
 
 /* ===== 아주 작은 폰 (넓이 340px 이하) ===== */
 @media (max-width: 340px) {
   .hero h1 {
-    font-size: 15px;
+    font-size: 14px;
+  }
+
+  .add-card-buttons {
+    gap: 4px;
+  }
+
+  .add-card .add-btn,
+  .sub-btn {
+    font-size: 11px;
+  }
+
+  .sync-chip {
+    padding: 0 2px;
+    font-size: 10px;
   }
 
   .hero-mascot {
     height: 28px;
   }
 
-  .toolbar {
-    gap: 2px;
-  }
-
-  .place-switch,
-  .calendar-header {
-    gap: 2px;
-  }
-
-  .toolbar .round-btn {
-    width: 28px;
-    height: 28px;
-    min-height: 28px;
-    font-size: 10px;
-  }
-
-  .place-switch h2 {
-    min-width: 0;
-    padding: 0;
-    font-size: 14px;
-  }
-
-  #monthTitle {
-    min-width: 30px;
-    font-size: 15px;
-  }
 }
 
 /* ===== 움직임 줄이기 설정을 켠 사람을 위해 ===== */
@@ -1133,7 +1198,7 @@ fieldset.people-check {
 }
 
 .splash img {
-  width: 120px;
+  width: auto;
   height: 120px;
 }
 

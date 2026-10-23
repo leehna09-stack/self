@@ -519,8 +519,10 @@ function updateBell() {
   const badge = document.getElementById("bellBadge");
   badge.hidden = (count === 0);
   badge.textContent = count > 9 ? "9+" : String(count);
-  document.getElementById("bellBtn").setAttribute(
-    "aria-label", count === 0 ? "새 소식" : "새 소식 " + count + "개");
+  const bell = document.getElementById("bellBtn");
+  bell.setAttribute("aria-label", count === 0 ? "새 소식" : "새 소식 " + count + "개");
+  // 안 읽은 소식이 있으면 종이 살짝 흔들림
+  bell.classList.toggle("has-news", count > 0);
 }
 
 // 종을 누르면 아직 안 누른 새 소식 목록을 보여줌 (소식을 눌러야 확인한 것으로 처리)
@@ -758,6 +760,7 @@ function sendBug() {
 // ===== 연결 상태 (헤더 오른쪽 아이콘, 누르면 자세한 내용) =====
 
 const SYNC_ICONS = { ok: "🟢", wait: "🔄", error: "⚠️" };
+const SYNC_LABELS = { ok: "완료", wait: "동기화중", error: "오류" };
 let syncTipTimer = null;
 
 let syncWaitTimer = null;
@@ -770,7 +773,8 @@ function setSync(level, text) {
   const icon = document.getElementById("syncIcon");
   icon.textContent = SYNC_ICONS[level];
   icon.dataset.level = level;
-  icon.setAttribute("aria-label", "연결 상태: " + text);
+  document.getElementById("syncLabel").textContent = SYNC_LABELS[level];
+  document.getElementById("syncChip").setAttribute("aria-label", "연결 상태: " + text);
   document.getElementById("syncTipText").textContent = text;
 
   syncLevel = level;
@@ -825,7 +829,7 @@ function toggleSyncTip() {
 // 말풍선 바깥을 누르면 닫음
 document.addEventListener("click", function (e) {
   const tip = document.getElementById("syncTip");
-  if (!tip.hidden && !e.target.closest("#syncIcon") && !e.target.closest("#syncTip")) {
+  if (!tip.hidden && !e.target.closest("#syncChip") && !e.target.closest("#syncTip")) {
     tip.hidden = true;
   }
 });
@@ -888,11 +892,13 @@ function drawCalendar() {
   const calendar = document.getElementById("calendar");
   calendar.innerHTML = "";
 
-  document.getElementById("monthTitle").innerHTML =
-    "<small>" + viewYear + "</small>" + (viewMonth + 1) + "월";
+  const monthBtn = document.getElementById("monthTitle");
+  monthBtn.textContent = viewYear + "년 " + (viewMonth + 1) + "월";
+  monthBtn.setAttribute("aria-label", viewYear + "년 " + (viewMonth + 1) + "월, 누르면 이번 달로 이동");
 
-  document.getElementById("placeTitle").textContent =
-    (viewPlace === "산본집" ? "🏠 " : "🌴 ") + viewPlace;
+  // 장소 탭 (선택된 탭에 밑줄)
+  document.getElementById("tabHome").setAttribute("aria-selected", viewPlace === "산본집" ? "true" : "false");
+  document.getElementById("tabJeju").setAttribute("aria-selected", viewPlace === "제주도" ? "true" : "false");
 
   const weekNames = ["일", "월", "화", "수", "목", "금", "토"];
   for (let i = 0; i < 7; i++) {
@@ -1028,8 +1034,23 @@ function changeMonth(step) {
 }
 
 // 산본집 ↔ 제주도 전환
-function switchPlace() {
-  viewPlace = (viewPlace === "산본집") ? "제주도" : "산본집";
+function switchPlace(place) {
+  if (place === viewPlace) {
+    return;
+  }
+  viewPlace = place;
+  drawCalendar();
+  watchMonthPhotos();
+}
+
+// 월 글자를 누르면 오늘이 있는 달로 돌아옴
+function goToday() {
+  const now = new Date();
+  if (viewYear === now.getFullYear() && viewMonth === now.getMonth()) {
+    return;
+  }
+  viewYear = now.getFullYear();
+  viewMonth = now.getMonth();
   drawCalendar();
   watchMonthPhotos();
 }

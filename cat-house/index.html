@@ -7,8 +7,8 @@
   <meta name="color-scheme" content="light">
   <meta name="theme-color" content="#f6f5f3">
   <link rel="manifest" href="manifest.webmanifest">
-  <link rel="icon" type="image/png" href="icon-192.png?v=mascot1">
-  <link rel="apple-touch-icon" href="apple-touch-icon.png?v=mascot1">
+  <link rel="icon" type="image/png" href="icon-192.png?v=mascot2">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png?v=mascot2">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="가족 소식통">
@@ -16,22 +16,18 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Jua&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=20261028a">
+  <link rel="stylesheet" href="style.css?v=20261031a">
 </head>
 <body>
   <div id="splash" class="splash" aria-hidden="true">
-    <img src="mascot.png?v=mascot1" alt="" width="84" height="120">
+    <img src="mascot.png?v=mascot2" alt="" width="84" height="120">
     <div class="splash-text">우리 가족 소식통</div>
   </div>
 
   <main class="app">
     <header class="hero">
-      <h1><img class="hero-cat hero-mascot" src="mascot.png?v=mascot1" alt="" width="26" height="36"> 우리 가족 소식통 &amp; 일정관리
-        <button type="button" id="syncIcon" class="sync-icon" onclick="toggleSyncTip()" aria-label="연결 상태 보기" data-level="wait">🔄</button></h1>
-      <div id="syncTip" class="sync-tip" role="status" aria-live="polite" hidden>
-        <span id="syncTipText">연결 준비 중…</span>
-        <button type="button" id="syncReloadBtn" class="sync-reload" onclick="reloadCloud()" hidden>🔄 다시 불러오기</button>
-      </div>
+      <h1><img class="hero-cat hero-mascot" src="mascot.png?v=mascot2" alt="" width="26" height="36"> 우리 가족 소식통 &amp; 일정관리</h1>
+      <button type="button" class="bell-btn" id="bellBtn" onclick="openNotif()" aria-label="새 소식"><span class="bell-icon" aria-hidden="true">🔔</span><span id="bellBadge" class="badge" hidden></span></button>
     </header>
 
     <section class="card add-card">
@@ -39,21 +35,24 @@
         <button class="add-btn" onclick="openForm()">📅 일정 입력</button>
         <button class="sub-btn" onclick="openManage()">✏️ 일정 변경</button>
         <button class="sub-btn" onclick="openBug()">🐞 버그제보</button>
+        <button type="button" id="syncChip" class="sync-chip" onclick="toggleSyncTip()" aria-label="연결 상태 보기"><span id="syncIcon" class="sync-icon" data-level="wait" aria-hidden="true">🔄</span><span id="syncLabel">동기화중</span></button>
+      </div>
+      <div id="syncTip" class="sync-tip" role="status" aria-live="polite" hidden>
+        <span id="syncTipText">연결 준비 중…</span>
+        <button type="button" id="syncReloadBtn" class="sync-reload" onclick="reloadCloud()" hidden>🔄 다시 불러오기</button>
       </div>
     </section>
 
     <section class="card">
       <div class="toolbar">
-        <div class="place-switch">
-          <button class="round-btn" onclick="switchPlace()" aria-label="이전 장소">◀</button>
-          <h2 id="placeTitle" aria-live="polite">🏠 산본집</h2>
-          <button class="round-btn" onclick="switchPlace()" aria-label="다음 장소">▶</button>
-          <button class="round-btn bell-btn" id="bellBtn" onclick="openNotif()" aria-label="새 소식">🔔<span id="bellBadge" class="badge" hidden></span></button>
+        <div class="place-tabs" role="tablist" aria-label="장소 선택">
+          <button type="button" role="tab" class="place-tab" id="tabHome" aria-selected="true" onclick="switchPlace('산본집')">🏠 산본집</button>
+          <button type="button" role="tab" class="place-tab" id="tabJeju" aria-selected="false" onclick="switchPlace('제주도')">🌴 제주도</button>
         </div>
 
         <div class="calendar-header">
           <button class="round-btn" onclick="changeMonth(-1)" aria-label="이전 달">◀</button>
-          <span id="monthTitle" aria-live="polite"></span>
+          <button type="button" id="monthTitle" class="month-title" onclick="goToday()" aria-label="이번 달로 이동"></button>
           <button class="round-btn" onclick="changeMonth(1)" aria-label="다음 달">▶</button>
         </div>
       </div>
@@ -569,6 +568,6 @@
     window.dispatchEvent(new Event("cloud-ready"));
   </script>
 
-  <script src="script.js?v=20261028a"></script>
+  <script src="script.js?v=20261031a"></script>
 </body>
 </html>
