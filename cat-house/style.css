@@ -107,7 +107,7 @@ h1, h2, h3 {
   justify-content: flex-start;
   min-width: 5.6em;
   gap: 4px;
-  min-height: 46px;
+  min-height: 38px;
   padding: 0 4px;
   border: none;
   background: transparent;
@@ -204,10 +204,10 @@ button {
   font-size: 13px;
   color: var(--ink);
   background-color: var(--card);
-  border: 1.5px solid var(--line);
+  border: 1px solid var(--line);
   border-radius: 999px;
-  min-height: 42px;
-  padding: 0 16px;
+  min-height: 36px;
+  padding: 0 14px;
   cursor: pointer;
   touch-action: manipulation;
   transition: transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1),
@@ -223,7 +223,7 @@ button:active {
 }
 
 .round-btn {
-  width: 42px;
+  width: 34px;
   padding: 0;
   font-size: 12px;
   flex-shrink: 0;
@@ -265,7 +265,7 @@ button:active {
 .add-card .add-btn {
   flex: 1 1 0;
   min-width: 0;
-  min-height: 46px;
+  min-height: 38px;
   padding: 0 6px;
   font-size: 13px;
   white-space: nowrap;
@@ -294,7 +294,7 @@ button:active {
   position: relative;
   flex: 1 1 0;
   min-width: 0;
-  min-height: 44px;
+  min-height: 40px;
   padding: 0 8px;
   border: none;
   border-radius: 0;
@@ -339,15 +339,15 @@ button:active {
 }
 
 .calendar-header .round-btn {
-  width: 44px;
-  height: 44px;
-  min-height: 44px;
+  width: 34px;
+  height: 34px;
+  min-height: 34px;
 }
 
 /* 가운데 월 글자 (누르면 이번 달로) */
 .month-title {
   flex: 1 1 auto;
-  min-height: 44px;
+  min-height: 36px;
   padding: 0 8px;
   border: none;
   border-radius: 12px;
@@ -512,12 +512,12 @@ button.day:active {
 .modal-title h2 {
   margin: 0;
   word-break: keep-all;
-  font-size: 20px;
+  font-size: 18px;
 }
 
 .modal h3 {
-  font-size: 16px;
-  margin: 20px 0 8px 0;
+  font-size: 15px;
+  margin: 16px 0 8px 0;
 }
 
 /* ===== 입력 폼 ===== */
@@ -531,7 +531,7 @@ button.day:active {
   display: flex;
   flex-direction: column;
   gap: 6px;
-  font-size: 14px;
+  font-size: 13px;
   color: var(--sub);
 }
 
@@ -541,9 +541,9 @@ button.day:active {
   font-size: 16px;
   color: var(--ink);
   background-color: #ffffff;
-  min-height: 48px;
+  min-height: 42px;
   padding: 0 12px;
-  border: 1.5px solid var(--line);
+  border: 1px solid var(--line);
   border-radius: 14px;
   touch-action: manipulation;
 }
@@ -561,7 +561,7 @@ fieldset.people-check {
   width: 100%;
   padding: 0;
   margin-bottom: 8px;
-  font-size: 14px;
+  font-size: 13px;
   color: var(--sub);
 }
 
@@ -572,12 +572,12 @@ fieldset.people-check {
   align-items: center;
   justify-content: center;
   gap: 4px;
-  min-height: 42px;
+  min-height: 36px;
   padding: 0 6px;
   font-size: 13px;
   white-space: nowrap;
   color: var(--ink);
-  border: 1.5px solid var(--line);
+  border: 1px solid var(--line);
   border-radius: 999px;
   cursor: pointer;
 }
@@ -608,7 +608,7 @@ fieldset.people-check {
 
 #saveBtn {
   font-size: 14px;
-  min-height: 50px;
+  min-height: 44px;
   margin-top: 4px;
 }
 
@@ -616,9 +616,9 @@ fieldset.people-check {
 #todayPlaces div {
   background-color: var(--soft);
   border-radius: 14px;
-  padding: 8px 14px;
+  padding: 6px 12px;
   margin-bottom: 6px;
-  font-size: 15px;
+  font-size: 14px;
 }
 
 #todayPlaces .detail-warn {
@@ -648,8 +648,8 @@ fieldset.people-check {
 }
 
 #manageSchedules li button {
-  min-height: 38px;
-  padding: 0 18px;
+  min-height: 32px;
+  padding: 0 14px;
   font-size: 12px;
 }
 
@@ -771,8 +771,8 @@ fieldset.people-check {
 }
 
 #detailPhoto button {
-  min-height: 35px;
-  padding: 0 18px;
+  min-height: 32px;
+  padding: 0 14px;
   font-size: 12px;
 }
 
@@ -814,7 +814,7 @@ fieldset.people-check {
 #detailWeather button {
   flex: 1 1 auto;
   min-width: 0;
-  min-height: 35px;
+  min-height: 32px;
   padding: 0 4px;
   font-size: clamp(9px, 2.75vw, 12px);
   white-space: nowrap;
@@ -913,7 +913,7 @@ fieldset.people-check {
 }
 
 .read-all-btn {
-  min-height: 34px;
+  min-height: 30px;
   padding: 6px 12px;
   border-radius: 18px;
   font-size: 11px;
@@ -936,8 +936,8 @@ fieldset.people-check {
 
 #notifList li button {
   width: 100%;
-  min-height: 42px;
-  padding: 8px 14px;
+  min-height: 36px;
+  padding: 6px 12px;
   border-radius: 14px;
   text-align: left;
   font-size: 12px;
@@ -959,7 +959,7 @@ fieldset.people-check {
 }
 
 .note-form button {
-  min-height: 39px;
+  min-height: 40px;
   border-radius: 14px;
 }
 
@@ -970,9 +970,9 @@ fieldset.people-check {
   font-size: 16px;
   color: var(--ink);
   background-color: #ffffff;
-  min-height: 44px;
+  min-height: 40px;
   padding: 0 12px;
-  border: 1.5px solid var(--line);
+  border: 1px solid var(--line);
   border-radius: 14px;
 }
 
@@ -1001,9 +1001,9 @@ fieldset.people-check {
 }
 
 .range-nav .round-btn {
-  width: 38px;
-  height: 38px;
-  min-height: 38px;
+  width: 32px;
+  height: 32px;
+  min-height: 32px;
 }
 
 .range-calendar {
@@ -1019,7 +1019,7 @@ fieldset.people-check {
 }
 
 .range-day {
-  min-height: 38px;
+  min-height: 34px;
   padding: 0;
   border: none;
   border-radius: 10px;
@@ -1051,7 +1051,7 @@ fieldset.people-check {
 .sub-btn {
   flex: 1 1 0;
   min-width: 0;
-  min-height: 46px;
+  min-height: 38px;
   padding: 0 6px;
   font-size: 13px;
   white-space: nowrap;
@@ -1066,7 +1066,7 @@ fieldset.people-check {
 }
 
 .user-buttons button {
-  min-height: 50px;
+  min-height: 42px;
   font-size: 14px;
 }
 
@@ -1076,9 +1076,9 @@ fieldset.people-check {
   font-size: 16px;
   color: var(--ink);
   background-color: #ffffff;
-  min-height: 48px;
+  min-height: 42px;
   padding: 0 12px;
-  border: 1.5px solid var(--line);
+  border: 1px solid var(--line);
   border-radius: 14px;
   touch-action: manipulation;
 }
@@ -1103,7 +1103,7 @@ fieldset.people-check {
 }
 
 .link-btn {
-  min-height: 34px;
+  min-height: 30px;
   padding: 0 10px;
   font-size: 11px;
   white-space: nowrap;
@@ -1251,9 +1251,9 @@ fieldset.people-check {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 40px;
-  height: 40px;
-  min-height: 40px;
+  width: 34px;
+  height: 34px;
+  min-height: 34px;
   padding: 0;
   border: none;
   border-radius: 50%;
@@ -1292,7 +1292,7 @@ fieldset.people-check {
 /* 위치 팝업: 날짜 이동 */
 .loc-today-btn {
   margin-left: auto;
-  min-height: 32px;
+  min-height: 30px;
   padding: 0 12px;
   border-radius: 16px;
   font-size: 12px;
@@ -1311,16 +1311,16 @@ fieldset.people-check {
 }
 
 .loc-nav .round-btn {
-  width: 40px;
-  height: 40px;
-  min-height: 40px;
+  width: 32px;
+  height: 32px;
+  min-height: 32px;
 }
 
 /* 날짜 글자 위에 투명한 날짜 입력칸을 겹쳐서, 글자를 누르면 폰의 날짜 선택창이 열림 */
 .loc-date {
   position: relative;
   flex: 1 1 auto;
-  min-height: 40px;
+  min-height: 34px;
   display: flex;
   align-items: center;
   justify-content: center;
