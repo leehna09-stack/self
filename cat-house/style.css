@@ -611,7 +611,6 @@ fieldset.people-check {
 }
 
 /* ===== 날짜 상세 ===== */
-#detailPlaces div,
 #todayPlaces div {
   background-color: var(--soft);
   border-radius: 14px;
@@ -620,7 +619,6 @@ fieldset.people-check {
   font-size: 15px;
 }
 
-#detailPlaces .detail-warn,
 #todayPlaces .detail-warn {
   background-color: #ffe3e0;
   color: #b42318;
@@ -953,6 +951,7 @@ fieldset.people-check {
 
 .note-form button {
   min-height: 39px;
+  border-radius: 14px;
 }
 
 .note-form input[type="text"] {
@@ -1230,4 +1229,15 @@ fieldset.people-check {
 .splash.hide {
   opacity: 0;
   pointer-events: none;
+}
+
+
+/* 팝업 오른쪽 위 닫기 버튼은 테두리 없이 */
+.modal-title .round-btn {
+  border: none;
+  background: transparent;
+}
+
+.modal-title .round-btn:hover {
+  background-color: var(--soft);
 }

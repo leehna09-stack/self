@@ -1299,7 +1299,7 @@ function addSchedule() {
 
 // ===== 날짜 상세 =====
 
-// 그 날짜에 누가 어디에 있는지를 box에 그려줌 (날짜 상세창과 오늘 위치 팝업이 함께 사용)
+// 그 날짜에 누가 어디에 있는지를 box에 그려줌 (오늘 위치 팝업에서 사용)
 function drawPlaces(box, dateString) {
   const placeIcons = { "산본집": "🏠", "제주도": "🌴", "송정지구": "🏢" };
   box.innerHTML = "";
@@ -1351,8 +1351,6 @@ function openDetail(dateString, keepFocus) {
       weekday: "short"
     }).format(new Date(dateString + "T00:00:00"));
 
-  // 장소별로 누가 있는지 (오늘 위치 팝업과 같은 방식)
-  drawPlaces(document.getElementById("detailPlaces"), dateString);
 
   // 날씨는 제주도 달력에서만
   document.getElementById("weatherSection").hidden = (viewPlace !== "제주도");
