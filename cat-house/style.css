@@ -653,7 +653,7 @@ fieldset.people-check {
 
 /* 사진 */
 .day-photo,
-.day-care {
+.day-video {
   font-size: 11px;
   line-height: 1;
 }
@@ -774,7 +774,7 @@ fieldset.people-check {
   font-size: 12px;
 }
 
-/* 카메라·앨범·밥줬어요·치웠어요는 좁은 화면에서도 한 줄 */
+/* 카메라·앨범·영상 버튼은 좁은 화면에서도 한 줄 */
 .photo-actions {
   display: flex;
   flex-wrap: nowrap;
@@ -788,12 +788,6 @@ fieldset.people-check {
   padding: 0 4px;
   font-size: clamp(9px, 2.75vw, 12px);
   white-space: nowrap;
-}
-
-.care-btn[aria-pressed="true"] {
-  background-color: var(--ink);
-  border-color: var(--ink);
-  color: #ffffff;
 }
 
 .day-weather {
@@ -1367,4 +1361,50 @@ fieldset.people-check {
 #notifList .notice-item {
   background-color: #fff6df;
   border-color: #f0d28a;
+}
+
+/* 영상 칸: 영상 전체가 보이게 (잘리지 않게) */
+.video-frame {
+  cursor: default;
+  background-color: #000000;
+}
+
+.video-frame video {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: contain;
+}
+
+/* 10초 넘는 영상: 올릴 구간 고르기 */
+.trim-video {
+  width: 100%;
+  max-height: 46vh;
+  border-radius: 14px;
+  background-color: #000000;
+  display: block;
+}
+
+.trim-label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 12px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.trim-label input[type="range"] {
+  width: 100%;
+  accent-color: var(--ink);
+}
+
+#trimInfo {
+  font-weight: 400;
+  color: var(--sub);
+}
+
+#trimOkBtn {
+  width: 100%;
+  margin-top: 12px;
 }

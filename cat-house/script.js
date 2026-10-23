@@ -37,6 +37,12 @@ let photos = {};
 const MAX_PHOTOS = 5;
 let photoBusy = false; // 사진을 올리는 중인지
 let lastPhotoCount = 0;
+const MAX_VIDEOS = 2;      // 날짜·장소마다 영상 최대 개수
+const MAX_VIDEO_SEC = 10;  // 영상 한 개의 최대 길이(초)
+let dayVideos = [];        // 상세창에 열린 날짜의 영상들
+let videosLoaded = false;
+let videoObserver = null;
+let photoBusyText = "";    // 올리는 중 안내 글(사진·영상 공통)
 
 // 보고 있는 달의 날씨·한줄평 ("2026-10-05" → { weather, note, noteBy ... })
 let days = {};
@@ -484,7 +490,7 @@ function openFromLink() {
     at: Date.now(),
     date: date,
     place: place,
-    type: params.get("type") === "photo" ? "photo" : "note"
+    type: ["photo", "video"].indexOf(params.get("type")) >= 0 ? params.get("type") : "note"
   });
 }
 
@@ -606,7 +612,7 @@ function drawNotifList() {
       btn.className = "notice-item";
     } else {
       btn.textContent = a.by + " 님이 " + a.place + " " + a.date +
-        (a.type === "photo" ? " 사진을 올렸어요 📷" : " 한줄평을 남겼어요 💬");
+        (a.type === "photo" ? " 사진을 올렸어요 📷" : a.type === "video" ? " 영상을 올렸어요 🎬" : " 한줄평을 남겼어요 💬");
     }
     btn.onclick = function () {
       gotoActivity(a);
@@ -642,7 +648,7 @@ function gotoActivity(a) {
     drawNotifList();
     return;
   }
-  highlightNewNote = (a.type !== "photo");
+  highlightNewNote = (a.type === "note");
   markRead([a]);
   updateBell();
   closeNotif();
@@ -653,7 +659,7 @@ function gotoActivity(a) {
   watchMonthPhotos();
   openDetail(a.date);
   // 사진 소식이면 사진 칸으로, 한줄평 소식이면 한줄평 칸으로 바로 내려가서 보여줌
-  const target = document.getElementById(a.type === "photo" ? "photoSectionTitle" : "noteSection");
+  const target = document.getElementById(a.type === "note" ? "noteSection" : "photoSectionTitle");
   target.scrollIntoView({ block: "start" });
 }
 
@@ -1110,16 +1116,13 @@ function drawCalendar() {
       marks.appendChild(mark);
     }
 
-    // 산본집 달력: 밥줬어요 / 치웠어요 표시
-    if (viewPlace === "산본집" && day) {
-      for (let i = 0; i < careList.length; i++) {
-        if (day[careList[i].key] === true) {
-          const c = document.createElement("span");
-          c.className = "day-care";
-          c.textContent = careList[i].icon;
-          marks.appendChild(c);
-        }
-      }
+    // 영상이 있는 날은 표시 (산본집·제주도 각각의 영상)
+    const videoCount = day ? (viewPlace === "제주도" ? day.jejuVideos : day.videos) : 0;
+    if (videoCount > 0) {
+      const vmark = document.createElement("span");
+      vmark.className = "day-video";
+      vmark.textContent = "🎬";
+      marks.appendChild(vmark);
     }
 
     if (marks.children.length > 0) {
@@ -1469,6 +1472,7 @@ function openDetail(dateString, keepFocus) {
   drawDetailPhoto();
   if (!keepFocus) {
     startNotes();
+    startVideos();
   }
 
   document.getElementById("detailModal").classList.remove("hidden");
@@ -1480,37 +1484,46 @@ function openDetail(dateString, keepFocus) {
 // 상세창의 사진 칸 그리기
 function drawDetailPhoto() {
   const box = document.getElementById("detailPhoto");
-  // 다시 그려도 보던 사진 위치를 유지하려고 미리 기억
+  // 다시 그려도 보던 위치를 유지하려고 미리 기억
   const oldStrip = box.querySelector(".photo-strip");
   const oldScroll = oldStrip ? oldStrip.scrollLeft : 0;
+  box.querySelectorAll("video").forEach(function (v) {
+    v.pause();
+  });
+  if (videoObserver) {
+    videoObserver.disconnect();
+    videoObserver = null;
+  }
   box.innerHTML = "";
 
   const list = photos[currentDetailDate] || [];
+  const vids = dayVideos;
+  const total = list.length + vids.length;
   const user = getUser();
 
-  // 사진을 아직 다 받아오지 못했으면 "없음"으로 오해하지 않게 안내
-  if (list.length === 0 && !photosLoaded && cloudConnected) {
+  // 아직 다 받아오지 못했으면 "없음"으로 오해하지 않게 안내
+  if (total === 0 && (!photosLoaded || !videosLoaded) && cloudConnected) {
     const loading = document.createElement("div");
     loading.className = "photo-by";
     loading.textContent = "사진 불러오는 중이에요…";
     box.appendChild(loading);
   }
 
-  if (list.length > 0) {
-    // 좌우로 밀어서 넘기는 사진 띠
+  if (total > 0) {
+    // 좌우로 밀어서 넘기는 띠 (사진 → 영상 순서, 영상은 보이면 자동 재생)
     const strip = document.createElement("div");
     strip.className = "photo-strip";
 
     const counter = document.createElement("div");
     counter.className = "photo-count";
-    counter.textContent = "1 / " + list.length;
+    counter.textContent = "1 / " + total;
 
     for (let i = 0; i < list.length; i++) {
       const p = list[i];
       const slide = document.createElement("div");
       slide.className = "photo-slide";
 
-      // 세로 비율(3:4) 틀 안에 사진을 맞춰 넣음 (가로 사진은 틀 안에서 작게 보이고, 누르면 크게 열림)
+      // 세로 비율(3:4) 틀을 사진으로 가득 채움 (누르면 원본 전체를 크게 보는 창이 열림)
       const frame = document.createElement("div");
       frame.className = "photo-frame";
       const img = document.createElement("img");
@@ -1545,23 +1558,88 @@ function drawDetailPhoto() {
       strip.appendChild(slide);
     }
 
-    // 지금 보고 있는 사진 번호 표시
+    for (let i = 0; i < vids.length; i++) {
+      const v = vids[i];
+      const slide = document.createElement("div");
+      slide.className = "photo-slide video-slide";
+
+      const frame = document.createElement("div");
+      frame.className = "photo-frame video-frame";
+      const video = document.createElement("video");
+      video.src = v.video;
+      video.loop = true;
+      video.controls = true;
+      video.playsInline = true;
+      video.setAttribute("playsinline", "");
+      video.preload = "metadata";
+      // 폰에서 줄인 영상은 길이 정보가 비어 있어서, 한 번 끝까지 건너뛰어 길이를 알아내야 재생 바가 움직임
+      video.addEventListener("loadedmetadata", function fixDuration() {
+        if (video.duration === Infinity) {
+          video.removeEventListener("loadedmetadata", fixDuration);
+          video.currentTime = 1e101;
+          video.addEventListener("timeupdate", function back() {
+            video.removeEventListener("timeupdate", back);
+            video.currentTime = 0;
+          });
+        }
+      });
+      frame.appendChild(video);
+      slide.appendChild(frame);
+
+      const by = document.createElement("div");
+      by.className = "photo-by";
+      by.textContent = "🎬 " + (v.by ? v.by + " 님이 올렸어요" : "영상");
+      slide.appendChild(by);
+
+      if (!v.by || v.by === user) {
+        const delBtn = document.createElement("button");
+        delBtn.type = "button";
+        delBtn.className = "icon-btn photo-del";
+        delBtn.innerHTML = xIcon(14);
+        delBtn.setAttribute("aria-label", "영상 삭제");
+        delBtn.onclick = function (e) {
+          e.stopPropagation();
+          deleteVideo(v.id);
+        };
+        frame.appendChild(delBtn);
+      }
+
+      strip.appendChild(slide);
+    }
+
+    // 지금 보고 있는 번호 표시
     strip.addEventListener("scroll", function () {
       // (창이 아직 안 열려 폭이 0일 때는 1번째로 봄)
       const n = Math.round(strip.scrollLeft / (strip.clientWidth || 1)) + 1;
-      counter.textContent = Math.min(n, list.length) + " / " + list.length;
+      counter.textContent = Math.min(n, total) + " / " + total;
     });
 
     box.appendChild(strip);
     box.appendChild(counter);
 
-    // 사진이 새로 늘었으면 가장 최근 사진(맨 오른쪽)으로 이동
-    strip.scrollLeft = list.length > lastPhotoCount ? strip.scrollWidth : oldScroll;
+    // 영상 칸이 화면에 60% 이상 보이면 자동 재생, 벗어나면 멈춤
+    if (vids.length > 0 && "IntersectionObserver" in window) {
+      videoObserver = new IntersectionObserver(function (entries) {
+        entries.forEach(function (en) {
+          if (en.isIntersecting && en.intersectionRatio >= 0.6) {
+            playVideo(en.target);
+          } else {
+            en.target.pause();
+          }
+        });
+      }, { root: strip, threshold: [0, 0.6, 1] });
+      strip.querySelectorAll("video").forEach(function (v) {
+        videoObserver.observe(v);
+      });
+    }
+
+    // 새로 늘었으면 가장 최근 것(맨 오른쪽)으로 이동
+    strip.scrollLeft = total > lastPhotoCount ? strip.scrollWidth : oldScroll;
     strip.dispatchEvent(new Event("scroll"));
   }
-  lastPhotoCount = list.length;
+  lastPhotoCount = total;
 
-  // 카메라 / 앨범 / 밥줬어요 / 치웠어요 버튼은 줄바꿈 없이 한 줄에
+  // 카메라 / 앨범 / 영상 버튼은 줄바꿈 없이 한 줄에
   const actions = document.createElement("div");
   actions.className = "photo-actions";
   box.appendChild(actions);
@@ -1587,28 +1665,25 @@ function drawDetailPhoto() {
   };
   actions.appendChild(albumBtn);
 
-  // 산본집 날짜에만: 밥줬어요 / 치웠어요 표시 (제주도 날씨처럼 같은 걸 다시 누르면 해제)
-  if (viewPlace === "산본집") {
-    const day = days[currentDetailDate] || {};
-    for (let i = 0; i < careList.length; i++) {
-      const c = careList[i];
-      const btn = document.createElement("button");
-      btn.type = "button";
-      btn.className = "care-btn";
-      btn.textContent = c.icon + " " + c.label;
-      btn.setAttribute("aria-pressed", day[c.key] === true ? "true" : "false");
-      btn.onclick = function () {
-        toggleCare(c.key, day[c.key] !== true);
-      };
-      actions.appendChild(btn);
+  const videoBtn = document.createElement("button");
+  videoBtn.type = "button";
+  videoBtn.className = "photo-add";
+  videoBtn.textContent = "🎬 영상 " + vids.length + "/" + MAX_VIDEOS;
+  videoBtn.disabled = photoBusy;
+  videoBtn.onclick = function () {
+    if (vids.length >= MAX_VIDEOS) {
+      alert("영상은 날짜마다 " + MAX_VIDEOS + "개까지 올릴 수 있어요.\n올린 영상을 지운 뒤 다시 올려 주세요.");
+      return;
     }
-  }
+    document.getElementById("videoInput").click();
+  };
+  actions.appendChild(videoBtn);
 
   if (photoBusy) {
     const busyNote = document.createElement("div");
     busyNote.className = "photo-by";
     busyNote.id = "photoBusyNote";
-    busyNote.textContent = "사진 올리는 중이에요… 잠시만 기다려 주세요";
+    busyNote.textContent = photoBusyText || "올리는 중이에요… 잠시만 기다려 주세요";
     box.appendChild(busyNote);
   }
 
@@ -1617,6 +1692,18 @@ function drawDetailPhoto() {
     note.className = "photo-by";
     note.textContent = "5장이 넘으면 가장 오래된 사진이 자동으로 지워져요";
     box.appendChild(note);
+  }
+}
+
+// 영상을 소리와 함께 재생하고, 자동 재생이 막히면 소리를 끄고 재생
+function playVideo(v) {
+  v.muted = false;
+  const p = v.play();
+  if (p && p.catch) {
+    p.catch(function () {
+      v.muted = true;
+      v.play().catch(function () {});
+    });
   }
 }
 
@@ -1904,6 +1991,338 @@ function deletePhoto(id) {
   });
 }
 
+// ===== 영상 (날짜·장소마다 최대 2개, 10초, 폰에서 줄여서 올림) =====
+
+// 지금 보고 있는 장소의 영상 저장 위치
+function videoCollection() {
+  return viewPlace === "제주도" ? "jejuVideos" : "videos";
+}
+
+// 상세창을 열 때: 그 날짜의 영상 받아오기 시작
+function startVideos() {
+  dayVideos = [];
+  videosLoaded = false;
+  if (cloudConnected) {
+    window.cloud.watchVideos(videoCollection(), currentDetailDate, onVideoData);
+  }
+}
+
+// 영상이 도착하거나 바뀌면 실행
+function onVideoData(list) {
+  dayVideos = list;
+  videosLoaded = true;
+  if (!document.getElementById("detailModal").classList.contains("hidden")) {
+    drawDetailPhoto();
+  }
+}
+
+// 영상 파일의 길이(초) 알아내기
+function readVideoMeta(url) {
+  return new Promise(function (resolve, reject) {
+    const v = document.createElement("video");
+    v.preload = "metadata";
+    v.muted = true;
+    v.onloadedmetadata = function () {
+      resolve({ duration: v.duration, width: v.videoWidth, height: v.videoHeight });
+    };
+    v.onerror = function () {
+      reject(new Error("이 영상은 읽을 수 없어요. 다른 영상으로 올려 주세요"));
+    };
+    v.src = url;
+  });
+}
+
+let trimJob = null; // 10초 넘는 영상을 편집 중일 때 { file, url, duration }
+
+// 영상을 고르면: 10초 이하는 바로 줄여서 올리고, 넘으면 구간 고르는 창을 띄움
+function onVideoChosen(e) {
+  const file = e.target.files[0];
+  e.target.value = "";
+  if (!file) {
+    return;
+  }
+  if (!cloudConnected) {
+    alert("아직 가족 코드로 연결되지 않았어요. 잠시 후 다시 시도해 주세요.");
+    return;
+  }
+  const user = getUser();
+  if (user === "") {
+    openUserModal();
+    return;
+  }
+  if (photoBusy) {
+    return;
+  }
+  if (dayVideos.length >= MAX_VIDEOS) {
+    alert("영상은 날짜마다 " + MAX_VIDEOS + "개까지 올릴 수 있어요.");
+    return;
+  }
+  const url = URL.createObjectURL(file);
+  readVideoMeta(url).then(function (meta) {
+    if (meta.duration > MAX_VIDEO_SEC + 0.3) {
+      openTrim(file, url, meta.duration);
+    } else {
+      uploadVideo(file, url, 0, Math.min(meta.duration, MAX_VIDEO_SEC));
+    }
+  }).catch(function (err) {
+    URL.revokeObjectURL(url);
+    alert(err.message || "영상을 읽지 못했어요");
+  });
+}
+
+function formatSec(sec) {
+  const s = Math.round(sec * 10) / 10;
+  const m = Math.floor(s / 60);
+  const rest = (s - m * 60).toFixed(1);
+  return m + ":" + (rest < 10 ? "0" : "") + rest;
+}
+
+// 10초 넘는 영상: 올릴 10초 구간을 고르는 창
+function openTrim(file, url, duration) {
+  trimJob = { file: file, url: url, duration: duration };
+  const video = document.getElementById("trimVideo");
+  const slider = document.getElementById("trimStart");
+  document.getElementById("trimHint").textContent =
+    "영상이 " + Math.round(duration) + "초예요. " + MAX_VIDEO_SEC + "초까지만 올릴 수 있어서 올릴 구간을 골라 주세요.";
+  video.src = url;
+  slider.min = 0;
+  slider.max = Math.max(0, duration - MAX_VIDEO_SEC).toFixed(1);
+  slider.value = 0;
+  document.getElementById("trimModal").classList.remove("hidden");
+  updateTrim();
+}
+
+// 슬라이더를 움직이면 미리보기도 그 위치로, 구간 끝에 닿으면 처음으로 되돌려 반복
+function updateTrim() {
+  const video = document.getElementById("trimVideo");
+  const start = parseFloat(document.getElementById("trimStart").value) || 0;
+  document.getElementById("trimInfo").textContent =
+    formatSec(start) + " ~ " + formatSec(start + MAX_VIDEO_SEC);
+  video.currentTime = start;
+}
+
+function closeTrim() {
+  const video = document.getElementById("trimVideo");
+  video.pause();
+  video.removeAttribute("src");
+  video.load();
+  document.getElementById("trimModal").classList.add("hidden");
+  if (trimJob) {
+    URL.revokeObjectURL(trimJob.url);
+    trimJob = null;
+  }
+}
+
+function confirmTrim() {
+  if (!trimJob) {
+    return;
+  }
+  const job = trimJob;
+  const start = parseFloat(document.getElementById("trimStart").value) || 0;
+  trimJob = null; // closeTrim이 주소를 지우지 않게 (올리는 동안 필요)
+  document.getElementById("trimModal").classList.add("hidden");
+  document.getElementById("trimVideo").pause();
+  uploadVideo(job.file, job.url, start, MAX_VIDEO_SEC);
+}
+
+// 영상의 [start, start+len]초 구간을 작게 다시 녹화해서 글자(data URL)로 바꾸기
+// (영상 틀을 그대로 두고 480px로 줄이고 약 400kbps, 소리는 32kbps)
+function compressVideo(url, start, len, bitrate, onProgress) {
+  return new Promise(function (resolve, reject) {
+    if (!window.MediaRecorder || !HTMLCanvasElement.prototype.captureStream) {
+      reject(new Error("이 브라우저에서는 영상을 줄일 수 없어요. 크롬으로 열어 주세요"));
+      return;
+    }
+    const mime = ["video/webm;codecs=vp8,opus", "video/webm;codecs=vp9,opus", "video/webm"].find(function (m) {
+      return MediaRecorder.isTypeSupported(m);
+    });
+    if (!mime) {
+      reject(new Error("이 브라우저는 영상 줄이기를 지원하지 않아요"));
+      return;
+    }
+    const v = document.createElement("video");
+    v.playsInline = true;
+    v.preload = "auto";
+    v.src = url;
+    v.onerror = function () {
+      reject(new Error("이 영상은 읽을 수 없어요. 다른 영상으로 올려 주세요"));
+    };
+
+    v.onloadedmetadata = function () {
+      const scale = Math.min(1, 480 / Math.max(v.videoWidth, v.videoHeight));
+      // 인코더가 짝수 크기를 좋아해서 2의 배수로 맞춤
+      const w = Math.max(2, Math.round(v.videoWidth * scale / 2) * 2);
+      const h = Math.max(2, Math.round(v.videoHeight * scale / 2) * 2);
+      const canvas = document.createElement("canvas");
+      canvas.width = w;
+      canvas.height = h;
+      const ctx = canvas.getContext("2d");
+
+      const stream = canvas.captureStream(24);
+      let audioCtx = null;
+      try {
+        // 소리는 화면에 틀지 않고 녹화에만 넣음
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const src = audioCtx.createMediaElementSource(v);
+        const dest = audioCtx.createMediaStreamDestination();
+        src.connect(dest);
+        dest.stream.getAudioTracks().forEach(function (t) {
+          stream.addTrack(t);
+        });
+      } catch (err) {
+        audioCtx = null; // 소리를 못 잡으면 소리 없이 올림
+      }
+
+      const chunks = [];
+      let rec;
+      try {
+        rec = new MediaRecorder(stream, {
+          mimeType: mime,
+          videoBitsPerSecond: bitrate,
+          audioBitsPerSecond: 32000
+        });
+      } catch (err) {
+        reject(new Error("영상 줄이기를 시작하지 못했어요"));
+        return;
+      }
+      rec.ondataavailable = function (ev) {
+        if (ev.data && ev.data.size > 0) {
+          chunks.push(ev.data);
+        }
+      };
+
+      let finished = false;
+      function cleanup() {
+        finished = true;
+        v.pause();
+        v.removeAttribute("src");
+        v.load();
+        if (audioCtx) {
+          audioCtx.close().catch(function () {});
+        }
+        stream.getTracks().forEach(function (t) {
+          t.stop();
+        });
+      }
+      rec.onstop = function () {
+        cleanup();
+        const blob = new Blob(chunks, { type: "video/webm" });
+        const reader = new FileReader();
+        reader.onload = function () {
+          resolve({ video: reader.result, mime: "video/webm", duration: Math.round(len * 10) / 10 });
+        };
+        reader.onerror = function () {
+          reject(new Error("영상을 저장 형식으로 바꾸지 못했어요"));
+        };
+        reader.readAsDataURL(blob);
+      };
+
+      function draw() {
+        if (finished) {
+          return;
+        }
+        ctx.drawImage(v, 0, 0, w, h);
+        const done = v.currentTime - start;
+        if (onProgress) {
+          onProgress(Math.min(1, Math.max(0, done / len)));
+        }
+        if (done >= len - 0.05 || v.ended) {
+          if (rec.state !== "inactive") {
+            rec.stop();
+          }
+          return;
+        }
+        requestAnimationFrame(draw);
+      }
+
+      v.onseeked = function () {
+        v.onseeked = null;
+        if (audioCtx && audioCtx.state === "suspended") {
+          audioCtx.resume().catch(function () {});
+        }
+        rec.start(500);
+        const p = v.play();
+        if (p && p.catch) {
+          p.catch(function () {
+            cleanup();
+            reject(new Error("영상을 재생하지 못해 줄일 수 없어요. 다시 시도해 주세요"));
+          });
+        }
+        requestAnimationFrame(draw);
+      };
+      v.currentTime = start;
+    };
+  });
+}
+
+// 영상을 줄여서 올리기 (너무 크면 화질을 낮춰서 한 번 더)
+function uploadVideo(file, url, start, len) {
+  const user = getUser();
+  const date = currentDetailDate;
+  const collectionName = videoCollection();
+  photoBusyText = "영상을 줄이는 중이에요… 0%";
+  setPhotoBusy(true);
+
+  function progress(ratio) {
+    const note = document.getElementById("photoBusyNote");
+    if (note) {
+      note.textContent = "영상을 줄이는 중이에요… " + Math.round(ratio * 100) + "% (끝날 때까지 이 화면을 켜 두세요)";
+    }
+  }
+
+  // 올리는 사이에 같은 날짜를 다시 열면 어긋날 수 있어서, 비어 있는 칸(1·2)을 지금 다시 확인
+  compressVideo(url, start, len, 380000, progress).then(function (res) {
+    if (res.video.length > 900000) {
+      return compressVideo(url, start, len, 220000, progress);
+    }
+    return res;
+  }).then(function (res) {
+    if (res.video.length > 950000) {
+      throw new Error("영상이 너무 커서 올릴 수 없어요. 더 짧거나 단순한 영상으로 올려 주세요");
+    }
+    const used = {};
+    dayVideos.forEach(function (v) {
+      used[v.id] = true;
+    });
+    let slot = 0;
+    for (let n = 1; n <= MAX_VIDEOS; n++) {
+      if (!used[date + "_" + n]) {
+        slot = n;
+        break;
+      }
+    }
+    if (slot === 0) {
+      throw new Error("영상은 날짜마다 " + MAX_VIDEOS + "개까지 올릴 수 있어요");
+    }
+    photoBusyText = "영상을 올리는 중이에요…";
+    drawDetailPhoto();
+    return withTimeout(
+      window.cloud.addVideo(collectionName, date, slot, res.video, res.mime, res.duration, user, dayVideos.length + 1),
+      30000,
+      "저장이 오래 걸려요. 인터넷이 연결되면 자동으로 올라갈 수 있으니 잠시 뒤 확인해 주세요"
+    );
+  }).catch(function (err) {
+    console.log("영상 저장 실패", err);
+    alert("영상을 올리지 못했어요.\n" + (err.message || err.code || "알 수 없는 오류") +
+      (err.code ? "\n(오류 코드: " + err.code + ")" : ""));
+  }).then(function () {
+    URL.revokeObjectURL(url);
+    photoBusyText = "";
+    setPhotoBusy(false);
+  });
+}
+
+// 영상 삭제
+function deleteVideo(id) {
+  if (!confirm("이 영상을 삭제할까요?")) {
+    return;
+  }
+  window.cloud.removeVideo(videoCollection(), currentDetailDate, id, Math.max(0, dayVideos.length - 1)).catch(function (err) {
+    console.log("영상 삭제 실패", err);
+    alert("삭제하지 못했어요. 인터넷 연결을 확인해 주세요.");
+  });
+}
+
 // key로 날씨 정보 찾기 (없으면 null)
 function findWeather(key) {
   for (let i = 0; i < weatherList.length; i++) {
@@ -1933,27 +2352,6 @@ function drawDetailWeather() {
     };
     box.appendChild(btn);
   }
-}
-
-// 산본집 돌봄 표시 (누가·언제는 남기지 않고 그날 했는지만 표시)
-const careList = [
-  { key: "fed", icon: "🍚", label: "밥줬어요" },
-  { key: "cleaned", icon: "💩", label: "치웠어요" }
-];
-
-// 밥줬어요 / 치웠어요 표시 저장
-function toggleCare(key, value) {
-  if (!cloudConnected) {
-    alert("아직 가족 코드로 연결되지 않았어요. 잠시 후 다시 시도해 주세요.");
-    return;
-  }
-  const fields = {};
-  fields[key] = value;
-  window.cloud.saveDay(currentDetailDate, fields).catch(function (err) {
-    console.log("돌봄 표시 저장 실패", err);
-    alert("저장하지 못했어요. 인터넷 연결을 확인해 주세요." +
-      (err && err.code ? "\n(" + err.code + ")" : ""));
-  });
 }
 
 // 날씨 저장
@@ -2203,7 +2601,10 @@ function closeDetail() {
   document.getElementById("detailModal").classList.add("hidden");
   if (window.cloud) {
     window.cloud.stopNotes();
+    window.cloud.stopVideos();
   }
+  dayVideos = [];
+  videosLoaded = false;
 }
 
 // ===== 일정 변경 (수정/삭제) =====
@@ -2317,6 +2718,15 @@ document.addEventListener("keydown", function (e) {
 
 document.getElementById("photoInput").addEventListener("change", onPhotoChosen);
 document.getElementById("cameraInput").addEventListener("change", onPhotoChosen);
+document.getElementById("videoInput").addEventListener("change", onVideoChosen);
+document.getElementById("trimStart").addEventListener("input", updateTrim);
+// 고른 10초 구간만 반복해서 보여줌
+document.getElementById("trimVideo").addEventListener("timeupdate", function () {
+  const start = parseFloat(document.getElementById("trimStart").value) || 0;
+  if (this.currentTime >= start + MAX_VIDEO_SEC) {
+    this.currentTime = start;
+  }
+});
 
 // 옛날에 이 브라우저에 저장했던 일정은 더 이상 쓰지 않아서 정리
 try {

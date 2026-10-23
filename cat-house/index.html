@@ -16,7 +16,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Jua&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=20261113a">
+  <link rel="stylesheet" href="style.css?v=20261114a">
 </head>
 <body>
   <div id="splash" class="splash" aria-hidden="true">
@@ -123,6 +123,7 @@
       <h3 id="photoSectionTitle">이 날의 사진</h3>
       <div id="detailPhoto"></div>
       <input type="file" id="photoInput" accept="image/*" hidden>
+      <input type="file" id="videoInput" accept="video/*" hidden>
       <input type="file" id="cameraInput" accept="image/*" capture="environment" hidden>
       <div id="noteSection">
         <h3>오늘의 한줄평</h3>
@@ -175,6 +176,23 @@
         <button class="round-btn" onclick="closeNotif()" aria-label="닫기"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
       </div>
       <ul id="notifList"></ul>
+    </div>
+  </div>
+
+  <div id="trimModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="trimTitle">
+    <div class="modal-box">
+      <div class="modal-title">
+        <h2 id="trimTitle">영상 자르기</h2>
+        <button class="round-btn" onclick="closeTrim()" aria-label="닫기"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+      </div>
+      <p class="hint" id="trimHint">영상이 10초보다 길어요. 올릴 10초 구간을 골라 주세요.</p>
+      <video id="trimVideo" class="trim-video" controls playsinline preload="metadata"></video>
+      <label class="trim-label">시작 위치 <span id="trimInfo"></span>
+        <input type="range" id="trimStart" min="0" max="0" step="0.1" value="0">
+      </label>
+      <div class="form-box">
+        <button type="button" id="trimOkBtn" onclick="confirmTrim()">이 10초 올리기</button>
+      </div>
     </div>
   </div>
 
@@ -300,6 +318,7 @@
     let unsubscribeDays = null;
     let unsubscribeNotes = null;
     let unsubscribeActivity = null;
+    let unsubscribeVideos = null;
     let currentCode = "";
 
     function scheduleCollection() {
@@ -538,9 +557,81 @@
         });
       },
 
+      // 그 날짜의 영상(최대 2개)을 받아오고, 바뀔 때마다 onData를 불러줌
+      // (name = 컬렉션 이름: 산본집 "videos", 제주도 "jejuVideos")
+      watchVideos: function (name, date, onData) {
+        if (unsubscribeVideos) {
+          unsubscribeVideos();
+        }
+        const q = query(
+          collection(db, "families", currentCode, name),
+          where(documentId(), ">=", date + "_0"),
+          where(documentId(), "<=", date + "_9")
+        );
+        unsubscribeVideos = onSnapshot(q, function (snap) {
+          const list = [];
+          snap.forEach(function (d) {
+            list.push({ id: d.id, ...d.data() });
+          });
+          list.sort(function (a, b) {
+            return (a.savedAt || 0) - (b.savedAt || 0);
+          });
+          onData(list);
+        }, function (error) {
+          reportReadError("영상", error);
+        });
+      },
+
+      // 영상 받기를 멈춤 (날짜 상세창을 닫을 때)
+      stopVideos: function () {
+        if (unsubscribeVideos) {
+          unsubscribeVideos();
+          unsubscribeVideos = null;
+        }
+      },
+
+      // 영상 저장 (번호 1·2칸, 달력 표시용 개수도 함께 저장) → 성공하면 종 알림 기록도 남김
+      addVideo: function (name, date, slot, video, mime, duration, by, countAfter) {
+        const now = Date.now();
+        const code = currentCode;
+        const batch = writeBatch(db);
+        batch.set(doc(db, "families", code, name, date + "_" + slot), {
+          video: video,
+          mime: mime,
+          duration: duration,
+          by: by,
+          savedAt: now
+        });
+        const fields = {};
+        fields[name === "jejuVideos" ? "jejuVideos" : "videos"] = countAfter;
+        batch.set(doc(db, "families", code, "days", date), fields, { merge: true });
+        return batch.commit().then(function () {
+          return setDoc(doc(collection(db, "families", code, "activity")), {
+            type: "video",
+            by: by,
+            date: date,
+            place: name === "jejuVideos" ? "제주도" : "산본집",
+            at: now
+          }).catch(function (error) {
+            console.log("새 소식 기록 실패", error);
+          });
+        });
+      },
+
+      // 영상 삭제 (달력 표시용 개수도 함께 고침)
+      removeVideo: function (name, date, id, countAfter) {
+        const code = currentCode;
+        const batch = writeBatch(db);
+        batch.delete(doc(db, "families", code, name, id));
+        const fields = {};
+        fields[name === "jejuVideos" ? "jejuVideos" : "videos"] = countAfter;
+        batch.set(doc(db, "families", code, "days", date), fields, { merge: true });
+        return batch.commit();
+      },
+
       // 가족 코드 아래의 모든 데이터를 한 번에 읽어서 돌려줌 (백업용)
       exportAll: async function () {
-        const names = ["schedules", "photos", "jejuPhotos", "days", "notes", "activity"];
+        const names = ["schedules", "photos", "jejuPhotos", "videos", "jejuVideos", "days", "notes", "activity"];
         const result = {};
         for (let i = 0; i < names.length; i++) {
           const snap = await getDocs(collection(db, "families", currentCode, names[i]));
@@ -601,6 +692,6 @@
     window.dispatchEvent(new Event("cloud-ready"));
   </script>
 
-  <script src="script.js?v=20261113a"></script>
+  <script src="script.js?v=20261114a"></script>
 </body>
 </html>
