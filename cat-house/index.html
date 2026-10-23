@@ -16,7 +16,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Jua&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=20261112a">
+  <link rel="stylesheet" href="style.css?v=20261113a">
 </head>
 <body>
   <div id="splash" class="splash" aria-hidden="true">
@@ -221,6 +221,12 @@
       <div class="form-box">
         <button type="button" onclick="adminChangeUser()">👤 사용자 바꾸기</button>
         <button type="button" onclick="adminChangeCode()">🔑 가족 코드 바꾸기</button>
+        <div id="noticeSection" hidden>
+          <h3>📢 공지 올리기</h3>
+          <textarea id="noticeInput" maxlength="100" rows="3" placeholder="가족 모두의 알림(🔔)으로 전달돼요 (최대 100자)" oninput="updateNoticeCount()"></textarea>
+          <button type="button" id="noticeSendBtn" onclick="sendNotice()">📢 공지 보내기</button>
+          <div class="hint" id="noticeStatus" aria-live="polite">0 / 100</div>
+        </div>
         <div id="backupSection" hidden>
           <button type="button" id="backupBtn" onclick="downloadBackup()">💾 백업 내려받기</button>
           <div class="hint" id="backupStatus" aria-live="polite">일정·사진·한줄평·날씨·소식 기록을 파일 하나로 내려받아요. 사진이 많으면 시간이 걸릴 수 있어요.</div>
@@ -513,6 +519,16 @@
         return setDoc(doc(db, "families", currentCode, "days", date), fields, { merge: true });
       },
 
+      // 공지 저장 (소식 기록으로 저장되어 가족 모두의 🔔 알림과 푸시 알림으로 전달됨)
+      postNotice: function (text, by) {
+        return setDoc(doc(collection(db, "families", currentCode, "activity")), {
+          type: "notice",
+          by: by,
+          text: text,
+          at: Date.now()
+        });
+      },
+
       // 버그 제보 저장 (서버 기능이 이 글을 보고 한나관리자에게 카카오톡을 보냄)
       sendBug: function (text, by) {
         return setDoc(doc(collection(db, "families", currentCode, "bugReports")), {
@@ -585,6 +601,6 @@
     window.dispatchEvent(new Event("cloud-ready"));
   </script>
 
-  <script src="script.js?v=20261112a"></script>
+  <script src="script.js?v=20261113a"></script>
 </body>
 </html>

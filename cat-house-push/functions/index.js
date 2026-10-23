@@ -38,20 +38,29 @@ exports.notifyFamily = onDocumentCreated(
       return;
     }
 
-    const what = activity.type === "photo" ? "사진을 올렸어요 📷" : "한줄평을 남겼어요 💬";
-    const link = SITE_URL + "?" + new URLSearchParams({
-      date: activity.date,
-      place: activity.place,
-      type: activity.type,
-      id: event.params.activityId
-    }).toString();
+    // 사진·한줄평 소식은 해당 날짜로 이동하는 주소, 공지는 앱 첫 화면 주소
+    let body;
+    let link;
+    if (activity.type === "notice") {
+      body = "📢 공지: " + activity.text;
+      link = SITE_URL;
+    } else {
+      const what = activity.type === "photo" ? "사진을 올렸어요 📷" : "한줄평을 남겼어요 💬";
+      body = activity.by + " 님이 " + activity.place + " " + activity.date + " " + what;
+      link = SITE_URL + "?" + new URLSearchParams({
+        date: activity.date,
+        place: activity.place,
+        type: activity.type,
+        id: event.params.activityId
+      }).toString();
+    }
 
     const messages = targets.map(function (token) {
       return {
         token: token,
         data: {
           title: "우리 가족 소식통",
-          body: activity.by + " 님이 " + activity.place + " " + activity.date + " " + what,
+          body: body,
           link: link,
           tag: event.params.activityId
         },
