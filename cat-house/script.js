@@ -1330,8 +1330,8 @@ function drawPlaces(box, dateString) {
 function openToday() {
   const now = new Date();
   const dateString = makeDateString(now.getFullYear(), now.getMonth(), now.getDate());
-  document.getElementById("todayTitle").textContent =
-    "📍 오늘의 위치 · " + new Intl.DateTimeFormat("ko-KR", { month: "long", day: "numeric", weekday: "short" }).format(now);
+  document.getElementById("todayDate").textContent =
+    new Intl.DateTimeFormat("ko-KR", { year: "numeric", month: "long", day: "numeric", weekday: "short" }).format(now) + " 기준";
   drawPlaces(document.getElementById("todayPlaces"), dateString);
   document.getElementById("todayModal").classList.remove("hidden");
 }

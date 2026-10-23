@@ -16,7 +16,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Jua&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=20261104a">
+  <link rel="stylesheet" href="style.css?v=20261105a">
 </head>
 <body>
   <div id="splash" class="splash" aria-hidden="true">
@@ -121,6 +121,10 @@
         <h2 id="detailTitle"></h2>
         <button class="round-btn" onclick="closeDetail()" aria-label="닫기">✕</button>
       </div>
+      <h3 id="photoSectionTitle">이 날의 사진</h3>
+      <div id="detailPhoto"></div>
+      <input type="file" id="photoInput" accept="image/*" hidden>
+      <input type="file" id="cameraInput" accept="image/*" capture="environment" hidden>
       <div id="noteSection">
         <h3>오늘의 한줄평</h3>
         <ul id="detailNote"></ul>
@@ -134,10 +138,6 @@
         <h3>이 날의 날씨</h3>
         <div id="detailWeather"></div>
       </div>
-      <h3 id="photoSectionTitle">이 날의 사진</h3>
-      <div id="detailPhoto"></div>
-      <input type="file" id="photoInput" accept="image/*" hidden>
-      <input type="file" id="cameraInput" accept="image/*" capture="environment" hidden>
       <h3>위치 정보</h3>
       <div id="detailPlaces"></div>
     </div>
@@ -187,6 +187,7 @@
         <h2 id="todayTitle">📍 오늘의 위치</h2>
         <button class="round-btn" onclick="closeToday()" aria-label="닫기">✕</button>
       </div>
+      <p class="hint" id="todayDate"></p>
       <div id="todayPlaces"></div>
     </div>
   </div>
@@ -579,6 +580,6 @@
     window.dispatchEvent(new Event("cloud-ready"));
   </script>
 
-  <script src="script.js?v=20261104a"></script>
+  <script src="script.js?v=20261105a"></script>
 </body>
 </html>
