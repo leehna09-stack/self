@@ -59,8 +59,17 @@ h1, h2, h3 {
 }
 
 .hero h1 {
-  font-size: 26px;
-  margin: 0 0 4px 0;
+  font-size: 21px;
+  margin: 0;
+  white-space: nowrap;
+}
+
+.hero-mascot {
+  display: inline-block;
+  vertical-align: middle;
+  width: auto;
+  height: 36px;
+  margin-right: 2px;
 }
 
 /* 헤더 오른쪽 연결 상태 아이콘 */
@@ -1030,7 +1039,11 @@ fieldset.people-check {
   }
 
   .hero h1 {
-    font-size: 23px;
+    font-size: 18px;
+  }
+
+  .hero-mascot {
+    height: 32px;
   }
 
   .calendar {
@@ -1061,6 +1074,14 @@ fieldset.people-check {
 
 /* ===== 아주 작은 폰 (넓이 340px 이하) ===== */
 @media (max-width: 340px) {
+  .hero h1 {
+    font-size: 15px;
+  }
+
+  .hero-mascot {
+    height: 28px;
+  }
+
   .toolbar {
     gap: 2px;
   }
