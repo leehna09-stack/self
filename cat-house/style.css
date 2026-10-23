@@ -213,6 +213,17 @@ button:active {
   margin-bottom: 16px;
 }
 
+/* 일정 입력 버튼도 다른 버튼과 같은 배경 */
+.add-card .add-btn {
+  background-color: var(--card);
+  border-color: var(--line);
+  color: var(--ink);
+}
+
+.add-card .add-btn:hover {
+  background-color: var(--soft);
+}
+
 .add-card .add-btn {
   flex: 1 1 0;
   min-width: 0;
@@ -1133,7 +1144,7 @@ fieldset.people-check {
 }
 
 .splash img {
-  width: 120px;
+  width: auto;
   height: 120px;
 }
 
