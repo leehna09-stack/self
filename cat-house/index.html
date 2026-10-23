@@ -16,7 +16,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Jua&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=20261021a">
+  <link rel="stylesheet" href="style.css?v=20261022a">
 </head>
 <body>
   <div id="splash" class="splash" aria-hidden="true">
@@ -65,10 +65,8 @@
     <div class="sync-bar">
       <span id="codeInfo"></span>
       <span id="userInfo"></span>
-      <button class="link-btn" id="adminBtn" onclick="openAdmin()" hidden>🛠 관리</button>
-      <button class="link-btn" id="installBtn" onclick="installApp()">📲 앱 설치</button>
-      <button class="link-btn" onclick="openUserModal()">사용자 바꾸기</button>
-      <button class="link-btn" onclick="openCodeModal()">가족 코드 바꾸기</button>
+      <button class="link-btn" id="adminBtn" onclick="openAdmin()">🛠 관리</button>
+      <button class="link-btn" id="installBtn" onclick="installApp()">📲 앱 재설치</button>
     </div>
   </main>
 
@@ -190,22 +188,28 @@
         <h2 id="bugTitle">버그 제보</h2>
         <button class="round-btn" onclick="closeBug()" aria-label="닫기">✕</button>
       </div>
-      <p class="hint">버그가 생기면 한나관리자에게 연락해주세요!</p>
-      <p class="hint">어떤 화면에서 어떤 일이 있었는지 알려 주시면 더 빨리 고칠 수 있어요.</p>
+      <p class="hint">불편한 점이나 오류를 적어 보내면 한나관리자의 카카오톡으로 전달돼요.</p>
+      <div class="note-form">
+        <input type="text" id="bugInput" maxlength="50" autocomplete="off" placeholder="최대 50자" oninput="updateBugCount()">
+        <button type="button" id="bugSendBtn" onclick="sendBug()">보내기</button>
+      </div>
+      <div class="hint" id="bugStatus" aria-live="polite">0 / 50</div>
     </div>
   </div>
 
   <div id="adminModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="adminTitle">
     <div class="modal-box">
       <div class="modal-title">
-        <h2 id="adminTitle">관리 메뉴</h2>
+        <h2 id="adminTitle">관리</h2>
         <button class="round-btn" onclick="closeAdmin()" aria-label="닫기">✕</button>
       </div>
-      <h3>백업</h3>
-      <p class="hint">일정·사진·한줄평·날씨·소식 기록을 파일 하나로 내려받아요. 사진이 많으면 파일이 커서 시간이 걸릴 수 있어요.</p>
       <div class="form-box">
-        <button type="button" id="backupBtn" onclick="downloadBackup()">💾 백업 내려받기</button>
-        <div class="hint" id="backupStatus" aria-live="polite"></div>
+        <button type="button" onclick="adminChangeUser()">👤 사용자 바꾸기</button>
+        <button type="button" onclick="adminChangeCode()">🔑 가족 코드 바꾸기</button>
+        <div id="backupSection" hidden>
+          <button type="button" id="backupBtn" onclick="downloadBackup()">💾 백업 내려받기</button>
+          <div class="hint" id="backupStatus" aria-live="polite">일정·사진·한줄평·날씨·소식 기록을 파일 하나로 내려받아요. 사진이 많으면 시간이 걸릴 수 있어요.</div>
+        </div>
       </div>
     </div>
   </div>
@@ -494,6 +498,15 @@
         return setDoc(doc(db, "families", currentCode, "days", date), fields, { merge: true });
       },
 
+      // 버그 제보 저장 (서버 기능이 이 글을 보고 한나관리자에게 카카오톡을 보냄)
+      sendBug: function (text, by) {
+        return setDoc(doc(collection(db, "families", currentCode, "bugReports")), {
+          text: text,
+          by: by,
+          at: Date.now()
+        });
+      },
+
       // 가족 코드 아래의 모든 데이터를 한 번에 읽어서 돌려줌 (백업용)
       exportAll: async function () {
         const names = ["schedules", "photos", "jejuPhotos", "days", "notes", "activity"];
@@ -557,6 +570,6 @@
     window.dispatchEvent(new Event("cloud-ready"));
   </script>
 
-  <script src="script.js?v=20261021a"></script>
+  <script src="script.js?v=20261022a"></script>
 </body>
 </html>

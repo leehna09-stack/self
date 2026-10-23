@@ -154,8 +154,6 @@ function getUser() {
 function updateUserInfo() {
   const name = getUser();
   document.getElementById("userInfo").textContent = name === "" ? "" : "👤 " + name;
-  // 관리 메뉴는 한나로 접속했을 때만 보임
-  document.getElementById("adminBtn").hidden = (name !== ADMIN_USER);
 }
 
 // ===== 관리 메뉴 (한나만) =====
@@ -164,11 +162,21 @@ const ADMIN_USER = "한나";
 
 // 관리 메뉴 열기
 function openAdmin() {
-  if (getUser() !== ADMIN_USER) {
-    return;
-  }
-  document.getElementById("backupStatus").textContent = "";
+  // 백업은 한나로 접속했을 때만 보임 (사용자·가족 코드 바꾸기는 모두에게 보임)
+  document.getElementById("backupSection").hidden = (getUser() !== ADMIN_USER);
+  document.getElementById("adminModal").classList.add("hidden");
   document.getElementById("adminModal").classList.remove("hidden");
+}
+
+// 관리에서 사용자 바꾸기 / 가족 코드 바꾸기
+function adminChangeUser() {
+  closeAdmin();
+  openUserModal();
+}
+
+function adminChangeCode() {
+  closeAdmin();
+  openCodeModal();
 }
 
 // 관리 메뉴 닫기
@@ -383,16 +391,13 @@ window.addEventListener("beforeinstallprompt", function (e) {
   installPrompt = e;
 });
 
-// 설치가 끝나면 버튼을 숨김
+// 설치가 끝나면 설치 창은 다시 쓸 수 없음
 window.addEventListener("appinstalled", function () {
   installPrompt = null;
-  document.getElementById("installBtn").hidden = true;
 });
 
-// 이미 앱으로 열었으면 설치 버튼이 필요 없음
-document.getElementById("installBtn").hidden = isStandalone();
-
-// 앱 설치 버튼: 설치 창을 띄울 수 있으면 바로 띄우고, 아니면 설치 방법을 안내
+// 앱 재설치 버튼: 설치 창을 띄울 수 있으면 바로 띄우고, 아니면 재설치 방법을 안내
+// (웹에서는 설치된 앱을 직접 지울 수 없어서, 이미 설치된 상태면 먼저 삭제하도록 안내)
 function installApp() {
   if (installPrompt) {
     const e = installPrompt;
@@ -401,9 +406,11 @@ function installApp() {
     return;
   }
   if (/iPad|iPhone|iPod/.test(navigator.userAgent)) {
-    alert("아이폰은 사파리로 이 페이지를 연 뒤\n공유 버튼(네모에 화살표) → '홈 화면에 추가'를 눌러 주세요.");
+    alert("아이폰은 사파리로 이 페이지를 연 뒤\n공유 버튼(네모에 화살표) → '홈 화면에 추가'를 눌러 주세요.\n(새 아이콘으로 바꾸려면 기존 앱을 먼저 지워 주세요)");
+  } else if (isStandalone()) {
+    alert("지금 설치된 앱으로 열려 있어요.\n새로 받으려면 홈 화면의 앱을 길게 눌러 삭제(제거)한 뒤,\n크롬에서 이 주소를 열고 '앱 재설치'를 다시 눌러 주세요.");
   } else {
-    alert("크롬 오른쪽 위 점 세 개(⋮) 메뉴에서\n'앱 설치' 또는 '홈 화면에 추가'를 눌러 주세요.\n(이미 설치했다면 메뉴에 보이지 않을 수 있어요)");
+    alert("크롬 오른쪽 위 점 세 개(⋮) 메뉴에서\n'앱 설치' 또는 '홈 화면에 추가'를 눌러 주세요.\n(이미 설치되어 있으면 먼저 홈 화면의 앱을 삭제해 주세요)");
   }
 }
 
@@ -688,13 +695,64 @@ function hideSplash() {
 // 연결이 안 되거나 오래 걸려도 6초 뒤에는 시작 화면을 걷어냄
 setTimeout(hideSplash, 6000);
 
-// 버그 제보 안내창
+// 버그 제보창 (내용을 적어 보내면 한나관리자의 카카오톡으로 전달)
+let bugLastSent = 0;
+
 function openBug() {
+  document.getElementById("bugInput").value = "";
+  updateBugCount();
   document.getElementById("bugModal").classList.remove("hidden");
+  document.getElementById("bugInput").focus();
 }
 
 function closeBug() {
   document.getElementById("bugModal").classList.add("hidden");
+}
+
+// 글자 수 표시
+function updateBugCount() {
+  const n = document.getElementById("bugInput").value.length;
+  document.getElementById("bugStatus").textContent = n + " / 50";
+}
+
+// 버그 제보 보내기
+function sendBug() {
+  const input = document.getElementById("bugInput");
+  const status = document.getElementById("bugStatus");
+  const text = input.value.trim().slice(0, 50);
+  if (text === "") {
+    status.textContent = "내용을 적어 주세요 (최대 50자)";
+    return;
+  }
+  const user = getUser();
+  if (user === "") {
+    closeBug();
+    openUserModal();
+    return;
+  }
+  if (!cloudConnected) {
+    status.textContent = "아직 연결 중이에요. 잠시 후 다시 눌러 주세요.";
+    return;
+  }
+  if (Date.now() - bugLastSent < 30000) {
+    status.textContent = "방금 보냈어요. 잠시 후 다시 보내 주세요.";
+    return;
+  }
+
+  const btn = document.getElementById("bugSendBtn");
+  btn.disabled = true;
+  status.textContent = "보내는 중이에요…";
+  window.cloud.sendBug(text, user).then(function () {
+    bugLastSent = Date.now();
+    input.value = "";
+    status.textContent = "✅ 보냈어요! 한나관리자의 카카오톡으로 전달돼요.";
+  }).catch(function (err) {
+    console.log("버그 제보 실패", err);
+    status.textContent = "⚠ 보내지 못했어요. 인터넷 연결을 확인해 주세요." +
+      (err && err.code ? " (" + err.code + ")" : "");
+  }).then(function () {
+    btn.disabled = false;
+  });
 }
 
 // ===== 연결 상태 (헤더 오른쪽 아이콘, 누르면 자세한 내용) =====
