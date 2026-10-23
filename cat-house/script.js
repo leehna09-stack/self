@@ -672,7 +672,7 @@ function onCloudData(list) {
   }
   // 오늘 위치 팝업이 열려 있으면 내용도 새로고침
   if (!document.getElementById("todayModal").classList.contains("hidden")) {
-    openToday();
+    renderLoc();
   }
 }
 
@@ -1330,15 +1330,53 @@ function drawPlaces(box, dateString) {
   }
 }
 
-// 📍 위치 버튼: 오늘 기준으로 누가 어디에 있는지 보여줌
-function openToday() {
+// 📍 위치 팝업: 처음에는 오늘 기준, ◀▶·날짜 선택으로 다른 날의 위치도 볼 수 있음
+let locDate = "";
+
+function todayDateString() {
   const now = new Date();
-  const dateString = makeDateString(now.getFullYear(), now.getMonth(), now.getDate());
-  document.getElementById("todayDate").textContent =
-    new Intl.DateTimeFormat("ko-KR", { year: "numeric", month: "long", day: "numeric", weekday: "short" }).format(now) + " 기준";
-  drawPlaces(document.getElementById("todayPlaces"), dateString);
+  return makeDateString(now.getFullYear(), now.getMonth(), now.getDate());
+}
+
+function openToday() {
+  locDate = todayDateString();
+  renderLoc();
   document.getElementById("todayModal").classList.remove("hidden");
 }
+
+// 보고 있는 날짜 기준으로 팝업 내용을 그림
+function renderLoc() {
+  const isToday = (locDate === todayDateString());
+  const d = new Date(locDate + "T00:00:00");
+  document.getElementById("locDateLabel").textContent =
+    new Intl.DateTimeFormat("ko-KR", { year: "numeric", month: "long", day: "numeric", weekday: "short" }).format(d) +
+    (isToday ? " · 오늘" : "");
+  document.getElementById("locDateInput").value = locDate;
+  document.getElementById("locTodayBtn").hidden = isToday;
+  drawPlaces(document.getElementById("todayPlaces"), locDate);
+}
+
+// 하루씩 앞뒤로 이동
+function shiftLocDay(step) {
+  const d = new Date(locDate + "T00:00:00");
+  d.setDate(d.getDate() + step);
+  locDate = makeDateString(d.getFullYear(), d.getMonth(), d.getDate());
+  renderLoc();
+}
+
+// 오늘로 돌아오기
+function goLocToday() {
+  locDate = todayDateString();
+  renderLoc();
+}
+
+// 날짜 선택창에서 고른 날짜로 이동
+document.getElementById("locDateInput").addEventListener("change", function (e) {
+  if (/^\d{4}-\d{2}-\d{2}$/.test(e.target.value)) {
+    locDate = e.target.value;
+    renderLoc();
+  }
+});
 
 function closeToday() {
   document.getElementById("todayModal").classList.add("hidden");
