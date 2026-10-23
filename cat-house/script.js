@@ -763,6 +763,11 @@ function sendBug() {
 
 // ===== 연결 상태 (헤더 오른쪽 아이콘, 누르면 자세한 내용) =====
 
+// 모양이 한쪽으로 쏠리지 않는 ✕ 아이콘 (글자 ✕ 대신 선으로 그림)
+function xIcon(size) {
+  return '<svg viewBox="0 0 24 24" width="' + size + '" height="' + size + '" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>';
+}
+
 const SYNC_ICONS = { ok: "🟢", wait: "🔄", error: "⚠️" };
 const SYNC_LABELS = { ok: "완료", wait: "동기화중", error: "오류" };
 let syncTipTimer = null;
@@ -1426,7 +1431,7 @@ function drawDetailPhoto() {
         const delBtn = document.createElement("button");
         delBtn.type = "button";
         delBtn.className = "icon-btn photo-del";
-        delBtn.textContent = "✕";
+        delBtn.innerHTML = xIcon(14);
         delBtn.setAttribute("aria-label", "사진 삭제");
         delBtn.onclick = function (e) {
           e.stopPropagation();
@@ -1730,7 +1735,7 @@ function openPhotoViewer(src, alt) {
   const close = document.createElement("button");
   close.type = "button";
   close.className = "round-btn";
-  close.textContent = "✕";
+  close.innerHTML = xIcon(18);
   close.setAttribute("aria-label", "닫기");
   close.onclick = closePhotoViewer;
   viewer.appendChild(close);
@@ -1991,7 +1996,7 @@ function drawDetailNotes() {
       const delBtn = document.createElement("button");
       delBtn.type = "button";
       delBtn.className = "icon-btn";
-      delBtn.textContent = "✕";
+      delBtn.innerHTML = xIcon(14);
       delBtn.setAttribute("aria-label", "한줄평 삭제");
       delBtn.onclick = function () {
         deleteNote(n.id);

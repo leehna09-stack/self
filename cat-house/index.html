@@ -16,7 +16,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Jua&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=20261107a">
+  <link rel="stylesheet" href="style.css?v=20261109a">
 </head>
 <body>
   <div id="splash" class="splash" aria-hidden="true">
@@ -73,7 +73,7 @@
     <div class="modal-box">
       <div class="modal-title">
         <h2 id="formTitle">일정 입력</h2>
-        <button class="round-btn" onclick="closeForm()" aria-label="닫기">✕</button>
+        <button class="round-btn" onclick="closeForm()" aria-label="닫기"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
       </div>
 
       <div class="form-box">
@@ -119,7 +119,7 @@
     <div class="modal-box">
       <div class="modal-title">
         <h2 id="detailTitle"></h2>
-        <button class="round-btn" onclick="closeDetail()" aria-label="닫기">✕</button>
+        <button class="round-btn" onclick="closeDetail()" aria-label="닫기"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
       </div>
       <h3 id="photoSectionTitle">이 날의 사진</h3>
       <div id="detailPhoto"></div>
@@ -145,7 +145,7 @@
     <div class="modal-box">
       <div class="modal-title">
         <h2 id="manageTitle">일정 변경</h2>
-        <button class="round-btn" onclick="closeManage()" aria-label="닫기">✕</button>
+        <button class="round-btn" onclick="closeManage()" aria-label="닫기"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
       </div>
       <ul id="manageSchedules"></ul>
     </div>
@@ -155,7 +155,7 @@
     <div class="modal-box">
       <div class="modal-title">
         <h2 id="codeTitle">가족 코드 입력</h2>
-        <button class="round-btn" id="codeCloseBtn" onclick="closeCodeModal()" aria-label="닫기">✕</button>
+        <button class="round-btn" id="codeCloseBtn" onclick="closeCodeModal()" aria-label="닫기"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
       </div>
 
       <div class="form-box">
@@ -173,7 +173,7 @@
       <div class="modal-title">
         <h2 id="notifTitle">새 소식</h2>
         <button type="button" id="notifReadAllBtn" class="read-all-btn" onclick="readAllNotif()" hidden>모두 읽음</button>
-        <button class="round-btn" onclick="closeNotif()" aria-label="닫기">✕</button>
+        <button class="round-btn" onclick="closeNotif()" aria-label="닫기"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
       </div>
       <ul id="notifList"></ul>
     </div>
@@ -183,7 +183,7 @@
     <div class="modal-box">
       <div class="modal-title">
         <h2 id="todayTitle">📍 오늘의 위치</h2>
-        <button class="round-btn" onclick="closeToday()" aria-label="닫기">✕</button>
+        <button class="round-btn" onclick="closeToday()" aria-label="닫기"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
       </div>
       <p class="hint" id="todayDate"></p>
       <div id="todayPlaces"></div>
@@ -194,7 +194,7 @@
     <div class="modal-box">
       <div class="modal-title">
         <h2 id="bugTitle">버그 제보</h2>
-        <button class="round-btn" onclick="closeBug()" aria-label="닫기">✕</button>
+        <button class="round-btn" onclick="closeBug()" aria-label="닫기"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
       </div>
       <p class="hint">불편한 점이나 오류를 적어 보내면 한나관리자의 카카오톡으로 전달돼요.</p>
       <div class="note-form">
@@ -209,7 +209,7 @@
     <div class="modal-box">
       <div class="modal-title">
         <h2 id="adminTitle">관리</h2>
-        <button class="round-btn" onclick="closeAdmin()" aria-label="닫기">✕</button>
+        <button class="round-btn" onclick="closeAdmin()" aria-label="닫기"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
       </div>
       <div class="form-box">
         <button type="button" onclick="adminChangeUser()">👤 사용자 바꾸기</button>
@@ -226,7 +226,7 @@
     <div class="modal-box">
       <div class="modal-title">
         <h2 id="userTitle">누구세요?</h2>
-        <button class="round-btn" id="userCloseBtn" onclick="closeUserModal()" aria-label="닫기">✕</button>
+        <button class="round-btn" id="userCloseBtn" onclick="closeUserModal()" aria-label="닫기"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
       </div>
       <p class="hint">고르면 이 폰에 저장돼요. 사진과 한줄평에 이름이 남아요.</p>
       <div class="user-buttons">
@@ -578,6 +578,6 @@
     window.dispatchEvent(new Event("cloud-ready"));
   </script>
 
-  <script src="script.js?v=20261107a"></script>
+  <script src="script.js?v=20261109a"></script>
 </body>
 </html>
