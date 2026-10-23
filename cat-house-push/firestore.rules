@@ -89,14 +89,28 @@ service cloud.firestore {
       allow read: if familyCode.size() >= 20;
 
       allow create: if familyCode.size() >= 20
-        && request.resource.data.keys().hasAll(['type', 'by', 'date', 'place', 'at'])
-        && request.resource.data.keys().hasOnly(['type', 'by', 'date', 'place', 'at'])
-        && request.resource.data.type in ['photo', 'note']
-        && request.resource.data.by in ['엄마', '아빠', '한나', '한비']
-        && request.resource.data.date is string
-        && request.resource.data.date.size() == 10
-        && request.resource.data.place in ['산본집', '제주도']
-        && request.resource.data.at is number;
+        && (
+          (
+            request.resource.data.keys().hasAll(['type', 'by', 'date', 'place', 'at'])
+            && request.resource.data.keys().hasOnly(['type', 'by', 'date', 'place', 'at'])
+            && request.resource.data.type in ['photo', 'note']
+            && request.resource.data.by in ['엄마', '아빠', '한나', '한비']
+            && request.resource.data.date is string
+            && request.resource.data.date.size() == 10
+            && request.resource.data.place in ['산본집', '제주도']
+            && request.resource.data.at is number
+          )
+          || (
+            request.resource.data.keys().hasAll(['type', 'by', 'text', 'at'])
+            && request.resource.data.keys().hasOnly(['type', 'by', 'text', 'at'])
+            && request.resource.data.type == 'notice'
+            && request.resource.data.by == '한나'
+            && request.resource.data.text is string
+            && request.resource.data.text.size() >= 1
+            && request.resource.data.text.size() <= 100
+            && request.resource.data.at is number
+          )
+        );
     }
 
     // 버그 제보 (쓰기만 가능, 읽기·수정·삭제는 서버만)

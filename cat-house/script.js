@@ -164,6 +164,8 @@ const ADMIN_USER = "한나";
 function openAdmin() {
   // 백업은 한나로 접속했을 때만 보임 (사용자·가족 코드 바꾸기는 모두에게 보임)
   document.getElementById("backupSection").hidden = (getUser() !== ADMIN_USER);
+  document.getElementById("noticeSection").hidden = (getUser() !== ADMIN_USER);
+  updateNoticeCount();
   document.getElementById("adminModal").classList.add("hidden");
   document.getElementById("adminModal").classList.remove("hidden");
 }
@@ -182,6 +184,56 @@ function adminChangeCode() {
 // 관리 메뉴 닫기
 function closeAdmin() {
   document.getElementById("adminModal").classList.add("hidden");
+}
+
+// ===== 공지 올리기 (한나만) =====
+
+let noticeLastSent = 0;
+
+// 글자 수 표시
+function updateNoticeCount() {
+  const n = document.getElementById("noticeInput").value.length;
+  document.getElementById("noticeStatus").textContent = n + " / 100";
+}
+
+// 공지를 보냄 → 가족 모두의 🔔 알림(과 푸시 알림)으로 전달
+function sendNotice() {
+  if (getUser() !== ADMIN_USER) {
+    return;
+  }
+  const input = document.getElementById("noticeInput");
+  const status = document.getElementById("noticeStatus");
+  const text = input.value.trim().slice(0, 100);
+  if (text === "") {
+    status.textContent = "공지 내용을 적어 주세요 (최대 100자)";
+    return;
+  }
+  if (!cloudConnected) {
+    status.textContent = "아직 연결 중이에요. 잠시 후 다시 눌러 주세요.";
+    return;
+  }
+  if (Date.now() - noticeLastSent < 10000) {
+    status.textContent = "방금 보냈어요. 잠시 후 다시 보내 주세요.";
+    return;
+  }
+  if (!confirm("가족 모두에게 이 공지를 보낼까요?\n\n" + text)) {
+    return;
+  }
+
+  const btn = document.getElementById("noticeSendBtn");
+  btn.disabled = true;
+  status.textContent = "보내는 중이에요…";
+  window.cloud.postNotice(text, ADMIN_USER).then(function () {
+    noticeLastSent = Date.now();
+    input.value = "";
+    status.textContent = "✅ 공지를 보냈어요. 가족 모두의 알림으로 전달돼요.";
+  }).catch(function (err) {
+    console.log("공지 보내기 실패", err);
+    status.textContent = "⚠ 보내지 못했어요. 인터넷 연결을 확인해 주세요." +
+      (err && err.code ? " (" + err.code + ")" : "");
+  }).then(function () {
+    btn.disabled = false;
+  });
 }
 
 // 모든 데이터를 파일 하나로 내려받기
@@ -549,8 +601,13 @@ function drawNotifList() {
     const li = document.createElement("li");
     const btn = document.createElement("button");
     btn.type = "button";
-    btn.textContent = a.by + " 님이 " + a.place + " " + a.date +
-      (a.type === "photo" ? " 사진을 올렸어요 📷" : " 한줄평을 남겼어요 💬");
+    if (a.type === "notice") {
+      btn.textContent = "📢 공지 · " + a.text;
+      btn.className = "notice-item";
+    } else {
+      btn.textContent = a.by + " 님이 " + a.place + " " + a.date +
+        (a.type === "photo" ? " 사진을 올렸어요 📷" : " 한줄평을 남겼어요 💬");
+    }
     btn.onclick = function () {
       gotoActivity(a);
     };
@@ -578,6 +635,13 @@ let highlightNewNote = false;
 
 // 새 소식을 누르면 그 소식만 확인 처리하고, 그 장소의 그 달 그 날짜를 열어 해당 소식이 있는 칸으로 이동
 function gotoActivity(a) {
+  // 공지는 이동할 곳이 없어서, 읽음으로만 처리하고 알림창에 남아 다른 소식도 이어서 볼 수 있게 함
+  if (a.type === "notice") {
+    markRead([a]);
+    updateBell();
+    drawNotifList();
+    return;
+  }
   highlightNewNote = (a.type !== "photo");
   markRead([a]);
   updateBell();

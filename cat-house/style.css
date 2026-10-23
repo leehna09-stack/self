@@ -1338,3 +1338,33 @@ fieldset.people-check {
   font-size: 16px;
   cursor: pointer;
 }
+
+
+/* 공지 올리기 */
+#noticeSection {
+  margin-bottom: 4px;
+}
+
+#noticeSection h3 {
+  margin: 4px 0 8px 0;
+}
+
+#noticeInput {
+  width: 100%;
+  box-sizing: border-box;
+  margin-bottom: 8px;
+  padding: 10px 12px;
+  border: 1.5px solid var(--line);
+  border-radius: 14px;
+  background-color: #ffffff;
+  font: inherit;
+  font-size: 16px;
+  color: var(--ink);
+  resize: none;
+}
+
+/* 알림창의 공지 항목 */
+#notifList .notice-item {
+  background-color: #fff6df;
+  border-color: #f0d28a;
+}
