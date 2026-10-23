@@ -638,6 +638,7 @@ function onDayData(map) {
 
 // 저장소에서 일정이 도착하면 실행 (처음 + 누군가 바꿀 때마다)
 function onCloudData(list) {
+  hideSplash();
   // 같은 사람 일정이 겹치면 시작일이 더 늦은 일정이 우선
   list.sort(function (a, b) {
     if (a.startDate < b.startDate) return 1;
@@ -661,6 +662,39 @@ function onCloudData(list) {
   if (!document.getElementById("detailModal").classList.contains("hidden")) {
     openDetail(currentDetailDate, true);
   }
+}
+
+// ===== 시작 화면 / 버그 제보 =====
+
+const splashStart = Date.now();
+let splashDone = false;
+
+// 시작 화면을 부드럽게 걷어냄 (너무 번쩍 사라지지 않게 최소 0.9초는 보여줌)
+function hideSplash() {
+  if (splashDone) {
+    return;
+  }
+  splashDone = true;
+  const wait = Math.max(0, 900 - (Date.now() - splashStart));
+  setTimeout(function () {
+    const splash = document.getElementById("splash");
+    splash.classList.add("hide");
+    setTimeout(function () {
+      splash.remove();
+    }, 500);
+  }, wait);
+}
+
+// 연결이 안 되거나 오래 걸려도 6초 뒤에는 시작 화면을 걷어냄
+setTimeout(hideSplash, 6000);
+
+// 버그 제보 안내창
+function openBug() {
+  document.getElementById("bugModal").classList.remove("hidden");
+}
+
+function closeBug() {
+  document.getElementById("bugModal").classList.add("hidden");
 }
 
 // ===== 연결 상태 (헤더 오른쪽 아이콘, 누르면 자세한 내용) =====
@@ -781,6 +815,7 @@ document.addEventListener("visibilitychange", function () {
 function startSync() {
   const code = getSavedCode();
   if (code === "") {
+    hideSplash();
     openCodeModal();
   } else {
     connectCloud(code);
@@ -2021,6 +2056,7 @@ document.addEventListener("keydown", function (e) {
     closeDetail();
     closeManage();
     closeNotif();
+    closeBug();
     closeAdmin();
     closeCodeModal();
     closeUserModal();
