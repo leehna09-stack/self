@@ -45,7 +45,8 @@ exports.notifyFamily = onDocumentCreated(
       body = "📢 공지: " + activity.text;
       link = SITE_URL;
     } else {
-      const what = activity.type === "photo" ? "사진을 올렸어요 📷" : "한줄평을 남겼어요 💬";
+      const what = activity.type === "photo" ? "사진을 올렸어요 📷"
+        : activity.type === "video" ? "영상을 올렸어요 🎬" : "한줄평을 남겼어요 💬";
       body = activity.by + " 님이 " + activity.place + " " + activity.date + " " + what;
       link = SITE_URL + "?" + new URLSearchParams({
         date: activity.date,

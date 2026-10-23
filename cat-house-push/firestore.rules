@@ -43,12 +43,44 @@ service cloud.firestore {
         && (!('by' in request.resource.data) || request.resource.data.by in ['엄마', '아빠', '한나', '한비']);
     }
 
+    match /families/{familyCode}/videos/{videoId} {
+      allow read, delete: if familyCode.size() >= 20;
+
+      // 날짜마다 1·2번 칸만 (날짜당 영상 2개까지), 10초짜리 줄인 영상(webm)
+      allow create, update: if familyCode.size() >= 20
+        && videoId.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}_[12]$')
+        && request.resource.data.keys().hasAll(['video', 'savedAt'])
+        && request.resource.data.keys().hasOnly(['video', 'mime', 'duration', 'savedAt', 'by'])
+        && request.resource.data.video is string
+        && request.resource.data.video.size() < 950000
+        && request.resource.data.video.matches('^data:video/webm;.*')
+        && request.resource.data.savedAt is number
+        && (!('duration' in request.resource.data) || request.resource.data.duration is number)
+        && (!('by' in request.resource.data) || request.resource.data.by in ['엄마', '아빠', '한나', '한비']);
+    }
+
+    match /families/{familyCode}/jejuVideos/{videoId} {
+      allow read, delete: if familyCode.size() >= 20;
+
+      // 날짜마다 1·2번 칸만 (날짜당 영상 2개까지), 10초짜리 줄인 영상(webm)
+      allow create, update: if familyCode.size() >= 20
+        && videoId.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}_[12]$')
+        && request.resource.data.keys().hasAll(['video', 'savedAt'])
+        && request.resource.data.keys().hasOnly(['video', 'mime', 'duration', 'savedAt', 'by'])
+        && request.resource.data.video is string
+        && request.resource.data.video.size() < 950000
+        && request.resource.data.video.matches('^data:video/webm;.*')
+        && request.resource.data.savedAt is number
+        && (!('duration' in request.resource.data) || request.resource.data.duration is number)
+        && (!('by' in request.resource.data) || request.resource.data.by in ['엄마', '아빠', '한나', '한비']);
+    }
+
     match /families/{familyCode}/days/{dayDate} {
       allow read, delete: if familyCode.size() >= 20;
 
       allow create, update: if familyCode.size() >= 20
         && dayDate.size() == 10
-        && request.resource.data.keys().hasOnly(['weather', 'weatherBy', 'note', 'noteBy', 'fed', 'cleaned'])
+        && request.resource.data.keys().hasOnly(['weather', 'weatherBy', 'note', 'noteBy', 'fed', 'cleaned', 'videos', 'jejuVideos'])
         && (!('weather' in request.resource.data)
             || request.resource.data.weather in ['', 'sun', 'cloud', 'overcast', 'rain', 'typhoon'])
         && (!('note' in request.resource.data)
@@ -60,7 +92,11 @@ service cloud.firestore {
         && (!('fed' in request.resource.data)
             || request.resource.data.fed is bool)
         && (!('cleaned' in request.resource.data)
-            || request.resource.data.cleaned is bool);
+            || request.resource.data.cleaned is bool)
+        && (!('videos' in request.resource.data)
+            || (request.resource.data.videos is int && request.resource.data.videos >= 0 && request.resource.data.videos <= 2))
+        && (!('jejuVideos' in request.resource.data)
+            || (request.resource.data.jejuVideos is int && request.resource.data.jejuVideos >= 0 && request.resource.data.jejuVideos <= 2));
     }
 
     match /families/{familyCode}/notes/{noteId} {
@@ -93,7 +129,7 @@ service cloud.firestore {
           (
             request.resource.data.keys().hasAll(['type', 'by', 'date', 'place', 'at'])
             && request.resource.data.keys().hasOnly(['type', 'by', 'date', 'place', 'at'])
-            && request.resource.data.type in ['photo', 'note']
+            && request.resource.data.type in ['photo', 'note', 'video']
             && request.resource.data.by in ['엄마', '아빠', '한나', '한비']
             && request.resource.data.date is string
             && request.resource.data.date.size() == 10
