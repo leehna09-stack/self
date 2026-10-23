@@ -16,7 +16,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Jua&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=20261029a">
+  <link rel="stylesheet" href="style.css?v=20261030a">
 </head>
 <body>
   <div id="splash" class="splash" aria-hidden="true">
@@ -44,16 +44,15 @@
 
     <section class="card">
       <div class="toolbar">
-        <div class="place-switch">
-          <button class="round-btn" onclick="switchPlace()" aria-label="이전 장소">◀</button>
-          <h2 id="placeTitle" aria-live="polite">🏠 산본집</h2>
-          <button class="round-btn" onclick="switchPlace()" aria-label="다음 장소">▶</button>
-          <button class="round-btn bell-btn" id="bellBtn" onclick="openNotif()" aria-label="새 소식">🔔<span id="bellBadge" class="badge" hidden></span></button>
+        <div class="place-tabs" role="tablist" aria-label="장소 선택">
+          <button type="button" role="tab" class="place-tab" id="tabHome" aria-selected="true" onclick="switchPlace('산본집')">🏠 산본집</button>
+          <button type="button" role="tab" class="place-tab" id="tabJeju" aria-selected="false" onclick="switchPlace('제주도')">🌴 제주도</button>
+          <button class="round-btn bell-btn" id="bellBtn" onclick="openNotif()" aria-label="새 소식"><span class="bell-icon" aria-hidden="true">🔔</span><span id="bellBadge" class="badge" hidden></span></button>
         </div>
 
         <div class="calendar-header">
           <button class="round-btn" onclick="changeMonth(-1)" aria-label="이전 달">◀</button>
-          <span id="monthTitle" aria-live="polite"></span>
+          <button type="button" id="monthTitle" class="month-title" onclick="goToday()" aria-label="이번 달로 이동"></button>
           <button class="round-btn" onclick="changeMonth(1)" aria-label="다음 달">▶</button>
         </div>
       </div>
@@ -569,6 +568,6 @@
     window.dispatchEvent(new Event("cloud-ready"));
   </script>
 
-  <script src="script.js?v=20261029a"></script>
+  <script src="script.js?v=20261030a"></script>
 </body>
 </html>

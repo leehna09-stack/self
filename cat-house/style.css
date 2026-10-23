@@ -238,54 +238,96 @@ button:active {
   outline-offset: 2px;
 }
 
-/* ===== 한 줄 도구막대: 장소 전환 + 월 이동 ===== */
+/* ===== 도구막대: 장소 탭(밑줄) + 월 이동 ===== */
 .toolbar {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: nowrap;
-  gap: 8px;
+  flex-direction: column;
+  gap: 6px;
   margin-bottom: 12px;
 }
 
-.toolbar .round-btn {
-  width: 38px;
-  height: 38px;
-  min-height: 38px;
+.place-tabs {
+  display: flex;
+  align-items: center;
+  border-bottom: 1px solid var(--line);
 }
 
-.place-switch,
+.place-tab {
+  position: relative;
+  flex: 1 1 0;
+  min-width: 0;
+  min-height: 44px;
+  padding: 0 8px;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  font-size: 15px;
+  color: var(--sub);
+  white-space: nowrap;
+}
+
+.place-tab:hover {
+  background: transparent;
+}
+
+/* 선택된 탭 아래 밑줄이 옆에서 펼쳐지며 나타남 */
+.place-tab::after {
+  content: "";
+  position: absolute;
+  left: 14%;
+  right: 14%;
+  bottom: -1px;
+  height: 3px;
+  border-radius: 3px 3px 0 0;
+  background-color: var(--ink);
+  transform: scaleX(0);
+  transition: transform 0.25s ease;
+}
+
+.place-tab[aria-selected="true"] {
+  color: var(--ink);
+  font-weight: bold;
+}
+
+.place-tab[aria-selected="true"]::after {
+  transform: scaleX(1);
+}
+
+.toolbar .bell-btn {
+  flex: 0 0 auto;
+  width: 40px;
+  height: 40px;
+  min-height: 40px;
+  margin-left: 4px;
+  font-size: 18px;
+}
+
 .calendar-header {
   display: flex;
   align-items: center;
-  gap: 4px;
-  margin: 0;
+  justify-content: space-between;
+  gap: 8px;
 }
 
-.place-switch h2 {
-  margin: 0;
-  min-width: 80px;
-  text-align: center;
-  font-size: 17px;
-  white-space: nowrap;
+.calendar-header .round-btn {
+  width: 44px;
+  height: 44px;
+  min-height: 44px;
 }
 
-#monthTitle {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  min-width: 44px;
+/* 가운데 월 글자 (누르면 이번 달로) */
+.month-title {
+  flex: 1 1 auto;
+  min-height: 44px;
+  padding: 0 8px;
+  border: none;
+  border-radius: 12px;
+  background: transparent;
   font-family: var(--font-title);
-  font-size: 17px;
+  font-size: 18px;
   line-height: 1.1;
   white-space: nowrap;
   font-variant-numeric: tabular-nums;
-}
-
-#monthTitle small {
-  font-family: var(--font-body);
-  font-size: 11px;
-  color: var(--sub);
 }
 
 /* ===== 달력 ===== */
@@ -796,20 +838,30 @@ fieldset.people-check {
   position: relative;
 }
 
+.bell-icon {
+  display: inline-block;
+  transform-origin: 50% 10%;
+}
+
+/* 안 읽은 소식이 있으면 종이 살짝 흔들림 (헤더 마스코트와 같은 움직임) */
+.bell-btn.has-news .bell-icon {
+  animation: wiggle 3s ease-in-out infinite;
+}
+
 .badge {
   position: absolute;
-  top: -4px;
-  right: -4px;
-  min-width: 18px;
-  height: 18px;
-  padding: 0 4px;
+  top: -1px;
+  right: -1px;
+  min-width: 14px;
+  height: 14px;
+  padding: 0 3px;
   box-sizing: border-box;
   border-radius: 999px;
   background-color: #d92d20;
   color: #ffffff;
   font-family: var(--font-body);
-  font-size: 11px;
-  line-height: 18px;
+  font-size: 9px;
+  line-height: 14px;
   text-align: center;
 }
 
@@ -1061,26 +1113,6 @@ fieldset.people-check {
     gap: 4px;
   }
 
-  /* 종 알림 버튼이 들어가도 장소·월 이동이 한 줄에 들어가게 */
-  .toolbar {
-    gap: 4px;
-  }
-
-  .toolbar .round-btn {
-    width: 32px;
-    height: 32px;
-    min-height: 32px;
-  }
-
-  .place-switch h2 {
-    min-width: 0;
-    padding: 0 2px;
-    font-size: 15px;
-  }
-
-  #monthTitle {
-    min-width: 36px;
-  }
 }
 
 /* ===== 아주 작은 폰 (넓이 340px 이하) ===== */
@@ -1093,32 +1125,6 @@ fieldset.people-check {
     height: 28px;
   }
 
-  .toolbar {
-    gap: 2px;
-  }
-
-  .place-switch,
-  .calendar-header {
-    gap: 2px;
-  }
-
-  .toolbar .round-btn {
-    width: 28px;
-    height: 28px;
-    min-height: 28px;
-    font-size: 10px;
-  }
-
-  .place-switch h2 {
-    min-width: 0;
-    padding: 0;
-    font-size: 14px;
-  }
-
-  #monthTitle {
-    min-width: 30px;
-    font-size: 15px;
-  }
 }
 
 /* ===== 움직임 줄이기 설정을 켠 사람을 위해 ===== */
