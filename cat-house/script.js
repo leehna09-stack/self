@@ -835,6 +835,9 @@ document.addEventListener("click", function (e) {
   }
 });
 
+// 연결 상태 시작점보다 오른쪽으로 살짝 옮기는 거리(px)
+const BELL_NUDGE = 2;
+
 // 알림 종 아이콘의 왼쪽 끝을 연결 상태(🟢 완료)의 시작점과 같은 세로줄에 맞춤
 function alignBell() {
   const bell = document.getElementById("bellBtn");
@@ -850,7 +853,7 @@ function alignBell() {
   const iconLeft = icon.getBoundingClientRect().left;
   // 연결 상태 아이콘(🟢)이 시작되는 지점 (칸의 왼쪽 여백 포함, 회전해도 흔들리지 않게 계산)
   const chipLeft = chip.getBoundingClientRect().left + parseFloat(getComputedStyle(chip).paddingLeft);
-  bell.style.left = (chipLeft - iconLeft) + "px";
+  bell.style.left = (chipLeft - iconLeft + BELL_NUDGE) + "px";
 
   // 제목이 종과 겹치지 않도록 헤더 오른쪽을 비우고, 제목이 한 줄에 들어갈 때까지 글자를 줄임
   const iconLeftNow = icon.getBoundingClientRect().left;
