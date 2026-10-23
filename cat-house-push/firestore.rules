@@ -99,6 +99,18 @@ service cloud.firestore {
         && request.resource.data.at is number;
     }
 
+    // 버그 제보 (쓰기만 가능, 읽기·수정·삭제는 서버만)
+    match /families/{familyCode}/bugReports/{reportId} {
+      allow create: if familyCode.size() >= 20
+        && request.resource.data.keys().hasAll(['text', 'by', 'at'])
+        && request.resource.data.keys().hasOnly(['text', 'by', 'at'])
+        && request.resource.data.text is string
+        && request.resource.data.text.size() >= 1
+        && request.resource.data.text.size() <= 50
+        && request.resource.data.by in ['엄마', '아빠', '한나', '한비']
+        && request.resource.data.at is number;
+    }
+
     // 푸시 알림을 받을 기기 주소 (읽기는 서버 기능만 하므로 막아 둠)
     match /families/{familyCode}/pushTokens/{token} {
       allow create, update: if familyCode.size() >= 20

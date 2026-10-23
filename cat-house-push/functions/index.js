@@ -81,3 +81,78 @@ exports.notifyFamily = onDocumentCreated(
     }));
   }
 );
+
+
+// ===== 버그 제보 → 한나관리자 카카오톡 ("나에게 보내기") =====
+// 카카오 키와 토큰은 Firestore의 config/kakao 문서에 저장 (앱에서는 읽을 수 없고 서버만 읽음)
+//   restApiKey: 카카오 REST API 키, clientSecret: (사용 설정했다면) 클라이언트 시크릿, refreshToken: 리프레시 토큰
+
+// 리프레시 토큰으로 새 액세스 토큰을 받음 (카카오가 새 리프레시 토큰을 주면 저장해 둠)
+async function getKakaoAccessToken(db) {
+  const ref = db.collection("config").doc("kakao");
+  const snap = await ref.get();
+  if (!snap.exists) {
+    throw new Error("config/kakao 문서가 없어요");
+  }
+  const cfg = snap.data();
+  const body = new URLSearchParams({
+    grant_type: "refresh_token",
+    client_id: cfg.restApiKey,
+    refresh_token: cfg.refreshToken
+  });
+  if (cfg.clientSecret) {
+    body.set("client_secret", cfg.clientSecret);
+  }
+  const res = await fetch("https://kauth.kakao.com/oauth/token", {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded;charset=utf-8" },
+    body: body
+  });
+  const json = await res.json();
+  if (!res.ok || !json.access_token) {
+    throw new Error("카카오 토큰 발급 실패: " + JSON.stringify(json));
+  }
+  if (json.refresh_token) {
+    await ref.update({ refreshToken: json.refresh_token });
+  }
+  return json.access_token;
+}
+
+exports.sendBugToKakao = onDocumentCreated(
+  { document: "families/{familyCode}/bugReports/{reportId}", region: REGION },
+  async function (event) {
+    const snap = event.data;
+    if (!snap) {
+      return;
+    }
+    const report = snap.data();
+    const db = getFirestore();
+
+    try {
+      const accessToken = await getKakaoAccessToken(db);
+      const when = new Date(report.at).toLocaleString("ko-KR", { timeZone: "Asia/Seoul" });
+      const template = {
+        object_type: "text",
+        text: "🐞 버그 제보\n" + report.by + ": " + report.text + "\n" + when,
+        link: { web_url: SITE_URL, mobile_web_url: SITE_URL },
+        button_title: "앱 열기"
+      };
+      const res = await fetch("https://kapi.kakao.com/v2/api/talk/memo/default/send", {
+        method: "POST",
+        headers: {
+          Authorization: "Bearer " + accessToken,
+          "Content-Type": "application/x-www-form-urlencoded;charset=utf-8"
+        },
+        body: new URLSearchParams({ template_object: JSON.stringify(template) })
+      });
+      const json = await res.json();
+      if (!res.ok || json.result_code !== 0) {
+        throw new Error("카카오 메시지 전송 실패: " + JSON.stringify(json));
+      }
+      await snap.ref.update({ kakaoSent: true });
+    } catch (err) {
+      console.error("버그 제보 카카오톡 전송 실패", err);
+      await snap.ref.update({ kakaoSent: false, kakaoError: String(err.message || err).slice(0, 300) });
+    }
+  }
+);
