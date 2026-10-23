@@ -694,7 +694,7 @@ fieldset.people-check {
   scroll-snap-align: center;
 }
 
-/* 세로 비율(3:4) 틀: 가로 사진은 틀 안에서 줄어들어 보이고, 누르면 팝업으로 크게 열림 */
+/* 세로 비율(3:4) 틀: 사진이 틀을 가득 채우고(가로 사진은 가운데를 기준으로 잘림), 누르면 팝업으로 원본 전체가 크게 열림 */
 .photo-frame {
   width: 100%;
   aspect-ratio: 3 / 4;
@@ -710,7 +710,7 @@ fieldset.people-check {
   width: 100%;
   height: 100%;
   display: block;
-  object-fit: contain;
+  object-fit: cover;
 }
 
 /* 사진 크게 보기 팝업 */
@@ -743,11 +743,21 @@ fieldset.people-check {
   margin-top: 4px;
 }
 
-.photo-del {
+.photo-del,
+#detailPhoto .photo-del {
   position: absolute;
   bottom: 8px;
   left: 8px;
-  background-color: rgba(255, 255, 255, 0.9);
+  width: 34px;
+  height: 34px;
+  min-height: 34px;
+  padding: 0;
+  border-radius: 50%;
+  background-color: rgba(255, 255, 255, 0.92);
+}
+
+.photo-del svg {
+  flex-shrink: 0;
 }
 
 .photo-count {
@@ -1275,4 +1285,56 @@ fieldset.people-check {
 /* 팝업이 열릴 때 자동으로 포커스가 가도 진한 원형 테두리가 생기지 않게 (연한 배경으로만 표시) */
 .modal-title .round-btn:focus-visible {
   outline: none;
+}
+
+
+/* 위치 팝업: 날짜 이동 */
+.loc-today-btn {
+  margin-left: auto;
+  min-height: 32px;
+  padding: 0 12px;
+  border-radius: 16px;
+  font-size: 12px;
+}
+
+.loc-today-btn[hidden] {
+  display: none;
+}
+
+.loc-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.loc-nav .round-btn {
+  width: 40px;
+  height: 40px;
+  min-height: 40px;
+}
+
+/* 날짜 글자 위에 투명한 날짜 입력칸을 겹쳐서, 글자를 누르면 폰의 날짜 선택창이 열림 */
+.loc-date {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  background-color: var(--soft);
+  font-size: 15px;
+  white-space: nowrap;
+}
+
+.loc-date input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  font-size: 16px;
+  cursor: pointer;
 }
