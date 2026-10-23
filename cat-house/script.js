@@ -671,6 +671,10 @@ function onCloudData(list) {
   if (!document.getElementById("detailModal").classList.contains("hidden")) {
     openDetail(currentDetailDate, true);
   }
+  // 오늘 위치 팝업이 열려 있으면 내용도 새로고침
+  if (!document.getElementById("todayModal").classList.contains("hidden")) {
+    openToday();
+  }
 }
 
 // ===== 시작 화면 / 버그 제보 =====
@@ -836,7 +840,7 @@ document.addEventListener("click", function (e) {
 });
 
 // 연결 상태 시작점보다 오른쪽으로 살짝 옮기는 거리(px)
-const BELL_NUDGE = 2;
+const BELL_NUDGE = 5;
 
 // 알림 종 아이콘의 왼쪽 끝을 연결 상태(🟢 완료)의 시작점과 같은 세로줄에 맞춤
 function alignBell() {
@@ -1295,22 +1299,10 @@ function addSchedule() {
 
 // ===== 날짜 상세 =====
 
-// 날짜 상세창 열기 (keepFocus가 true면 포커스를 옮기지 않음)
-function openDetail(dateString, keepFocus) {
-  currentDetailDate = dateString;
-  document.getElementById("detailTitle").textContent =
-    new Intl.DateTimeFormat("ko-KR", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-      weekday: "short"
-    }).format(new Date(dateString + "T00:00:00"));
-
+// 그 날짜에 누가 어디에 있는지를 box에 그려줌 (날짜 상세창과 오늘 위치 팝업이 함께 사용)
+function drawPlaces(box, dateString) {
   const placeIcons = { "산본집": "🏠", "제주도": "🌴", "송정지구": "🏢" };
-
-  // 장소별로 누가 있는지
-  const placeBox = document.getElementById("detailPlaces");
-  placeBox.innerHTML = "";
+  box.innerHTML = "";
   const shownPlaces = ["산본집", "제주도"];
   for (let p = 0; p < shownPlaces.length; p++) {
     const names = [];
@@ -1322,7 +1314,7 @@ function openDetail(dateString, keepFocus) {
     const line = document.createElement("div");
     line.textContent = placeIcons[shownPlaces[p]] + " " + shownPlaces[p] + ": " +
       (names.length > 0 ? names.join(", ") : "없음");
-    placeBox.appendChild(line);
+    box.appendChild(line);
   }
 
   // 빈집이면 경고
@@ -1330,8 +1322,37 @@ function openDetail(dateString, keepFocus) {
     const warn = document.createElement("div");
     warn.className = "detail-warn";
     warn.textContent = "🐱 빈집 " + getEmptyDays(dateString) + "일차";
-    placeBox.appendChild(warn);
+    box.appendChild(warn);
   }
+}
+
+// 📍 위치 버튼: 오늘 기준으로 누가 어디에 있는지 보여줌
+function openToday() {
+  const now = new Date();
+  const dateString = makeDateString(now.getFullYear(), now.getMonth(), now.getDate());
+  document.getElementById("todayTitle").textContent =
+    "📍 오늘의 위치 · " + new Intl.DateTimeFormat("ko-KR", { month: "long", day: "numeric", weekday: "short" }).format(now);
+  drawPlaces(document.getElementById("todayPlaces"), dateString);
+  document.getElementById("todayModal").classList.remove("hidden");
+}
+
+function closeToday() {
+  document.getElementById("todayModal").classList.add("hidden");
+}
+
+// 날짜 상세창 열기 (keepFocus가 true면 포커스를 옮기지 않음)
+function openDetail(dateString, keepFocus) {
+  currentDetailDate = dateString;
+  document.getElementById("detailTitle").textContent =
+    new Intl.DateTimeFormat("ko-KR", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+      weekday: "short"
+    }).format(new Date(dateString + "T00:00:00"));
+
+  // 장소별로 누가 있는지 (오늘 위치 팝업과 같은 방식)
+  drawPlaces(document.getElementById("detailPlaces"), dateString);
 
   // 날씨는 제주도 달력에서만
   document.getElementById("weatherSection").hidden = (viewPlace !== "제주도");
@@ -2181,6 +2202,7 @@ document.addEventListener("keydown", function (e) {
     closeManage();
     closeNotif();
     closeBug();
+    closeToday();
     closeAdmin();
     closeCodeModal();
     closeUserModal();

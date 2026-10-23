@@ -610,7 +610,8 @@ fieldset.people-check {
 }
 
 /* ===== 날짜 상세 ===== */
-#detailPlaces div {
+#detailPlaces div,
+#todayPlaces div {
   background-color: var(--soft);
   border-radius: 14px;
   padding: 8px 14px;
@@ -618,7 +619,8 @@ fieldset.people-check {
   font-size: 15px;
 }
 
-#detailPlaces .detail-warn {
+#detailPlaces .detail-warn,
+#todayPlaces .detail-warn {
   background-color: #ffe3e0;
   color: #b42318;
   font-weight: bold;

@@ -16,7 +16,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Jua&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=20261103a">
+  <link rel="stylesheet" href="style.css?v=20261104a">
 </head>
 <body>
   <div id="splash" class="splash" aria-hidden="true">
@@ -34,7 +34,7 @@
       <div class="add-card-buttons">
         <button class="add-btn" onclick="openForm()">📅 일정 입력</button>
         <button class="sub-btn" onclick="openManage()">✏️ 일정 변경</button>
-        <button class="sub-btn" onclick="openBug()">🐞 버그제보</button>
+        <button class="sub-btn" onclick="openToday()">📍 위치</button>
         <button type="button" id="syncChip" class="sync-chip" onclick="toggleSyncTip()" aria-label="연결 상태 보기"><span id="syncIcon" class="sync-icon" data-level="wait" aria-hidden="true">🔄</span><span id="syncLabel">동기화중</span></button>
       </div>
       <div id="syncTip" class="sync-tip" role="status" aria-live="polite" hidden>
@@ -64,6 +64,7 @@
       <span id="codeInfo"></span>
       <span id="userInfo"></span>
       <button class="link-btn" id="adminBtn" onclick="openAdmin()">🛠 관리</button>
+      <button class="link-btn" onclick="openBug()">🐞 버그제보</button>
       <button class="link-btn" id="installBtn" onclick="installApp()">📲 앱 설치</button>
     </div>
   </main>
@@ -177,6 +178,16 @@
         <button class="round-btn" onclick="closeNotif()" aria-label="닫기">✕</button>
       </div>
       <ul id="notifList"></ul>
+    </div>
+  </div>
+
+  <div id="todayModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="todayTitle">
+    <div class="modal-box">
+      <div class="modal-title">
+        <h2 id="todayTitle">📍 오늘의 위치</h2>
+        <button class="round-btn" onclick="closeToday()" aria-label="닫기">✕</button>
+      </div>
+      <div id="todayPlaces"></div>
     </div>
   </div>
 
@@ -568,6 +579,6 @@
     window.dispatchEvent(new Event("cloud-ready"));
   </script>
 
-  <script src="script.js?v=20261103a"></script>
+  <script src="script.js?v=20261104a"></script>
 </body>
 </html>
