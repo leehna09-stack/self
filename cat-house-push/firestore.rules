@@ -8,7 +8,7 @@ service cloud.firestore {
         && request.resource.data.keys().hasAll(['person', 'place', 'startDate', 'endDate'])
         && request.resource.data.keys().hasOnly(['person', 'place', 'startDate', 'endDate'])
         && request.resource.data.person in ['엄마', '아빠', '한나', '한비']
-        && request.resource.data.place in ['산본집', '제주도', '송정지구']
+        && request.resource.data.place in ['산본집', '제주도']
         && request.resource.data.startDate is string
         && request.resource.data.endDate is string
         && request.resource.data.startDate.size() == 10

@@ -16,10 +16,7 @@ let viewMonth = new Date().getMonth(); // 0=1월, 1=2월, ... 11=12월
 // 가족 이름 목록
 const people = ["엄마", "아빠", "한나", "한비"];
 
-// 장소 목록
-const placeList = ["산본집", "제주도", "송정지구"];
-
-// 각 사람의 평소 위치 (일정이 없는 날의 기본값)
+// 각 사람의 평소 위치 (일정이 없는 날의 기본값, 일정 입력·사진·한줄평은 산본집/제주도만)
 const defaultPlaces = {
   "엄마": "제주도",
   "아빠": "제주도",
@@ -1374,7 +1371,7 @@ function addSchedule() {
 function drawPlaces(box, dateString) {
   const placeIcons = { "산본집": "🏠", "제주도": "🌴", "송정지구": "🏢" };
   box.innerHTML = "";
-  const shownPlaces = ["산본집", "제주도"];
+  const shownPlaces = ["산본집", "제주도", "송정지구"];
   for (let p = 0; p < shownPlaces.length; p++) {
     const names = [];
     for (let i = 0; i < people.length; i++) {
@@ -2675,7 +2672,12 @@ function editSchedule(id) {
   for (let i = 0; i < boxes.length; i++) {
     boxes[i].checked = (boxes[i].value === s.person);
   }
-  document.getElementById("place").value = s.place;
+  // 옛 송정지구 일정처럼 선택칸에 없는 장소는 산본집으로 채워서 저장이 막히지 않게
+  const placeSelect = document.getElementById("place");
+  placeSelect.value = s.place;
+  if (placeSelect.value !== s.place) {
+    placeSelect.value = "산본집";
+  }
   document.getElementById("startDate").value = s.startDate;
   document.getElementById("endDate").value = s.endDate;
   syncPicker();
