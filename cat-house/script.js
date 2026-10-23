@@ -40,6 +40,8 @@ let dayVideos = [];        // 상세창에 열린 날짜의 영상들
 let videosLoaded = false;
 let videoObserver = null;
 let photoBusyText = "";    // 올리는 중 안내 글(사진·영상 공통)
+let photoBusyPct = null;   // 진행률 0~100 (null이면 끝을 알 수 없어서 계속 움직이는 막대)
+let photoBusyHint = "";    // 막대 아래 작은 안내
 
 // 보고 있는 달의 날씨·한줄평 ("2026-10-05" → { weather, note, noteBy ... })
 let days = {};
@@ -1677,11 +1679,39 @@ function drawDetailPhoto() {
   actions.appendChild(videoBtn);
 
   if (photoBusy) {
-    const busyNote = document.createElement("div");
-    busyNote.className = "photo-by";
-    busyNote.id = "photoBusyNote";
-    busyNote.textContent = photoBusyText || "올리는 중이에요… 잠시만 기다려 주세요";
-    box.appendChild(busyNote);
+    // 진행 막대 + 퍼센트 (퍼센트를 모르면 막대가 계속 흐름)
+    const busyBox = document.createElement("div");
+    busyBox.className = "busy-box";
+    busyBox.id = "photoBusyNote";
+    busyBox.setAttribute("role", "progressbar");
+    busyBox.setAttribute("aria-valuemin", "0");
+    busyBox.setAttribute("aria-valuemax", "100");
+
+    const row = document.createElement("div");
+    row.className = "busy-row";
+    const label = document.createElement("span");
+    label.id = "busyLabel";
+    const pct = document.createElement("span");
+    pct.id = "busyPct";
+    row.appendChild(label);
+    row.appendChild(pct);
+    busyBox.appendChild(row);
+
+    const track = document.createElement("div");
+    track.className = "busy-track";
+    const fill = document.createElement("div");
+    fill.id = "busyFill";
+    fill.className = "busy-fill";
+    track.appendChild(fill);
+    busyBox.appendChild(track);
+
+    const hint = document.createElement("div");
+    hint.id = "busyHint";
+    hint.className = "busy-hint";
+    busyBox.appendChild(hint);
+
+    box.appendChild(busyBox);
+    paintBusy();
   }
 
   if (list.length >= MAX_PHOTOS) {
@@ -1690,6 +1720,36 @@ function drawDetailPhoto() {
     note.textContent = "5장이 넘으면 가장 오래된 사진이 자동으로 지워져요";
     box.appendChild(note);
   }
+}
+
+// 진행 막대·퍼센트·안내 글을 지금 값으로 그림
+function paintBusy() {
+  const box = document.getElementById("photoBusyNote");
+  if (!box) {
+    return;
+  }
+  const known = photoBusyPct !== null;
+  const pct = known ? Math.max(0, Math.min(100, Math.round(photoBusyPct))) : 0;
+  document.getElementById("busyLabel").textContent = photoBusyText || "올리는 중";
+  document.getElementById("busyPct").textContent = known ? pct + "%" : "";
+  const fill = document.getElementById("busyFill");
+  fill.classList.toggle("indeterminate", !known);
+  fill.style.width = known ? pct + "%" : "";
+  document.getElementById("busyHint").textContent = photoBusyHint;
+  box.setAttribute("aria-label", photoBusyText || "올리는 중");
+  if (known) {
+    box.setAttribute("aria-valuenow", String(pct));
+  } else {
+    box.removeAttribute("aria-valuenow");
+  }
+}
+
+// 올리는 중 상태 바꾸기 (화면을 다시 그리지 않고 막대만 갱신)
+function setBusyInfo(text, pct, hint) {
+  photoBusyText = text;
+  photoBusyPct = pct;
+  photoBusyHint = hint || "";
+  paintBusy();
 }
 
 // 영상을 소리와 함께 재생하고, 자동 재생이 막히면 소리를 끄고 재생
@@ -1956,6 +2016,9 @@ function onPhotoChosen(e) {
   }
   const date = currentDetailDate;
   const collectionName = photoCollection();
+  photoBusyText = "사진 올리는 중";
+  photoBusyPct = null;
+  photoBusyHint = "";
   setPhotoBusy(true);
   shrinkPhoto(file).then(function (image) {
     // 넣고 나서 MAX_PHOTOS장을 넘는 만큼 오래된 사진부터 지움
@@ -2257,19 +2320,19 @@ function uploadVideo(file, url, start, len) {
   const user = getUser();
   const date = currentDetailDate;
   const collectionName = videoCollection();
-  photoBusyText = "영상을 줄이는 중이에요… 0%";
+  photoBusyText = "영상 줄이는 중";
+  photoBusyPct = 0;
+  photoBusyHint = "끝날 때까지 이 화면을 켜 두세요";
   setPhotoBusy(true);
 
   function progress(ratio) {
-    const note = document.getElementById("photoBusyNote");
-    if (note) {
-      note.textContent = "영상을 줄이는 중이에요… " + Math.round(ratio * 100) + "% (끝날 때까지 이 화면을 켜 두세요)";
-    }
+    setBusyInfo(photoBusyText, ratio * 100, photoBusyHint);
   }
 
   // 올리는 사이에 같은 날짜를 다시 열면 어긋날 수 있어서, 비어 있는 칸(1·2)을 지금 다시 확인
   compressVideo(url, start, len, 380000, progress).then(function (res) {
     if (res.video.length > 900000) {
+      setBusyInfo("용량이 커서 화질을 낮춰 다시 줄이는 중", 0, photoBusyHint);
       return compressVideo(url, start, len, 220000, progress);
     }
     return res;
@@ -2291,8 +2354,7 @@ function uploadVideo(file, url, start, len) {
     if (slot === 0) {
       throw new Error("영상은 날짜마다 " + MAX_VIDEOS + "개까지 올릴 수 있어요");
     }
-    photoBusyText = "영상을 올리는 중이에요…";
-    drawDetailPhoto();
+    setBusyInfo("영상 올리는 중", null, "");
     return withTimeout(
       window.cloud.addVideo(collectionName, date, slot, res.video, res.mime, res.duration, user, dayVideos.length + 1),
       30000,
@@ -2305,6 +2367,8 @@ function uploadVideo(file, url, start, len) {
   }).then(function () {
     URL.revokeObjectURL(url);
     photoBusyText = "";
+    photoBusyPct = null;
+    photoBusyHint = "";
     setPhotoBusy(false);
   });
 }
