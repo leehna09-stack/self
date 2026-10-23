@@ -791,6 +791,7 @@ function setSync(level, text) {
     syncStale = false;
   }
   updateSyncReload();
+  alignBell();
 }
 
 // "다시 불러오기" 버튼 표시 여부
@@ -833,6 +834,47 @@ document.addEventListener("click", function (e) {
     tip.hidden = true;
   }
 });
+
+// 알림 종 아이콘의 왼쪽 끝을 연결 상태(🟢 완료)의 시작점과 같은 세로줄에 맞춤
+function alignBell() {
+  const bell = document.getElementById("bellBtn");
+  const chip = document.getElementById("syncChip");
+  const hero = bell.parentElement;
+  const icon = bell.querySelector(".bell-icon");
+  if (!bell || !chip || !icon) {
+    return;
+  }
+  bell.style.right = "auto";
+  bell.style.left = "0px";
+  const heroLeft = hero.getBoundingClientRect().left;
+  const iconLeft = icon.getBoundingClientRect().left;
+  // 연결 상태 아이콘(🟢)이 시작되는 지점 (칸의 왼쪽 여백 포함, 회전해도 흔들리지 않게 계산)
+  const chipLeft = chip.getBoundingClientRect().left + parseFloat(getComputedStyle(chip).paddingLeft);
+  bell.style.left = (chipLeft - iconLeft) + "px";
+
+  // 제목이 종과 겹치지 않도록 헤더 오른쪽을 비우고, 제목이 한 줄에 들어갈 때까지 글자를 줄임
+  const iconLeftNow = icon.getBoundingClientRect().left;
+  const heroRight = hero.getBoundingClientRect().right;
+  hero.style.paddingRight = Math.max(16, Math.round(heroRight - iconLeftNow + 8)) + "px";
+  fitHeroTitle();
+}
+
+// 헤더 제목을 한 줄에 맞춤
+function fitHeroTitle() {
+  const h1 = document.querySelector(".hero h1");
+  h1.style.fontSize = "";
+  let size = parseFloat(getComputedStyle(h1).fontSize);
+  while (h1.scrollWidth > h1.clientWidth + 1 && size > 12) {
+    size -= 0.5;
+    h1.style.fontSize = size + "px";
+  }
+}
+
+window.addEventListener("resize", alignBell);
+window.addEventListener("load", alignBell);
+if (document.fonts && document.fonts.ready) {
+  document.fonts.ready.then(alignBell);
+}
 
 // 연결 상태를 아이콘으로 표시
 function onCloudStatus(status, errorCode) {
