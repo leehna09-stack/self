@@ -7,8 +7,8 @@
   <meta name="color-scheme" content="light">
   <meta name="theme-color" content="#f6f5f3">
   <link rel="manifest" href="manifest.webmanifest">
-  <link rel="icon" type="image/png" href="icon-192.png?v=jeju3">
-  <link rel="apple-touch-icon" href="apple-touch-icon.png?v=jeju3">
+  <link rel="icon" type="image/png" href="icon-192.png?v=mascot1">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png?v=mascot1">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="가족 소식통">
@@ -16,23 +16,22 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Jua&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=20261026a">
+  <link rel="stylesheet" href="style.css?v=20261028a">
 </head>
 <body>
   <div id="splash" class="splash" aria-hidden="true">
-    <img src="icon-192.png?v=jeju3" alt="" width="120" height="120">
+    <img src="mascot.png?v=mascot1" alt="" width="84" height="120">
     <div class="splash-text">우리 가족 소식통</div>
   </div>
 
   <main class="app">
     <header class="hero">
-      <h1><span class="hero-cat" aria-hidden="true">🐱</span> 우리 가족 소식통
+      <h1><img class="hero-cat hero-mascot" src="mascot.png?v=mascot1" alt="" width="26" height="36"> 우리 가족 소식통 &amp; 일정관리
         <button type="button" id="syncIcon" class="sync-icon" onclick="toggleSyncTip()" aria-label="연결 상태 보기" data-level="wait">🔄</button></h1>
       <div id="syncTip" class="sync-tip" role="status" aria-live="polite" hidden>
         <span id="syncTipText">연결 준비 중…</span>
         <button type="button" id="syncReloadBtn" class="sync-reload" onclick="reloadCloud()" hidden>🔄 다시 불러오기</button>
       </div>
-      <p>산본집 아가들을 위한 가족 일정 관리</p>
     </header>
 
     <section class="card add-card">
@@ -570,6 +569,6 @@
     window.dispatchEvent(new Event("cloud-ready"));
   </script>
 
-  <script src="script.js?v=20261026a"></script>
+  <script src="script.js?v=20261028a"></script>
 </body>
 </html>
