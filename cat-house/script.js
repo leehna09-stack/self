@@ -1369,9 +1369,9 @@ function addSchedule() {
 
 // 그 날짜에 누가 어디에 있는지를 box에 그려줌 (오늘 위치 팝업에서 사용)
 function drawPlaces(box, dateString) {
-  const placeIcons = { "산본집": "🏠", "제주도": "🌴" };
+  const placeIcons = { "산본집": "🏠", "제주도": "🌴", "송정지구": "🏢" };
   box.innerHTML = "";
-  const shownPlaces = ["산본집", "제주도"];
+  const shownPlaces = ["산본집", "제주도", "송정지구"];
   for (let p = 0; p < shownPlaces.length; p++) {
     const names = [];
     for (let i = 0; i < people.length; i++) {
