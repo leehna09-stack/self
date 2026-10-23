@@ -53,7 +53,7 @@ h1, h2, h3 {
   background-color: var(--card);
   border-radius: 28px;
   box-shadow: var(--shadow);
-  padding: 20px;
+  padding: 18px 54px 18px 16px;
   margin-bottom: 16px;
   text-align: center;
 }
@@ -72,21 +72,49 @@ h1, h2, h3 {
   margin-right: 2px;
 }
 
-/* 헤더 오른쪽 연결 상태 아이콘 */
-.sync-icon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 24px;
-  height: 24px;
-  min-height: 0;
+/* 헤더 오른쪽 위의 알림 종 (테두리 없음) */
+.hero .bell-btn {
+  position: absolute;
+  top: 50%;
+  right: 8px;
+  width: 42px;
+  height: 42px;
+  min-height: 42px;
+  margin-top: -21px;
   padding: 0;
-  margin-left: 2px;
   border: none;
   background: transparent;
-  font-size: 13px;
+  font-size: 22px;
   line-height: 1;
-  vertical-align: middle;
+}
+
+.hero .bell-btn:hover {
+  background: transparent;
+}
+
+/* 연결 상태 (버그제보 옆, 테두리 없음) */
+.sync-chip {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 46px;
+  padding: 0 4px;
+  border: none;
+  background: transparent;
+  color: var(--sub);
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.sync-chip:hover {
+  background: transparent;
+}
+
+.sync-icon {
+  display: inline-block;
+  font-size: 12px;
+  line-height: 1;
 }
 
 .sync-icon[data-level="wait"] {
@@ -97,12 +125,11 @@ h1, h2, h3 {
   to { transform: rotate(360deg); }
 }
 
-/* 아이콘을 누르면 나오는 말풍선 */
+/* 연결 상태를 누르면 나오는 말풍선 */
 .sync-tip {
   position: absolute;
-  left: 50%;
-  top: 58px;
-  transform: translateX(-50%);
+  right: 12px;
+  top: calc(100% + 6px);
   max-width: calc(100% - 24px);
   padding: 7px 12px;
   border-radius: 12px;
@@ -110,6 +137,7 @@ h1, h2, h3 {
   color: #ffffff;
   font-size: 12px;
   line-height: 1.4;
+  text-align: left;
   z-index: 5;
   box-shadow: var(--shadow);
 }
@@ -206,6 +234,7 @@ button:active {
 
 /* 일정 입력 카드 */
 .add-card {
+  position: relative;
   display: flex;
   flex-wrap: nowrap;
   align-items: center;
@@ -291,15 +320,6 @@ button:active {
 
 .place-tab[aria-selected="true"]::after {
   transform: scaleX(1);
-}
-
-.toolbar .bell-btn {
-  flex: 0 0 auto;
-  width: 40px;
-  height: 40px;
-  min-height: 40px;
-  margin-left: 4px;
-  font-size: 18px;
 }
 
 .calendar-header {
@@ -850,8 +870,8 @@ fieldset.people-check {
 
 .badge {
   position: absolute;
-  top: -1px;
-  right: -1px;
+  top: 3px;
+  right: 3px;
   min-width: 14px;
   height: 14px;
   padding: 0 3px;
@@ -1098,11 +1118,25 @@ fieldset.people-check {
   }
 
   .hero {
-    padding: 16px;
+    padding: 14px 50px 14px 12px;
+  }
+
+  .hero .bell-btn {
+    right: 6px;
   }
 
   .hero h1 {
     font-size: 18px;
+  }
+
+  /* 버튼 3개 + 연결 상태가 한 줄에 들어가게 */
+  .add-card-buttons {
+    gap: 6px;
+  }
+
+  .add-card .add-btn,
+  .sub-btn {
+    padding: 0 4px;
   }
 
   .hero-mascot {
@@ -1118,7 +1152,21 @@ fieldset.people-check {
 /* ===== 아주 작은 폰 (넓이 340px 이하) ===== */
 @media (max-width: 340px) {
   .hero h1 {
-    font-size: 15px;
+    font-size: 14px;
+  }
+
+  .add-card-buttons {
+    gap: 4px;
+  }
+
+  .add-card .add-btn,
+  .sub-btn {
+    font-size: 11px;
+  }
+
+  .sync-chip {
+    padding: 0 2px;
+    font-size: 10px;
   }
 
   .hero-mascot {

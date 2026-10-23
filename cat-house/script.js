@@ -760,6 +760,7 @@ function sendBug() {
 // ===== 연결 상태 (헤더 오른쪽 아이콘, 누르면 자세한 내용) =====
 
 const SYNC_ICONS = { ok: "🟢", wait: "🔄", error: "⚠️" };
+const SYNC_LABELS = { ok: "완료", wait: "동기화중", error: "오류" };
 let syncTipTimer = null;
 
 let syncWaitTimer = null;
@@ -772,7 +773,8 @@ function setSync(level, text) {
   const icon = document.getElementById("syncIcon");
   icon.textContent = SYNC_ICONS[level];
   icon.dataset.level = level;
-  icon.setAttribute("aria-label", "연결 상태: " + text);
+  document.getElementById("syncLabel").textContent = SYNC_LABELS[level];
+  document.getElementById("syncChip").setAttribute("aria-label", "연결 상태: " + text);
   document.getElementById("syncTipText").textContent = text;
 
   syncLevel = level;
@@ -827,7 +829,7 @@ function toggleSyncTip() {
 // 말풍선 바깥을 누르면 닫음
 document.addEventListener("click", function (e) {
   const tip = document.getElementById("syncTip");
-  if (!tip.hidden && !e.target.closest("#syncIcon") && !e.target.closest("#syncTip")) {
+  if (!tip.hidden && !e.target.closest("#syncChip") && !e.target.closest("#syncTip")) {
     tip.hidden = true;
   }
 });
