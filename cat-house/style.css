@@ -703,6 +703,7 @@ fieldset.people-check {
   border-radius: 14px;
   overflow: hidden;
   cursor: zoom-in;
+  position: relative;
 }
 
 .photo-slide img {
@@ -734,6 +735,8 @@ fieldset.people-check {
   position: absolute;
   top: 12px;
   right: 12px;
+  border: none;
+  background-color: rgba(255, 255, 255, 0.9);
 }
 
 .photo-slide .photo-by {
@@ -742,8 +745,8 @@ fieldset.people-check {
 
 .photo-del {
   position: absolute;
-  top: 8px;
-  right: 8px;
+  bottom: 8px;
+  left: 8px;
   background-color: rgba(255, 255, 255, 0.9);
 }
 

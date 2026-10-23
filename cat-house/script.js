@@ -1428,10 +1428,12 @@ function drawDetailPhoto() {
         delBtn.className = "icon-btn photo-del";
         delBtn.textContent = "✕";
         delBtn.setAttribute("aria-label", "사진 삭제");
-        delBtn.onclick = function () {
+        delBtn.onclick = function (e) {
+          e.stopPropagation();
           deletePhoto(p.id);
         };
-        slide.appendChild(delBtn);
+        // 팝업 닫기(✕)와 같은 줄에 있지 않도록 사진 왼쪽 아래에 둠
+        frame.appendChild(delBtn);
       }
 
       strip.appendChild(slide);
