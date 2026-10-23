@@ -837,7 +837,6 @@ function xIcon(size) {
 }
 
 const SYNC_ICONS = { ok: "🟢", wait: "🔄", error: "⚠️" };
-const SYNC_LABELS = { ok: "완료", wait: "동기화중", error: "오류" };
 let syncTipTimer = null;
 
 let syncWaitTimer = null;
@@ -850,7 +849,6 @@ function setSync(level, text) {
   const icon = document.getElementById("syncIcon");
   icon.textContent = SYNC_ICONS[level];
   icon.dataset.level = level;
-  document.getElementById("syncLabel").textContent = SYNC_LABELS[level];
   document.getElementById("syncChip").setAttribute("aria-label", "연결 상태: " + text);
   document.getElementById("syncTipText").textContent = text;
 
@@ -912,30 +910,13 @@ document.addEventListener("click", function (e) {
   }
 });
 
-// 연결 상태 시작점보다 오른쪽으로 살짝 옮기는 거리(px)
-const BELL_NUDGE = 5;
-
-// 알림 종 아이콘의 왼쪽 끝을 연결 상태(🟢 완료)의 시작점과 같은 세로줄에 맞춤
+// 연결 상태 기호가 오른쪽에 있어서 제목과 겹치지 않게 헤더 오른쪽을 비움 (제목은 아래에서 한 줄에 맞춤)
 function alignBell() {
-  const bell = document.getElementById("bellBtn");
+  const hero = document.querySelector(".hero");
   const chip = document.getElementById("syncChip");
-  const hero = bell.parentElement;
-  const icon = bell.querySelector(".bell-icon");
-  if (!bell || !chip || !icon) {
-    return;
-  }
-  bell.style.right = "auto";
-  bell.style.left = "0px";
-  const heroLeft = hero.getBoundingClientRect().left;
-  const iconLeft = icon.getBoundingClientRect().left;
-  // 연결 상태 아이콘(🟢)이 시작되는 지점 (칸의 왼쪽 여백 포함, 회전해도 흔들리지 않게 계산)
-  const chipLeft = chip.getBoundingClientRect().left + parseFloat(getComputedStyle(chip).paddingLeft);
-  bell.style.left = (chipLeft - iconLeft + BELL_NUDGE) + "px";
-
-  // 제목이 종과 겹치지 않도록 헤더 오른쪽을 비우고, 제목이 한 줄에 들어갈 때까지 글자를 줄임
-  const iconLeftNow = icon.getBoundingClientRect().left;
+  const chipLeft = chip.getBoundingClientRect().left;
   const heroRight = hero.getBoundingClientRect().right;
-  hero.style.paddingRight = Math.max(16, Math.round(heroRight - iconLeftNow + 8)) + "px";
+  hero.style.paddingRight = Math.max(16, Math.round(heroRight - chipLeft + 6)) + "px";
   fitHeroTitle();
 }
 
