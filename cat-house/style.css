@@ -541,7 +541,7 @@ button.day:active {
   font-size: 16px;
   color: var(--ink);
   background-color: #ffffff;
-  min-height: 42px;
+  min-height: 38px;
   padding: 0 12px;
   border: 1px solid var(--line);
   border-radius: 14px;
@@ -959,7 +959,7 @@ fieldset.people-check {
 }
 
 .note-form button {
-  min-height: 40px;
+  min-height: 36px;
   border-radius: 14px;
 }
 
@@ -970,10 +970,29 @@ fieldset.people-check {
   font-size: 16px;
   color: var(--ink);
   background-color: #ffffff;
-  min-height: 40px;
+  line-height: 1.2;
+  min-height: 36px;
   padding: 0 12px;
   border: 1px solid var(--line);
   border-radius: 14px;
+}
+
+/* 안내 글 · 입력줄 · 글자 수 사이 간격 (포커스 테두리와 겹치지 않게) */
+.hint + .note-form {
+  margin-top: 10px;
+}
+
+.note-form + .hint {
+  margin-top: 6px;
+}
+
+/* 입력칸 포커스: 바깥으로 두껍게 번지지 않고 칸 안쪽에 그림 (위아래 글자와 겹침 방지) */
+input[type="text"]:focus-visible,
+input[type="date"]:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: -2px;
 }
 
 /* 기간 고르는 달력 */
@@ -1076,7 +1095,7 @@ fieldset.people-check {
   font-size: 16px;
   color: var(--ink);
   background-color: #ffffff;
-  min-height: 42px;
+  min-height: 38px;
   padding: 0 12px;
   border: 1px solid var(--line);
   border-radius: 14px;
@@ -1354,12 +1373,13 @@ fieldset.people-check {
   width: 100%;
   box-sizing: border-box;
   margin-bottom: 8px;
-  padding: 10px 12px;
-  border: 1.5px solid var(--line);
+  padding: 8px 12px;
+  border: 1px solid var(--line);
   border-radius: 14px;
   background-color: #ffffff;
   font: inherit;
   font-size: 16px;
+  line-height: 1.4;
   color: var(--ink);
   resize: none;
 }
@@ -1414,4 +1434,72 @@ fieldset.people-check {
 #trimOkBtn {
   width: 100%;
   margin-top: 12px;
+}
+
+/* 올리는 중: 진행 막대 + 퍼센트 (퍼센트를 모를 때는 막대가 계속 흐름) */
+.busy-box {
+  width: 100%;
+  flex: 0 0 100%;
+  margin-top: 10px;
+}
+
+.busy-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 6px;
+  font-size: 12px;
+  color: var(--sub);
+}
+
+#busyPct {
+  font-size: 13px;
+  font-weight: bold;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.busy-track {
+  height: 8px;
+  border-radius: 999px;
+  background-color: var(--soft);
+  overflow: hidden;
+}
+
+.busy-fill {
+  height: 100%;
+  width: 0;
+  border-radius: 999px;
+  background-color: var(--ink);
+  transition: width 0.25s ease-out;
+}
+
+.busy-fill.indeterminate {
+  width: 35%;
+  transition: none;
+  animation: busy-slide 1.1s ease-in-out infinite;
+}
+
+@keyframes busy-slide {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(290%); }
+}
+
+.busy-hint {
+  margin-top: 6px;
+  font-size: 11px;
+  color: var(--sub);
+}
+
+.busy-hint:empty {
+  display: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .busy-fill.indeterminate {
+    animation: none;
+    width: 100%;
+    opacity: 0.5;
+  }
 }
