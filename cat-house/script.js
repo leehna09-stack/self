@@ -671,6 +671,10 @@ function onCloudData(list) {
   if (!document.getElementById("detailModal").classList.contains("hidden")) {
     openDetail(currentDetailDate, true);
   }
+  // 오늘 위치 팝업이 열려 있으면 내용도 새로고침
+  if (!document.getElementById("todayModal").classList.contains("hidden")) {
+    openToday();
+  }
 }
 
 // ===== 시작 화면 / 버그 제보 =====
@@ -759,6 +763,11 @@ function sendBug() {
 
 // ===== 연결 상태 (헤더 오른쪽 아이콘, 누르면 자세한 내용) =====
 
+// 모양이 한쪽으로 쏠리지 않는 ✕ 아이콘 (글자 ✕ 대신 선으로 그림)
+function xIcon(size) {
+  return '<svg viewBox="0 0 24 24" width="' + size + '" height="' + size + '" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>';
+}
+
 const SYNC_ICONS = { ok: "🟢", wait: "🔄", error: "⚠️" };
 const SYNC_LABELS = { ok: "완료", wait: "동기화중", error: "오류" };
 let syncTipTimer = null;
@@ -791,6 +800,7 @@ function setSync(level, text) {
     syncStale = false;
   }
   updateSyncReload();
+  alignBell();
 }
 
 // "다시 불러오기" 버튼 표시 여부
@@ -833,6 +843,50 @@ document.addEventListener("click", function (e) {
     tip.hidden = true;
   }
 });
+
+// 연결 상태 시작점보다 오른쪽으로 살짝 옮기는 거리(px)
+const BELL_NUDGE = 5;
+
+// 알림 종 아이콘의 왼쪽 끝을 연결 상태(🟢 완료)의 시작점과 같은 세로줄에 맞춤
+function alignBell() {
+  const bell = document.getElementById("bellBtn");
+  const chip = document.getElementById("syncChip");
+  const hero = bell.parentElement;
+  const icon = bell.querySelector(".bell-icon");
+  if (!bell || !chip || !icon) {
+    return;
+  }
+  bell.style.right = "auto";
+  bell.style.left = "0px";
+  const heroLeft = hero.getBoundingClientRect().left;
+  const iconLeft = icon.getBoundingClientRect().left;
+  // 연결 상태 아이콘(🟢)이 시작되는 지점 (칸의 왼쪽 여백 포함, 회전해도 흔들리지 않게 계산)
+  const chipLeft = chip.getBoundingClientRect().left + parseFloat(getComputedStyle(chip).paddingLeft);
+  bell.style.left = (chipLeft - iconLeft + BELL_NUDGE) + "px";
+
+  // 제목이 종과 겹치지 않도록 헤더 오른쪽을 비우고, 제목이 한 줄에 들어갈 때까지 글자를 줄임
+  const iconLeftNow = icon.getBoundingClientRect().left;
+  const heroRight = hero.getBoundingClientRect().right;
+  hero.style.paddingRight = Math.max(16, Math.round(heroRight - iconLeftNow + 8)) + "px";
+  fitHeroTitle();
+}
+
+// 헤더 제목을 한 줄에 맞춤
+function fitHeroTitle() {
+  const h1 = document.querySelector(".hero h1");
+  h1.style.fontSize = "";
+  let size = parseFloat(getComputedStyle(h1).fontSize);
+  while (h1.scrollWidth > h1.clientWidth + 1 && size > 12) {
+    size -= 0.5;
+    h1.style.fontSize = size + "px";
+  }
+}
+
+window.addEventListener("resize", alignBell);
+window.addEventListener("load", alignBell);
+if (document.fonts && document.fonts.ready) {
+  document.fonts.ready.then(alignBell);
+}
 
 // 연결 상태를 아이콘으로 표시
 function onCloudStatus(status, errorCode) {
@@ -1250,22 +1304,10 @@ function addSchedule() {
 
 // ===== 날짜 상세 =====
 
-// 날짜 상세창 열기 (keepFocus가 true면 포커스를 옮기지 않음)
-function openDetail(dateString, keepFocus) {
-  currentDetailDate = dateString;
-  document.getElementById("detailTitle").textContent =
-    new Intl.DateTimeFormat("ko-KR", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-      weekday: "short"
-    }).format(new Date(dateString + "T00:00:00"));
-
+// 그 날짜에 누가 어디에 있는지를 box에 그려줌 (오늘 위치 팝업에서 사용)
+function drawPlaces(box, dateString) {
   const placeIcons = { "산본집": "🏠", "제주도": "🌴", "송정지구": "🏢" };
-
-  // 장소별로 누가 있는지
-  const placeBox = document.getElementById("detailPlaces");
-  placeBox.innerHTML = "";
+  box.innerHTML = "";
   const shownPlaces = ["산본집", "제주도"];
   for (let p = 0; p < shownPlaces.length; p++) {
     const names = [];
@@ -1277,7 +1319,7 @@ function openDetail(dateString, keepFocus) {
     const line = document.createElement("div");
     line.textContent = placeIcons[shownPlaces[p]] + " " + shownPlaces[p] + ": " +
       (names.length > 0 ? names.join(", ") : "없음");
-    placeBox.appendChild(line);
+    box.appendChild(line);
   }
 
   // 빈집이면 경고
@@ -1285,8 +1327,35 @@ function openDetail(dateString, keepFocus) {
     const warn = document.createElement("div");
     warn.className = "detail-warn";
     warn.textContent = "🐱 빈집 " + getEmptyDays(dateString) + "일차";
-    placeBox.appendChild(warn);
+    box.appendChild(warn);
   }
+}
+
+// 📍 위치 버튼: 오늘 기준으로 누가 어디에 있는지 보여줌
+function openToday() {
+  const now = new Date();
+  const dateString = makeDateString(now.getFullYear(), now.getMonth(), now.getDate());
+  document.getElementById("todayDate").textContent =
+    new Intl.DateTimeFormat("ko-KR", { year: "numeric", month: "long", day: "numeric", weekday: "short" }).format(now) + " 기준";
+  drawPlaces(document.getElementById("todayPlaces"), dateString);
+  document.getElementById("todayModal").classList.remove("hidden");
+}
+
+function closeToday() {
+  document.getElementById("todayModal").classList.add("hidden");
+}
+
+// 날짜 상세창 열기 (keepFocus가 true면 포커스를 옮기지 않음)
+function openDetail(dateString, keepFocus) {
+  currentDetailDate = dateString;
+  document.getElementById("detailTitle").textContent =
+    new Intl.DateTimeFormat("ko-KR", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+      weekday: "short"
+    }).format(new Date(dateString + "T00:00:00"));
+
 
   // 날씨는 제주도 달력에서만
   document.getElementById("weatherSection").hidden = (viewPlace !== "제주도");
@@ -1362,12 +1431,14 @@ function drawDetailPhoto() {
         const delBtn = document.createElement("button");
         delBtn.type = "button";
         delBtn.className = "icon-btn photo-del";
-        delBtn.textContent = "✕";
+        delBtn.innerHTML = xIcon(14);
         delBtn.setAttribute("aria-label", "사진 삭제");
-        delBtn.onclick = function () {
+        delBtn.onclick = function (e) {
+          e.stopPropagation();
           deletePhoto(p.id);
         };
-        slide.appendChild(delBtn);
+        // 팝업 닫기(✕)와 같은 줄에 있지 않도록 사진 왼쪽 아래에 둠
+        frame.appendChild(delBtn);
       }
 
       strip.appendChild(slide);
@@ -1664,7 +1735,7 @@ function openPhotoViewer(src, alt) {
   const close = document.createElement("button");
   close.type = "button";
   close.className = "round-btn";
-  close.textContent = "✕";
+  close.innerHTML = xIcon(18);
   close.setAttribute("aria-label", "닫기");
   close.onclick = closePhotoViewer;
   viewer.appendChild(close);
@@ -1925,7 +1996,7 @@ function drawDetailNotes() {
       const delBtn = document.createElement("button");
       delBtn.type = "button";
       delBtn.className = "icon-btn";
-      delBtn.textContent = "✕";
+      delBtn.innerHTML = xIcon(14);
       delBtn.setAttribute("aria-label", "한줄평 삭제");
       delBtn.onclick = function () {
         deleteNote(n.id);
@@ -2136,6 +2207,7 @@ document.addEventListener("keydown", function (e) {
     closeManage();
     closeNotif();
     closeBug();
+    closeToday();
     closeAdmin();
     closeCodeModal();
     closeUserModal();
