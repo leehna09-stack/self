@@ -7,8 +7,8 @@
   <meta name="color-scheme" content="light">
   <meta name="theme-color" content="#f6f5f3">
   <link rel="manifest" href="manifest.webmanifest">
-  <link rel="icon" type="image/png" href="icon-192.png">
-  <link rel="apple-touch-icon" href="apple-touch-icon.png">
+  <link rel="icon" type="image/png" href="icon-192.png?v=palm">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png?v=palm">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="가족 소식통">
@@ -16,9 +16,14 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Jua&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=20261019a">
+  <link rel="stylesheet" href="style.css?v=20261021a">
 </head>
 <body>
+  <div id="splash" class="splash" aria-hidden="true">
+    <img src="icon-192.png?v=palm" alt="" width="120" height="120">
+    <div class="splash-text">우리 가족 소식통</div>
+  </div>
+
   <main class="app">
     <header class="hero">
       <h1><span class="hero-cat" aria-hidden="true">🐱</span> 우리 가족 소식통
@@ -31,13 +36,10 @@
     </header>
 
     <section class="card add-card">
-      <div class="add-card-text">
-        <h2>가족 일정 넣기</h2>
-        <p>일정을 넣으면 산본집이 비는 날을 달력에 표시해 줘요. 날짜를 누르면 사진과 한줄평을 남길 수 있어요. 버그가 생기면 한나관리자에게 연락해주세요!</p>
-      </div>
       <div class="add-card-buttons">
         <button class="add-btn" onclick="openForm()">📅 일정 입력</button>
         <button class="sub-btn" onclick="openManage()">✏️ 일정 변경</button>
+        <button class="sub-btn" onclick="openBug()">🐞 버그제보</button>
       </div>
     </section>
 
@@ -179,6 +181,17 @@
         <button class="round-btn" onclick="closeNotif()" aria-label="닫기">✕</button>
       </div>
       <ul id="notifList"></ul>
+    </div>
+  </div>
+
+  <div id="bugModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="bugTitle">
+    <div class="modal-box">
+      <div class="modal-title">
+        <h2 id="bugTitle">버그 제보</h2>
+        <button class="round-btn" onclick="closeBug()" aria-label="닫기">✕</button>
+      </div>
+      <p class="hint">버그가 생기면 한나관리자에게 연락해주세요!</p>
+      <p class="hint">어떤 화면에서 어떤 일이 있었는지 알려 주시면 더 빨리 고칠 수 있어요.</p>
     </div>
   </div>
 
@@ -544,6 +557,6 @@
     window.dispatchEvent(new Event("cloud-ready"));
   </script>
 
-  <script src="script.js?v=20261019a"></script>
+  <script src="script.js?v=20261021a"></script>
 </body>
 </html>
