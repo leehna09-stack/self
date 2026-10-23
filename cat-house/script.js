@@ -312,7 +312,6 @@ function saveCode() {
 
 // 인터넷 저장소에 연결
 function connectCloud(code) {
-  document.getElementById("codeInfo").textContent = "🔑 " + code.slice(0, 4) + "…";
   window.cloud.start(code, onCloudData, onCloudStatus);
   cloudConnected = true;
   watchedMonthKey = "";
