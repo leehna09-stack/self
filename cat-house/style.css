@@ -541,7 +541,7 @@ button.day:active {
   font-size: 16px;
   color: var(--ink);
   background-color: #ffffff;
-  min-height: 42px;
+  min-height: 38px;
   padding: 0 12px;
   border: 1px solid var(--line);
   border-radius: 14px;
@@ -959,7 +959,7 @@ fieldset.people-check {
 }
 
 .note-form button {
-  min-height: 40px;
+  min-height: 36px;
   border-radius: 14px;
 }
 
@@ -970,10 +970,29 @@ fieldset.people-check {
   font-size: 16px;
   color: var(--ink);
   background-color: #ffffff;
-  min-height: 40px;
+  line-height: 1.2;
+  min-height: 36px;
   padding: 0 12px;
   border: 1px solid var(--line);
   border-radius: 14px;
+}
+
+/* 안내 글 · 입력줄 · 글자 수 사이 간격 (포커스 테두리와 겹치지 않게) */
+.hint + .note-form {
+  margin-top: 10px;
+}
+
+.note-form + .hint {
+  margin-top: 6px;
+}
+
+/* 입력칸 포커스: 바깥으로 두껍게 번지지 않고 칸 안쪽에 그림 (위아래 글자와 겹침 방지) */
+input[type="text"]:focus-visible,
+input[type="date"]:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: -2px;
 }
 
 /* 기간 고르는 달력 */
@@ -1076,7 +1095,7 @@ fieldset.people-check {
   font-size: 16px;
   color: var(--ink);
   background-color: #ffffff;
-  min-height: 42px;
+  min-height: 38px;
   padding: 0 12px;
   border: 1px solid var(--line);
   border-radius: 14px;
@@ -1354,12 +1373,13 @@ fieldset.people-check {
   width: 100%;
   box-sizing: border-box;
   margin-bottom: 8px;
-  padding: 10px 12px;
-  border: 1.5px solid var(--line);
+  padding: 8px 12px;
+  border: 1px solid var(--line);
   border-radius: 14px;
   background-color: #ffffff;
   font: inherit;
   font-size: 16px;
+  line-height: 1.4;
   color: var(--ink);
   resize: none;
 }
