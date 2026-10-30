@@ -505,6 +505,14 @@ input:focus, input:focus-visible { outline: 0; border-color: var(--primary); box
 .prog > div.ok { flex: none; }
 .prog > div.ok:not(:only-child) { border-radius: 99px 0 0 99px; }
 .prog > div.ex { flex: none; border-radius: 0 99px 99px 0; background: #ff6b5e; box-shadow: 0 0 10px rgba(255,107,94,.9), inset 0 -2px 2px rgba(0,0,0,.12); }
+
+/* 초과 금액 말풍선 */
+.progwrap { position: relative; padding: 8px 0; margin: -8px 0 -4px; }
+.progwrap .prog { margin-bottom: 0; }
+.progwrap.hasover { cursor: pointer; }
+.progwrap:focus-visible { outline: 2px solid #fff; outline-offset: 2px; border-radius: 10px; }
+.progtip { position: absolute; bottom: calc(100% - 2px); transform: translateX(-50%); white-space: nowrap; padding: 6px 10px; border-radius: 10px; background: #1b2438; color: #fff; font-size: 12px; font-weight: 700; box-shadow: 0 6px 16px rgba(0,0,0,.28); pointer-events: none; z-index: 2; }
+.progtip::after { content: ""; position: absolute; top: 100%; left: 50%; margin-left: -5px; border: 5px solid transparent; border-top-color: #1b2438; }
 </style>
 </head>
 
@@ -555,7 +563,6 @@ input:focus, input:focus-visible { outline: 0; border-color: var(--primary); box
 
     <!-- 달력: 날짜별 합계가 보이고, 날짜를 누르면 그날 내역만 조회 -->
     <section class="card cal" id="sec-cal" aria-label="달력">
-      <p class="hint">날짜를 누르면 해당일의 지출을 입력할 수 있어요.</p>
       <div class="calgrid" id="calendar"></div>
     </section>
 
@@ -1059,6 +1066,35 @@ input:focus, input:focus-visible { outline: 0; border-color: var(--primary); box
     return b;
   }
 
+  // 진행바: 목표를 넘으면 넘은 부분만 강조색. 그 부분을 누르면(또는 Enter) 초과 금액을 말풍선으로 보여줘요
+  var tipTimer = null;
+  function progBar(total, goal) {
+    var over = total > goal;
+    var okPct = Math.min(total, goal) / Math.max(total, goal) * 100;
+    var tip = h('span', { class: 'progtip num', role: 'status', hidden: true }, '목표 초과 ' + fmtWon(total - goal));
+    var bar = h('div', { class: 'prog', role: 'progressbar', 'aria-valuemin': '0', 'aria-valuemax': '100', 'aria-valuenow': String(Math.min(100, Math.round(total / goal * 100))), 'aria-label': '목표 사용률' + (over ? ' (목표 초과)' : '') },
+      h('div', { class: 'ok', style: 'width:' + okPct + '%' }),
+      over ? h('div', { class: 'ex', style: 'width:' + ((total - goal) / total * 100) + '%' }) : null);
+    var wrap = h('div', { class: 'progwrap' + (over ? ' hasover' : ''), tabindex: over ? '0' : null, 'aria-label': over ? '목표 초과 금액 보기' : null }, bar, tip);
+    if (over) {
+      var hide = function () { tip.hidden = true; clearTimeout(tipTimer); document.removeEventListener('click', away, true); };
+      var away = function (ev) { if (!wrap.contains(ev.target)) hide(); };
+      var toggle = function () {
+        if (!tip.hidden) { hide(); return; }
+        tip.hidden = false;
+        var W = wrap.clientWidth, c = W * (okPct + (100 - okPct) / 2) / 100, half = tip.offsetWidth / 2;
+        tip.style.left = Math.max(half, Math.min(W - half, c)) + 'px';
+        clearTimeout(tipTimer); tipTimer = setTimeout(hide, 3500);
+        document.addEventListener('click', away, true);
+      };
+      wrap.addEventListener('click', function (ev) {
+        if (ev.clientX >= wrap.getBoundingClientRect().left + wrap.clientWidth * okPct / 100 - 6) toggle(); else hide();
+      });
+      wrap.addEventListener('keydown', function (ev) { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); toggle(); } });
+    }
+    return wrap;
+  }
+
   function renderSummary() {
     var s = monthStats(month), by = s.by, total = s.total;
     $('#monthTitle').textContent = fmtMonth(month);
@@ -1070,10 +1106,7 @@ input:focus, input:focus-visible { outline: 0; border-color: var(--primary); box
         h('p', { class: 'big num' }, fmtWon(total)),
         h('p', { class: 'big sep', 'aria-hidden': 'true' }, '/'),
         h('p', { class: 'big goalamt num sg-r' }, fmtWon(goal))),
-      h('div', { class: 'prog', role: 'progressbar', 'aria-valuemin': '0', 'aria-valuemax': '100', 'aria-valuenow': String(Math.min(100, Math.round(total / goal * 100))), 'aria-label': '목표 사용률' + (total > goal ? ' (목표 초과)' : '') },
-        // 목표를 넘으면 막대 전체를 합계 기준으로 나누고, 넘은 부분(ex)만 강조색으로 표시해요
-        h('div', { class: 'ok', style: 'width:' + (Math.min(total, goal) / Math.max(total, goal) * 100) + '%' }),
-        total > goal ? h('div', { class: 'ex', style: 'width:' + ((total - goal) / total * 100) + '%' }) : null)];
+      progBar(total, goal)];
 
     kids.push(h('p', { class: 'cats num' }, '식비 ' + fmtWon(s.cat['식비']) + ' · 생활용품 ' + fmtWon(s.cat['생활용품']) + ' · 기타 ' + fmtWon(s.cat['기타'])));
     box.replaceChildren.apply(box, kids);
