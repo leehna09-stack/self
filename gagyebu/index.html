@@ -499,6 +499,12 @@ input:focus, input:focus-visible { outline: 0; border-color: var(--primary); box
 .hero-title { align-items: center; gap: 10px; }
 .brand { width: auto; height: 51px; align-self: center; flex: none; border-radius: 0; box-shadow: none; background: none; }
 .mininav img { width: auto; height: 20px; border-radius: 0; }
+
+/* 진행바: 목표를 넘은 부분만 강조 */
+.prog { display: flex; }
+.prog > div.ok { flex: none; }
+.prog > div.ok:not(:only-child) { border-radius: 99px 0 0 99px; }
+.prog > div.ex { flex: none; border-radius: 0 99px 99px 0; background: #ff6b5e; box-shadow: 0 0 10px rgba(255,107,94,.9), inset 0 -2px 2px rgba(0,0,0,.12); }
 </style>
 </head>
 
@@ -1064,18 +1070,11 @@ input:focus, input:focus-visible { outline: 0; border-color: var(--primary); box
         h('p', { class: 'big num' }, fmtWon(total)),
         h('p', { class: 'big sep', 'aria-hidden': 'true' }, '/'),
         h('p', { class: 'big goalamt num sg-r' }, fmtWon(goal))),
-      h('div', { class: 'prog' + (total > goal ? ' over' : ''), role: 'progressbar', 'aria-valuemin': '0', 'aria-valuemax': '100', 'aria-valuenow': String(Math.min(100, Math.round(total / goal * 100))), 'aria-label': '목표 사용률' },
-        h('div', { style: 'width:' + Math.min(100, total / goal * 100) + '%' }))];
+      h('div', { class: 'prog', role: 'progressbar', 'aria-valuemin': '0', 'aria-valuemax': '100', 'aria-valuenow': String(Math.min(100, Math.round(total / goal * 100))), 'aria-label': '목표 사용률' + (total > goal ? ' (목표 초과)' : '') },
+        // 목표를 넘으면 막대 전체를 합계 기준으로 나누고, 넘은 부분(ex)만 강조색으로 표시해요
+        h('div', { class: 'ok', style: 'width:' + (Math.min(total, goal) / Math.max(total, goal) * 100) + '%' }),
+        total > goal ? h('div', { class: 'ex', style: 'width:' + ((total - goal) / total * 100) + '%' }) : null)];
 
-    if (total === 0) {
-      kids.push(h('p', { class: 'empty' }, '이 달에는 아직 기록이 없어요. 아래에서 첫 지출을 입력해 보세요.'));
-      box.replaceChildren.apply(box, kids);
-      return;
-    }
-
-    if (total > goal) {
-      kids.push(h('p', { class: 'over num' }, '목표 ' + fmtGoal(goal) + '을 ' + fmtWon(total - goal) + ' 넘었어요'));
-    }
     kids.push(h('p', { class: 'cats num' }, '식비 ' + fmtWon(s.cat['식비']) + ' · 생활용품 ' + fmtWon(s.cat['생활용품']) + ' · 기타 ' + fmtWon(s.cat['기타'])));
     box.replaceChildren.apply(box, kids);
   }
