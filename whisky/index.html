@@ -361,6 +361,16 @@ textarea.field { min-height: 140px; resize: vertical; line-height: 28px; padding
 .vmemo { white-space: pre-wrap; overflow-wrap: anywhere; font-size: 15px; line-height: 1.7; }
 .vbox .tags { margin-top: 0; }
 .box.plain { padding-top: 4px; padding-bottom: 4px; }
+
+/* 가격 기록: 저장된 위스키와 연결 표시 */
+.mtch { margin: 8px 2px 0; font-size: 12.5px; }
+.mtch .ok { color: var(--hi); font-weight: 700; }
+.mtch .warn { color: var(--amber-ink); font-weight: 700; }
+.mtch .muted { color: var(--muted); }
+.mtch .quick { margin-top: 6px; }
+.ac .svd { color: var(--hi); font-weight: 700; }
+#matchList .btn-main { margin-top: 10px; text-align: center; flex-direction: column; gap: 2px; }
+#matchList .btn-main small { display: block; margin-top: 1px; font-weight: 500; font-size: 12px; }
 </style>
 </head>
 
@@ -398,6 +408,14 @@ textarea.field { min-height: 140px; resize: vertical; line-height: 28px; padding
   <button class="tab" data-tab="settings"><svg class="ic"><use href="#i-gear"/></svg>설정</button>
 </div></nav>
 <div id="sheetRoot"></div>
+<div id="matchModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="matchTitle" hidden>
+  <div class="modal-box">
+    <h2 id="matchTitle"><svg class="ic" aria-hidden="true"><use href="#i-won"/></svg> 저장된 위스키와 연결할까요?</h2>
+    <p id="matchMsg"></p>
+    <div id="matchList"></div>
+    <button type="button" class="btn-sub" id="matchNew" style="margin-top:10px">새 위스키로 저장</button>
+  </div>
+</div>
 <div id="srcModal" class="modal" role="dialog" aria-modal="true" aria-label="사진 추가" hidden>
   <div class="modal-box">
     <h2><svg class="ic" aria-hidden="true"><use href="#i-camera"/></svg> 사진 추가</h2>
@@ -876,7 +894,7 @@ function bindView() {
       download('whisky-notes-' + today() + '.csv', csv, 'text/csv');
     };
     $('#expprice').onclick = () => {
-      const rows = [['구매일', '위스키', '용량(ml)', '도수(%)', '가격(원)', '구매처', '출처']].concat(priceEntries().sort(byTime).map(e => [e.date, e.name, e.ml || '', e.abv || '', e.price, e.shop || '', e.src === 'diary' ? '다이어리' : '가격 기록']));
+      const rows = [['가격 확인일', '위스키', '용량(ml)', '도수(%)', '가격(원)', '구매처', '출처']].concat(priceEntries().sort(byTime).map(e => [e.date, e.name, e.ml || '', e.abv || '', e.price, e.shop || '', e.src === 'diary' ? '다이어리' : '가격 기록']));
       const csv = '\ufeff' + rows.map(r => r.map(v => '"' + String(v ?? '').replace(/"/g, '""') + '"').join(',')).join('\r\n');
       download('whisky-prices-' + today() + '.csv', csv, 'text/csv');
     };
@@ -1095,6 +1113,27 @@ function openPriceDetail(key) {
 }
 
 /* 가격 입력/수정 화면 */
+/* 가격 탭에 이미 저장된 위스키(이름+용량 묶음). 새 가격을 기존 기록과 이어주기 위해 써요 */
+function savedGroups() {
+  return priceGroups().map(list => { const last = list[list.length - 1]; return { ko: last.name, en: '', type: '저장됨', ml: last.ml, abv: last.abv, n: list.length, price: last.price, date: last.date, src: 'saved' }; })
+    .sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+}
+function savedMatches(raw) {
+  const words = raw.toLowerCase().split(/\s+/).map(norm).filter(Boolean);
+  if (!words.length) return [];
+  return savedGroups().filter(c => words.every(w => scoreOf(c, w) >= 0));
+}
+/* 비슷한 이름만 입력했을 때 저장된 위스키와 연결할지 묻는 창 */
+function askMatch(nm, groups, onPick, onNew) {
+  const m = $('#matchModal');
+  $('#matchMsg').innerHTML = `입력한 "<b>${esc(nm)}</b>"와 비슷한 위스키가 가격 기록에 저장돼 있어요. 같은 위스키라면 연결해야 가격 변동이 이어서 기록돼요.`;
+  $('#matchList').innerHTML = groups.map((c, i) => `<button type="button" class="btn-main" data-mi="${i}">${esc(c.ko)} · ${volLabel(c.ml)}<small>기록 ${c.n}건 · 최근 ${won(c.price)}</small></button>`).join('');
+  m.hidden = false;
+  m.querySelectorAll('[data-mi]').forEach(b => b.onclick = () => { m.hidden = true; onPick(groups[+b.dataset.mi]); });
+  $('#matchNew').onclick = () => { m.hidden = true; onNew(); };
+  m.onclick = e => { if (e.target === m) m.hidden = true; };
+}
+
 function openPriceForm(opts = {}) {
   const old = opts.id ? prices.find(p => p.id === opts.id) : null;
   const g = old ? { ...old } : { name: '', ml: 700, abv: '', price: '', shop: '', date: today(), ...(opts.preset || {}) };
@@ -1112,6 +1151,7 @@ function openPriceForm(opts = {}) {
       <label class="lb">${ic('i-bottle')} 위스키 이름</label>
       <div class="ac-wrap"><input class="field" id="pname" placeholder="예: 맥캘란, glenfiddich, ㄱㄹㅍㄷ" value="${esc(g.name)}" autocomplete="off" autocapitalize="off"><div class="ac" id="pac" hidden></div></div>
       <div class="autonote" id="pnote">${esc(note)}</div>
+      <div class="mtch" id="pmatch"></div>
 
       <div class="grid2">
         <div><label class="lb">${ic('i-bottle')} 용량</label><div class="unit"><input class="field" id="pml" type="number" inputmode="numeric" min="0" value="${g.ml || ''}"><em>ml</em></div></div>
@@ -1121,7 +1161,7 @@ function openPriceForm(opts = {}) {
 
       <div class="grid2">
         <div><label class="lb">${ic('i-won')} 가격</label><div class="unit"><input class="field" id="pprice" type="number" inputmode="numeric" min="0" step="100" value="${g.price || ''}" placeholder="0"><em>원</em></div></div>
-        <div><label class="lb">${ic('i-cal')} 구매일</label><input class="field dt" id="pdate" type="date" value="${esc(g.date)}"></div>
+        <div><label class="lb">${ic('i-cal')} 가격 확인한 날</label><input class="field dt" id="pdate" type="date" value="${esc(g.date)}"></div>
       </div>
       <div class="hint" id="phint"></div>
 
@@ -1166,14 +1206,39 @@ function openPriceForm(opts = {}) {
     if (on) { const v = vols.getBoundingClientRect(), c = on.getBoundingClientRect(); vols.scrollLeft += (c.left + c.width / 2) - (v.left + v.width / 2); }
     root.querySelectorAll('[data-pshop]').forEach(b => b.onclick = () => { $('#pshop').value = b.dataset.pshop; root.querySelectorAll('[data-pshop]').forEach(x => x.classList.toggle('on', x === b)); });
 
+    /* 저장된 위스키와 연결 상태 표시: 같은 이름+용량이면 이어지고, 아니면 눌러서 맞출 수 있어요 */
+    const matchEl = $('#pmatch');
+    const adopt = c => { $('#pname').value = c.ko; $('#pml').value = c.ml || ''; if (c.abv) $('#pabv').value = c.abv; markVol(); updateHint(); updateMatch(); };
+    const updateMatch = () => {
+      const nm = $('#pname').value.trim(), ml = +$('#pml').value || 0;
+      if (!nm) { matchEl.innerHTML = ''; return; }
+      const sameName = savedGroups().filter(c => norm(c.ko) === norm(nm));
+      let list = [];
+      if (sameName.length) {
+        const grp = sameName.find(c => (c.ml || 0) === ml);
+        if (grp) matchEl.innerHTML = `<span class="ok">✓ 저장된 위스키와 연결돼요 · 기록 ${grp.n}건</span>`;
+        else { list = sameName; matchEl.innerHTML = `<span class="warn">같은 위스키가 다른 용량으로 저장돼 있어요. 같은 병이면 눌러서 맞추세요</span><div class="quick">${list.map((c, i) => `<button type="button" class="chip" data-mv="${i}">${volLabel(c.ml)}로 맞추기 · ${c.n}건</button>`).join('')}</div>`; }
+      } else {
+        list = savedMatches(nm).sort((a, b) => ((b.ml || 0) === ml) - ((a.ml || 0) === ml)).slice(0, 3);
+        matchEl.innerHTML = list.length
+          ? `<span class="warn">비슷한 위스키가 저장돼 있어요. 같은 위스키면 눌러 주세요</span><div class="quick">${list.map((c, i) => `<button type="button" class="chip" data-mv="${i}">${esc(c.ko)} · ${volLabel(c.ml)} · ${c.n}건</button>`).join('')}</div>`
+          : `<span class="muted">새 위스키로 기록돼요</span>`;
+      }
+      matchEl.querySelectorAll('[data-mv]').forEach(b => b.onclick = () => adopt(list[+b.dataset.mv]));
+    };
+    ['pname', 'pml'].forEach(id => $('#' + id).addEventListener('input', updateMatch));
+    vols.querySelectorAll('[data-pvol]').forEach(b => b.addEventListener('click', updateMatch));
+    updateMatch();
+
     /* 위스키 이름 자동완성: 고르면 용량·도수가 채워져요 */
     const name = $('#pname'), ac = $('#pac'); let res = [], hi = -1;
-    const pick = c => { read(); g.name = c.ko; g.ml = c.ml; g.abv = c.abv; note = `✨ ${c.en || c.type} · 용량·도수를 채웠어요. 가격과 구매처를 적어주세요.`; draw(); setTimeout(() => { const a = document.activeElement, p = $('#pprice'); if (p && (!a || a === document.body || a.id === 'pname')) p.focus(); }, 30); };
+    const pick = c => { read(); g.name = c.ko; g.ml = c.ml; g.abv = c.abv; note = c.src === 'saved' ? '✓ 저장된 위스키를 불러왔어요. 새 가격은 이 위스키 기록에 이어서 쌓여요.' : `✨ ${c.en || c.type} · 용량·도수를 채웠어요. 가격과 구매처를 적어주세요.`; draw(); setTimeout(() => { const a = document.activeElement, p = $('#pprice'); if (p && (!a || a === document.body || a.id === 'pname')) p.focus(); }, 30); };
     const showAc = () => {
-      res = searchWords(name.value); hi = -1;
+      const saved = savedMatches(name.value).slice(0, 5), savedNames = new Set(savedGroups().map(c => norm(c.ko)));
+      res = [...saved, ...searchWords(name.value).filter(c => !savedNames.has(norm(c.ko)))].slice(0, 10); hi = -1;
       if (!res.length || (note && res.length === 1 && norm(res[0].ko) === norm(name.value))) { ac.hidden = true; return; }
       ac.hidden = false;
-      ac.innerHTML = res.map((c, i) => `<button type="button" data-i="${i}">${ic((TYPE_STYLE[c.type] || TYPE_STYLE['기타·직접입력'])[0])}<span><b>${hl(c.ko, name.value)}</b><small>${esc(c.en ? c.en + ' · ' : '')}${esc(c.type)} · ${volLabel(c.ml)} · ${c.abv}%</small></span></button>`).join('');
+      ac.innerHTML = res.map((c, i) => `<button type="button" data-i="${i}">${ic((TYPE_STYLE[c.type] || TYPE_STYLE['기타·직접입력'])[0])}<span><b>${hl(c.ko, name.value)}</b><small>${c.src === 'saved' ? `<span class="svd">저장됨</span> · ${volLabel(c.ml)}${c.abv ? ' · ' + c.abv + '%' : ''} · 기록 ${c.n}건 · 최근 ${won(c.price)}` : `${esc(c.en ? c.en + ' · ' : '')}${esc(c.type)} · ${volLabel(c.ml)} · ${c.abv}%`}</small></span></button>`).join('');
       ac.querySelectorAll('button').forEach(b => b.onmousedown = e => { e.preventDefault(); pick(res[+b.dataset.i]); });
     };
     name.addEventListener('input', () => { note = ''; $('#pnote').textContent = ''; showAc(); });
@@ -1190,12 +1255,18 @@ function openPriceForm(opts = {}) {
       bs.forEach((b, i) => b.classList.toggle('hi', i === hi));
     });
 
+    let skipMatch = false;
     $('#psave').onclick = async () => {
       read();
       const nm = g.name.trim();
       if (!nm) { toast('위스키 이름을 입력해주세요'); $('#pname').focus(); return; }
       if (!(g.price > 0)) { toast('가격을 입력해주세요'); $('#pprice').focus(); return; }
       if (g.abv > 100 || g.abv < 0) { toast('도수를 확인해주세요'); return; }
+      /* 새 기록인데 이름이 저장된 위스키와 정확히 같지 않고 비슷한 게 있으면 연결할지 물어봐요 (내장 목록의 정식 이름이면 묻지 않아요) */
+      if (!old && !skipMatch && !DB.some(d => norm(d[0]) === norm(nm)) && !savedGroups().some(c => norm(c.ko) === norm(nm))) {
+        const sim = savedMatches(nm).sort((a, b) => ((b.ml || 0) === g.ml) - ((a.ml || 0) === g.ml)).slice(0, 4);
+        if (sim.length) { askMatch(nm, sim, c => { adopt(c); $('#psave').click(); }, () => { skipMatch = true; $('#psave').click(); }); return; }
+      }
       const date = g.date || today();
       const prev = prevEntry(nm, g.ml, date, old && old.id);
       const rec = { id: old ? old.id : uid(), name: nm, ml: g.ml, abv: g.abv, price: g.price, shop: g.shop, date, created: old ? old.created : Date.now() };
