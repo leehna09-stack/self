@@ -894,7 +894,7 @@ function bindView() {
       download('whisky-notes-' + today() + '.csv', csv, 'text/csv');
     };
     $('#expprice').onclick = () => {
-      const rows = [['구매일', '위스키', '용량(ml)', '도수(%)', '가격(원)', '구매처', '출처']].concat(priceEntries().sort(byTime).map(e => [e.date, e.name, e.ml || '', e.abv || '', e.price, e.shop || '', e.src === 'diary' ? '다이어리' : '가격 기록']));
+      const rows = [['가격 확인일', '위스키', '용량(ml)', '도수(%)', '가격(원)', '구매처', '출처']].concat(priceEntries().sort(byTime).map(e => [e.date, e.name, e.ml || '', e.abv || '', e.price, e.shop || '', e.src === 'diary' ? '다이어리' : '가격 기록']));
       const csv = '\ufeff' + rows.map(r => r.map(v => '"' + String(v ?? '').replace(/"/g, '""') + '"').join(',')).join('\r\n');
       download('whisky-prices-' + today() + '.csv', csv, 'text/csv');
     };
@@ -1161,7 +1161,7 @@ function openPriceForm(opts = {}) {
 
       <div class="grid2">
         <div><label class="lb">${ic('i-won')} 가격</label><div class="unit"><input class="field" id="pprice" type="number" inputmode="numeric" min="0" step="100" value="${g.price || ''}" placeholder="0"><em>원</em></div></div>
-        <div><label class="lb">${ic('i-cal')} 구매일</label><input class="field dt" id="pdate" type="date" value="${esc(g.date)}"></div>
+        <div><label class="lb">${ic('i-cal')} 가격 확인한 날</label><input class="field dt" id="pdate" type="date" value="${esc(g.date)}"></div>
       </div>
       <div class="hint" id="phint"></div>
 
