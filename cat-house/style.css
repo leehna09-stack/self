@@ -830,7 +830,7 @@ fieldset.people-check {
   list-style: none;
   padding: 0;
   margin: 0 0 8px 0;
-  font-size: 15px;
+  font-size: 13px;
 }
 
 #detailNote li {
@@ -850,7 +850,7 @@ fieldset.people-check {
 }
 
 #detailNote .note-text small {
-  font-size: 12px;
+  font-size: 11px;
   color: var(--sub);
   white-space: nowrap;
 }
