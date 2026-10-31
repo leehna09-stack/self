@@ -400,6 +400,37 @@ textarea.field { min-height: 140px; resize: vertical; line-height: 28px; padding
 .top .tt { min-width: 0; }
 .hadd { margin-left: auto; flex: none; padding: 9px 15px; border-radius: 999px; background: var(--amber); color: #3a2208; font-weight: 800; font-size: 14px; box-shadow: 0 3px 0 #c47f17; white-space: nowrap; }
 .hadd:active { transform: translateY(2px); box-shadow: 0 1px 0 #c47f17; }
+
+/* 가격 판단 보드 */
+.pnow { text-align: right; line-height: 1.15; }
+.pnow b { display: block; font: 700 21px/1.1 var(--hand); font-variant-numeric: tabular-nums; }
+.pnow small { font-size: 11.5px; color: var(--muted); }
+.pg .pa { align-self: flex-start; }
+.pg .pnow { flex: 1 0 100%; display: flex; justify-content: space-between; align-items: baseline; gap: 8px; padding-top: 9px; border-top: 1.5px dotted var(--line); text-align: left; }
+.pg .pnow b { font-size: 24px; }
+.pg .rg, .judge .rg { flex: 1 0 100%; }
+.rg-t { position: relative; display: flex; height: 10px; }
+.rg-t i { flex: 1; height: 100%; }
+.rg-t .s1 { background: #f6dba6; border-radius: 6px 0 0 6px; } .rg-t .s2 { background: #ecc06c; } .rg-t .s3 { background: #d99b3a; border-radius: 0 6px 6px 0; }
+.rg-t .mk { position: absolute; top: -5px; width: 4px; height: 20px; margin-left: -2px; background: var(--text); border-radius: 2px; box-shadow: 0 0 0 2px var(--paper); }
+.rg-z { display: flex; justify-content: space-between; font-size: 10.5px; color: var(--muted); margin-top: 4px; }
+.rg-n { display: flex; justify-content: space-between; font-size: 12px; font-weight: 700; margin-top: 1px; font-variant-numeric: tabular-nums; }
+.pcf { flex: 1 0 100%; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.pcf .when, .jr1 .when { margin-left: auto; font-size: 11.5px; color: var(--muted); }
+.sg { display: inline-flex; align-items: center; gap: 3px; padding: 2px 9px; border-radius: 999px; font-size: 11.5px; font-weight: 800; white-space: nowrap; }
+.sg.ok { background: var(--mint); color: #1f5f4f; } .sg.hi { background: var(--peach); color: #8f3c2a; } .sg.mid { background: #efe9dc; color: #6b5d49; }
+.judge { margin-top: 10px; background: var(--paper); border: 1.5px solid var(--line); border-radius: 14px; padding: 11px 13px; display: grid; gap: 9px; }
+.jr1 { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.cmp3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.cmp3 > div { background: #fbf6ea; border: 1.5px solid var(--line); border-radius: 12px; padding: 7px 4px; text-align: center; }
+.cmp3 span { display: block; font-size: 10.5px; color: var(--muted); }
+.cmp3 b { font: 700 15px/1.2 var(--hand); font-variant-numeric: tabular-nums; }
+.shr { display: flex; justify-content: space-between; align-items: center; padding: 9px 0; border-top: 1.5px dotted var(--line); font-weight: 600; }
+.shr small { color: var(--muted); font-weight: 400; margin-left: 6px; font-size: 11.5px; }
+.shr .spr { display: flex; align-items: center; gap: 6px; font-weight: 800; font-variant-numeric: tabular-nums; }
+.shr .spr em { font-style: normal; color: var(--muted); font-size: 12px; font-weight: 600; }
+.lnk { background: none; border: 0; padding: 0 2px; font: inherit; font-weight: 700; color: var(--amber-ink); text-decoration: underline; cursor: pointer; }
+.hero-g.two { grid-template-columns: repeat(2, 1fr); }
 </style>
 </head>
 
@@ -430,8 +461,8 @@ textarea.field { min-height: 140px; resize: vertical; line-height: 28px; padding
 <div class="app" id="app"></div>
 
 <nav class="tabbar"><div class="tabbar-in">
-  <button class="tab" data-tab="list"><svg class="ic"><use href="#i-book"/></svg>다이어리</button>
   <button class="tab" data-tab="price"><svg class="ic"><use href="#i-won"/></svg>가격</button>
+  <button class="tab" data-tab="list"><svg class="ic"><use href="#i-book"/></svg>기록</button>
   <button class="tab" data-tab="stats"><svg class="ic"><use href="#i-chart"/></svg>취향리포트</button>
   <button class="tab" data-tab="settings"><svg class="ic"><use href="#i-gear"/></svg>설정</button>
 </div></nav>
@@ -497,7 +528,7 @@ const store = {
   save(list) { try { localStorage.setItem(KEY, JSON.stringify(list)); } catch { toast('저장 공간이 부족해요'); } },
 };
 let logs = store.load();
-let state = { tab: 'list', main: 'drink', q: '', pq: '', flavor: '', sort: 'new' };
+let state = { tab: 'price', q: '', pq: '', pf: '', flavor: '', sort: 'new' };
 
 const today = () => { const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
 const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
@@ -773,7 +804,7 @@ const ORN = () => `<div class="orn">${ic('i-glass')}${ic('i-bottle')}${ic('i-dra
 function viewList() {
   const total = logs.length;
   /* 가격 기록: 가격 탭에 등록된 위스키 종 수 (가격 탭 목록 위의 'N종'과 같은 숫자) */
-  const priceCount = priceGroups().length;
+  const gmap = new Map(priceGroups().map(l => [gkey(l[0]), l]));
   const rated = logs.filter(l => l.rating);
   const avg = rated.length ? fmtNum(rated.reduce((s, l) => s + l.rating, 0) / rated.length) : '-';
   const arr = filtered();
@@ -787,6 +818,7 @@ function viewList() {
       <div class="cbody">
         <div class="row1"><h3>${esc(l.name)}</h3><div class="rt"><div class="date">${fmtDate(l.date)}</div><button type="button" class="eic" data-edit="${l.id}" aria-label="${esc(l.name)} 수정" title="수정">${ic('i-pen')}</button></div></div>
         <div class="meta">${l.ml ? `<span>${ic('i-bottle', 'sm')} ${volLabel(l.ml)}</span>` : ''}${l.abv ? `<span>${ic('i-drop', 'sm')} ${l.abv}%</span>` : ''}${l.openDate ? `<span>${ic('i-cal', 'sm')} ${fmtDate(l.openDate)} 오픈</span>` : ''}${l.rating ? stars(l.rating) : ''}</div>
+        ${(() => { const gl = gmap.get(gkey(l)); if (!gl) return `<div class="meta buyline"><span>${ic('i-won', 'sm')} 가격 기록 없음 <button type="button" class="lnk" data-gadd="${l.id}">가격 입력</button></span></div>`; const lo = gl.reduce((a, b) => b.price < a.price ? b : a); return `<div class="meta buyline"><span>${ic('i-won', 'sm')} 지금 최저가 <b>${won(lo.price)}</b>${lo.shop ? ' · ' + esc(lo.shop) : ''}</span></div>`; })()}
         ${(l.price > 0 || l.shop) ? `<div class="meta buyline">${l.price > 0 ? `<span>${ic('i-won', 'sm')} <b>${won(l.price)}</b>${isLowest(l) ? ' <span class="low">최저가</span>' : ''}</span>` : ''}${l.shop ? `<span>${ic('i-shop', 'sm')} ${esc(l.shop)}</span>` : ''}${l.price > 0 ? `<span>${fmtDate(buyDateOf(l))} 구매</span>` : ''}</div>` : ''}
         ${(l.flavors || []).length ? `<div class="tags">${l.flavors.map(f => `<span class="tag">${FICON[f] || ''} ${esc(f)}</span>`).join('')}</div>` : ''}
         ${l.memo ? `<div class="memo">${esc(l.memo)}</div>` : ''}
@@ -804,11 +836,10 @@ function viewList() {
       <select id="sort">${[['new', '최신순'], ['old', '오래된순'], ['rate', '점수순'], ['abv', '도수 높은순'], ['price', '구매가 낮은순'], ['name', '이름순']].map(([v, t]) => `<option value="${v}" ${state.sort === v ? 'selected' : ''}>${t}</option>`).join('')}</select></div>
     ${arr.length ? cards + ORN() : empty}`;
   /* 요약 칸 '마신 기록'을 누르면 다이어리 목록, '가격 기록'을 누르면 가격 목록이 아래에 나와요 */
-  return header('우리가 마신 위스키 다이어리') + `
-    <div class="hero"><div class="hero-t">우리의 위스키 기록</div><div class="hero-g">
-      <button type="button" class="hs ${state.main === 'price' ? '' : 'on'}" data-main="drink" aria-pressed="${state.main !== 'price'}">${ic('i-glass')}<b>${total}</b><span>마신 기록</span></button>
-      <button type="button" class="hs ${state.main === 'price' ? 'on' : ''}" data-main="price" aria-pressed="${state.main === 'price'}">${ic('i-won')}<b>${priceCount}종</b><span>가격 기록</span></button>
-      <div class="hs">${ic('i-dram')}<b>${avg}</b><span>평균 점수</span></div></div></div>` + (state.main === 'price' ? priceBody() : drinkBody);
+  return header('마신 기록') + `
+    <div class="hero"><div class="hero-t">우리의 위스키 기록</div><div class="hero-g two">
+      <div class="hs">${ic('i-glass')}<b>${total}</b><span>마신 기록</span></div>
+      <div class="hs">${ic('i-dram')}<b>${avg}</b><span>평균 점수</span></div></div></div>` + drinkBody;
 }
 
 function viewStats() {
@@ -942,7 +973,8 @@ function bindView() {
   $('#backupBtn').onclick = exportJson;
   $('#hdrAdd').onclick = () => openPriceForm();
   const ad = $('#addDrink'); if (ad) ad.onclick = () => openForm();
-  document.querySelectorAll('[data-main]').forEach(b => b.onclick = () => { state.main = b.dataset.main; render(); });
+  document.querySelectorAll('[data-gadd]').forEach(b => b.onclick = e => { e.stopPropagation(); const l = logs.find(x => x.id === b.dataset.gadd); if (l) openPriceForm({ preset: { name: l.name, ml: l.ml, abv: l.abv } }); });
+  document.querySelectorAll('[data-pf]').forEach(b => b.onclick = () => { state.pf = b.dataset.pf; render(); });
   bindPrice();
   document.querySelectorAll('[data-ph]').forEach(img => img.onclick = e => { e.stopPropagation(); const [id, n] = img.dataset.ph.split(':'); openViewer(photoMap[id], +n); });
   const q = $('#q');
@@ -1055,12 +1087,27 @@ const textHit = (text, raw) => {
   return raw.toLowerCase().split(/\s+/).map(norm).filter(Boolean).every(w => t.includes(w) || jt.includes(jamo(w)) || (/^[ㄱ-ㅎ]+$/.test(w) && cho(t).includes(w)));
 };
 
+/* 지금 가격이 내 최저~최고 범위의 어디쯤인지: 아래쪽 1/3 = 싼 편, 위쪽 1/3 = 비싼 편 */
+function signalOf(list) {
+  const last = list[list.length - 1], vals = list.map(e => e.price), mn = Math.min(...vals), mx = Math.max(...vals);
+  const prev = list.length > 1 ? list[list.length - 2] : null, chg = changeBetween(last, prev);
+  if (mx === mn) return { last, mn, mx, pos: null, zone: 'none', chg };
+  const pos = (last.price - mn) / (mx - mn);
+  return { last, mn, mx, pos, zone: pos <= 1 / 3 ? 'low' : pos >= 2 / 3 ? 'high' : 'mid', chg };
+}
+const sigChip = z => z === 'low' ? '<span class="sg ok">✓ 최저가 근처</span>' : z === 'high' ? '<span class="sg hi">비싼 편</span>' : z === 'mid' ? '<span class="sg mid">보통</span>' : '';
+const gaugeHtml = (pos, mn, mx) => `<div class="rg"><div class="rg-t"><i class="s1"></i><i class="s2"></i><i class="s3"></i><b class="mk" style="left:${Math.round(pos * 100)}%"></b></div><div class="rg-z"><span>싼 편</span><span>보통</span><span>비싼 편</span></div><div class="rg-n"><span>최저 ${won(mn)}</span><span>최고 ${won(mx)}</span></div></div>`;
+
 function priceBody() {
   const groups = priceGroups().sort((a, b) => byTime(b[b.length - 1], a[a.length - 1]));
-  const shown = state.pq ? groups.filter(l => textHit(l[0].name + ' ' + l.map(e => e.shop).join(' '), state.pq)) : groups;
+  const sig = new Map(groups.map(l => [gkey(l[0]), signalOf(l)]));
+  const cnt = { '': groups.length, low: 0, high: 0, down: 0 };
+  sig.forEach(v => { if (v.zone === 'low') cnt.low++; if (v.zone === 'high') cnt.high++; if (v.chg.kind === 'down') cnt.down++; });
+  const byPf = l => { const v = sig.get(gkey(l[0])); return !state.pf || (state.pf === 'down' ? v.chg.kind === 'down' : v.zone === state.pf); };
+  const shown = groups.filter(byPf).filter(l => !state.pq || textHit(l[0].name + ' ' + l.map(e => e.shop).join(' '), state.pq));
+  const pfChips = [['', '전체'], ['low', '최저가 근처'], ['high', '비싼 편'], ['down', '내린 것']].map(([k, t]) => `<button type="button" class="chip ${state.pf === k ? 'on' : ''}" data-pf="${k}">${t} ${cnt[k]}</button>`).join('');
   const cards = shown.map(list => {
-    const last = list[list.length - 1];
-    const vals = list.map(e => e.price), mn = Math.min(...vals), mx = Math.max(...vals);
+    const v = sig.get(gkey(list[list.length - 1])), last = v.last;
     const [icon, color] = typeStyle(last.name);
     const gp = groupPhotos(list);
     return `<div class="pg" role="button" tabindex="0" data-pg="${esc(gkey(last))}" aria-label="${esc(last.name)} 가격 기록 보기">
@@ -1072,24 +1119,22 @@ function priceBody() {
         <button type="button" class="eic" data-pcam="${esc(last.id)}" aria-label="${esc(last.name)} 최근 기록에 사진 추가" title="사진 추가">${ic('i-camera')}</button>
         <button type="button" class="eic" data-pedit="${esc(last.id)}" data-psrc="${last.src}" aria-label="${esc(last.name)} 최근 기록 수정" title="최근 기록 수정">${ic('i-pen')}</button>
       </div>
-      <div class="mm">
-        <div class="hi"><span>최고 ${won(mx)}</span>${last.ml ? `<small>${p100txt(mx, last.ml)}</small>` : ''}</div>
-        <div class="lo"><span>최저 ${won(mn)}</span>${last.ml ? `<small>${p100txt(mn, last.ml)}</small>` : ''}</div>
-      </div>
+      <div class="pnow"><b>${won(last.price)}</b>${last.ml ? `<small>${p100txt(last.price, last.ml)}</small>` : ''}</div>
+      ${v.pos === null ? '' : gaugeHtml(v.pos, v.mn, v.mx)}
+      <div class="pcf">${sigChip(v.zone)}${chgHtml(v.chg)}<span class="when">${last.shop ? esc(last.shop) + ' · ' : ''}${fmtDate(last.date)}</span></div>
     </div>`;
   }).join('');
   const empty = groups.length
     ? `<div class="empty">${ic('i-flask')}<br>조건에 맞는 위스키가 없어요</div>`
     : `<div class="empty">${ic('i-won')}<br>아직 가격 기록이 없어요</div>`;
   return `
-    <button type="button" class="btn-main" id="padd" style="margin-top:0">${ic('i-won')} 가격 기록하기</button>
-    ${groups.length ? `<input class="search" id="pq" style="margin-top:12px" placeholder="위스키·구매처 검색 (초성 가능)" value="${esc(state.pq)}" enterkeyhint="search">
+    ${groups.length ? `<div class="filters">${pfChips}</div>
+    <input class="search" id="pq" placeholder="위스키·구매처 검색 (초성 가능)" value="${esc(state.pq)}" enterkeyhint="search">
     <div class="sortrow"><span>${shown.length}종 · 기록 ${priceEntries().length}건</span><span>최근 기록순</span></div>` : ''}
     ${shown.length ? cards + ORN() : empty}`;
 }
-function viewPrice() { return header('가격 기록·비교') + priceBody(); }
+function viewPrice() { return header('가격 판단 보드') + priceBody(); }
 function bindPrice() {
-  const add = $('#padd'); if (add) add.onclick = () => openPriceForm();
   const q = $('#pq'); if (q) q.addEventListener('input', e => { state.pq = e.target.value; const pos = e.target.selectionStart; render(); const n = $('#pq'); n.focus(); n.setSelectionRange(pos, pos); });
   document.querySelectorAll('[data-pg]').forEach(c => {
     c.onclick = () => openPriceDetail(c.dataset.pg);
@@ -1165,6 +1210,9 @@ function openPriceDetail(key) {
   const gp = groupPhotos(list);
   const info = e => `${e.shop ? esc(e.shop) + ' · ' : ''}${fmtDate(e.date)}`;
   const rows = list.map((e, i) => ({ e, c: changeBetween(e, i ? list[i - 1] : null) })).reverse();
+  const bestBy = new Map(); list.forEach(e => { if (e.shop && (!bestBy.has(e.shop) || e.price < bestBy.get(e.shop).price)) bestBy.set(e.shop, e); });
+  const shopRows = [...bestBy.values()].sort((a, b) => a.price - b.price).slice(0, 6);
+  const shopBox = shopRows.length > 1 ? `<div class="box"><h3>${ic('i-shop')} 구매처별 최저가</h3>${shopRows.map((e, i) => `<div class="shr ${i ? '' : 'best'}"><span>${esc(e.shop)}<small>${fmtDate(e.date)}</small></span><span class="spr">${won(e.price)}${i ? `<em>+${won(e.price - shopRows[0].price).replace('원', '')}</em>` : '<span class="sg ok">✓ 최저</span>'}</span></div>`).join('')}</div>` : '';
   root.innerHTML = `<div class="sheet"><div class="sheet-in">
     <div class="sheet-head"><button class="link" id="dclose">닫기</button><h2>${ic('i-won')} 가격 기록</h2><button class="link" id="dadd" style="color:var(--amber-ink);font-weight:700">+ 추가</button></div>
     <div class="pd-title">${gp.length ? `<button type="button" class="tile img big" id="dimg" aria-label="사진 크게 보기"><img src="${gp[0].thumb}" alt=""></button>` : `<span class="tile ${color}">${ic(icon)}</span>`}<div><h3>${esc(last.name)}</h3><div class="sub">${[last.ml ? volLabel(last.ml) : '', last.abv ? last.abv + '%' : ''].filter(Boolean).join(' · ')}</div></div></div>
@@ -1174,6 +1222,7 @@ function openPriceDetail(key) {
       <div class="sr avg"><span class="mk">━</span><span class="k">평균가</span><span class="vv"><span class="v">${won(avg)}</span>${last.ml ? `<small>${p100txt(avg, last.ml)}</small>` : ''}</span></div>
       <div class="sr lo"><span class="mk">▼</span><span class="k">최저가<small>${info(loE)}</small></span><span class="vv"><span class="v">${won(mn)}</span>${last.ml ? `<small>${p100txt(mn, last.ml)}</small>` : ''}</span></div>
     </div>
+    ${shopBox}
     <div class="box"><h3>${ic('i-book')} 가격 기록 ${list.length}건</h3>${rows.map(({ e, c }) => `<div class="hr" data-hid="${esc(e.id)}"><span class="hl">${(photoMap[e.id] || []).length ? `<img class="hth" src="${photoMap[e.id][0].thumb}" data-hthumb="${esc(e.id)}" alt="사진 보기">` : ''}<span><b>${fmtDate(e.date)}</b><small>${e.shop ? esc(e.shop) : '구매처 미입력'}${e.src === 'diary' ? ' · 다이어리 기록' : ''}</small></span></span><span class="hp">${won(e.price)}${e.ml ? `<small>${p100txt(e.price, e.ml)}</small>` : ''}${chgHtml(c)}</span><span class="ha"><button type="button" class="eic sm" data-hcam="${esc(e.id)}" aria-label="${fmtDate(e.date)} 기록에 사진 추가" title="사진 추가">${ic('i-camera')}</button><button type="button" class="eic sm" data-hedit="${esc(e.id)}" data-hsrc="${e.src}" aria-label="${fmtDate(e.date)} 기록 수정" title="수정">${ic('i-pen')}</button></span></div>`).join('')}</div>
   </div></div>`;
   $('#dclose').onclick = close;
@@ -1204,6 +1253,20 @@ function askMatch(nm, groups, onPick, onNew) {
   m.querySelectorAll('[data-mi]').forEach(b => b.onclick = () => { m.hidden = true; onPick(groups[+b.dataset.mi]); });
   $('#matchNew').onclick = () => { m.hidden = true; onNew(); };
   m.onclick = e => { if (e.target === m) m.hidden = true; };
+}
+
+/* 입력한 가격을 같은 위스키(이름+용량)의 지금까지 기록과 견줘서 바로 판정해요 */
+function judgeHtml(price, nm, ml, exceptId) {
+  const list = priceGroups().find(l => gkey(l[0]) === gkey({ name: nm, ml }));
+  const rest = list ? list.filter(e => e.id !== exceptId) : [];
+  if (!rest.length || !(price > 0)) return '';
+  const vals = rest.map(e => e.price), mn = Math.min(...vals), mx = Math.max(...vals), avg = Math.round(vals.reduce((a, b) => a + b, 0) / vals.length);
+  const lo = Math.min(mn, price), hi = Math.max(mx, price), pos = hi === lo ? .5 : (price - lo) / (hi - lo);
+  const head = price < mn ? '<span class="sg ok">✓ 지금까지 최저가</span>' : price > mx ? '<span class="sg hi">지금까지 최고가</span>' : price === mn ? '<span class="sg ok">✓ 최저가와 같아요</span>' : sigChip(pos <= 1 / 3 ? 'low' : pos >= 2 / 3 ? 'high' : 'mid');
+  const sorted = rest.slice().sort(byTime), prev = sorted[sorted.length - 1];
+  const d = n => (n > 0 ? '+' : n < 0 ? '-' : '') + won(Math.abs(n));
+  return `<div class="jr1">${head}${chgHtml(changeBetween({ price, ml }, prev))}<span class="when">직전 ${won(prev.price)}</span></div>${gaugeHtml(pos, lo, hi)}
+    <div class="cmp3"><div><span>평균 대비</span><b>${d(price - avg)}</b></div><div><span>최고 대비</span><b>${d(price - mx)}</b></div><div><span>최저 대비</span><b>${d(price - mn)}</b></div></div>`;
 }
 
 function openPriceForm(opts = {}) {
@@ -1237,6 +1300,7 @@ function openPriceForm(opts = {}) {
       </div>
       <div class="hint" id="pper"></div>
       <div class="hint" id="phint"></div>
+      <div class="judge" id="pjudge" hidden></div>
 
       <label class="lb">${ic('i-shop')} 구매 장소</label>
       <input class="field" id="pshop" placeholder="예: 코스트코 양재점, 면세점, 쿠팡" value="${esc(g.shop)}" maxlength="40" autocomplete="off">
@@ -1264,7 +1328,9 @@ function openPriceForm(opts = {}) {
       const nm = $('#pname').value.trim();
       const ml = +$('#pml').value || 0, price = Math.round(+$('#pprice').value) || 0, date = $('#pdate').value || today();
       $('#pper').textContent = price > 0 ? p100txt(price, ml) : '';
-      const prev = nm ? prevEntry(nm, ml, date, old && old.id) : null;
+      const jd = $('#pjudge'), jh = nm ? judgeHtml(price, nm, ml, old && old.id) : '';
+      jd.hidden = !jh; jd.innerHTML = jh;
+      const prev = nm && !jh ? prevEntry(nm, ml, date, old && old.id) : null;
       if (!prev) { hintEl.innerHTML = ''; return; }
       const t = `이전 가격 ${won(prev.price)}${prev.ml && prev.ml !== ml ? ' (' + volLabel(prev.ml) + ')' : ''} · ${prev.shop || '구매처 미입력'} · ${fmtDate(prev.date)}`;
       hintEl.innerHTML = esc(t) + (price > 0 ? ' ' + chgHtml(changeBetween({ price, ml }, prev)) : '');
@@ -1578,7 +1644,7 @@ function openForm(id, opts = {}) {
         if (!photoFail) { if (f.photos.length) { photoMap[rec.id] = f.photos; try { navigator.storage && navigator.storage.persist && navigator.storage.persist(); } catch {} } else delete photoMap[rec.id]; }
       }
       close(); toast(photoFail ? '기록은 저장했지만 사진은 저장하지 못했어요' : old ? '수정했어요' : '다이어리에 기록했어요');
-      state.tab = 'list'; state.main = 'drink'; render();
+      state.tab = 'list'; render();
       if (opts.fromDetail) openDiaryDetail(rec.id);
     };
   };
