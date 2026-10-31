@@ -502,6 +502,10 @@ textarea.field { min-height: 140px; resize: vertical; line-height: 28px; padding
 /* 기록 카드: 수정 아이콘은 썸네일 아래 */
 .tcol { display: flex; flex-direction: column; align-items: center; gap: 4px; flex: none; }
 .card .tcol .eic { margin-top: 2px; }
+
+/* 맛은 카드 전체 폭에 한 줄로 */
+.card { flex-wrap: wrap; row-gap: 8px; }
+.card > .tags.flat { flex: 0 0 100%; margin-top: 0; }
 </style>
 </head>
 
@@ -907,9 +911,9 @@ function viewList() {
           const lo = gl.reduce((a, b) => b.price < a.price ? b : a);
           return `<div class="meta buyline lowest" title="지금 최저가"><span><b>${won(lo.price)}</b></span>${lo.shop ? `<span>${esc(lo.shop)}</span>` : ''}<span class="dn" role="img" aria-label="지금 최저가">${ic('i-down')}</span></div>`;
         })()}
-        ${(l.flavors || []).length ? `<div class="tags flat">${l.flavors.slice(0, 4).map(f => `<span class="tag">${FICON[f] || ''} ${esc(f)}</span>`).join('')}</div>` : ''}
         ${l.memo ? `<div class="memo">${esc(l.memo)}</div>` : ''}
       </div>
+      ${(l.flavors || []).length ? `<div class="tags flat">${l.flavors.slice(0, 4).map(f => `<span class="tag">${FICON[f] || ''} ${esc(f)}</span>`).join('')}</div>` : ''}
     </div>`;
   }).join('');
   const empty = logs.length
