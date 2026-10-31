@@ -498,6 +498,14 @@ textarea.field { min-height: 140px; resize: vertical; line-height: 28px; padding
 .buyline.lowest .dn .ic { width: 15px; height: 15px; stroke-width: 2.4; }
 .tags.flat { flex-wrap: nowrap; overflow: hidden; gap: clamp(5px, 2.2vw, 10px); margin-top: 7px; }
 .tags.flat .tag { background: none; padding: 0; flex: 0 1 auto; min-width: 0; white-space: nowrap; font-size: clamp(10.5px, 3.3vw, 12px); color: var(--amber-ink); font-weight: 600; overflow: hidden; text-overflow: ellipsis; }
+
+/* 기록 카드: 수정 아이콘은 썸네일 아래 */
+.tcol { display: flex; flex-direction: column; align-items: center; gap: 4px; flex: none; }
+.card .tcol .eic { margin-top: 2px; }
+
+/* 맛은 카드 전체 폭에 한 줄로 */
+.card { flex-wrap: wrap; row-gap: 8px; }
+.card > .tags.flat { flex: 0 0 100%; margin-top: 0; }
 </style>
 </head>
 
@@ -893,9 +901,9 @@ function viewList() {
     const ph = (photoMap[l.id] || [])[0];
     return `
     <div class="card tape${i % 3}" role="button" tabindex="0" data-view="${l.id}" aria-label="${esc(l.name)} 기록 보기">
-      ${ph ? `<span class="tile img"><img src="${ph.thumb}" alt=""></span>` : `<span class="tile ${color}">${ic(icon)}</span>`}
+      <div class="tcol">${ph ? `<span class="tile img"><img src="${ph.thumb}" alt=""></span>` : `<span class="tile ${color}">${ic(icon)}</span>`}<button type="button" class="eic" data-edit="${l.id}" aria-label="${esc(l.name)} 수정" title="수정">${ic('i-pen')}</button></div>
       <div class="cbody">
-        <div class="row1"><h3>${esc(l.name)}</h3><div class="rt">${l.openDate ? `<div class="date" aria-label="오픈일">${fmtDate(l.openDate)}</div>` : ''}<button type="button" class="eic" data-edit="${l.id}" aria-label="${esc(l.name)} 수정" title="수정">${ic('i-pen')}</button></div></div>
+        <div class="row1"><h3>${esc(l.name)}</h3>${l.openDate ? `<div class="date" aria-label="오픈일">${fmtDate(l.openDate)}</div>` : ''}</div>
         <div class="meta">${l.ml ? `<span>${ic('i-bottle', 'sm')} ${volLabel(l.ml)}</span>` : ''}${l.abv ? `<span>${ic('i-drop', 'sm')} ${l.abv}%</span>` : ''}${l.rating ? stars(l.rating) : ''}</div>
         ${(() => {
           const gl = gmap.get(gkey(l));
@@ -903,9 +911,9 @@ function viewList() {
           const lo = gl.reduce((a, b) => b.price < a.price ? b : a);
           return `<div class="meta buyline lowest" title="지금 최저가"><span><b>${won(lo.price)}</b></span>${lo.shop ? `<span>${esc(lo.shop)}</span>` : ''}<span class="dn" role="img" aria-label="지금 최저가">${ic('i-down')}</span></div>`;
         })()}
-        ${(l.flavors || []).length ? `<div class="tags flat">${l.flavors.slice(0, 4).map(f => `<span class="tag">${FICON[f] || ''} ${esc(f)}</span>`).join('')}</div>` : ''}
         ${l.memo ? `<div class="memo">${esc(l.memo)}</div>` : ''}
       </div>
+      ${(l.flavors || []).length ? `<div class="tags flat">${l.flavors.slice(0, 4).map(f => `<span class="tag">${FICON[f] || ''} ${esc(f)}</span>`).join('')}</div>` : ''}
     </div>`;
   }).join('');
   const empty = logs.length
