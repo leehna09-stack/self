@@ -284,7 +284,7 @@ textarea.field { min-height: 140px; resize: vertical; line-height: 28px; padding
 .pg h3 { margin: 0; font: 700 17px/1.25 var(--title); letter-spacing: -.01em; overflow-wrap: anywhere; }
 .pg .sub, .pd-title .sub { color: var(--muted); font-size: 12.5px; margin-top: 1px; }
 .pg-r { text-align: right; white-space: nowrap; display: flex; flex-direction: column; align-items: flex-end; gap: 3px; }
-.pg-p { font: 700 21px/1.1 var(--hand); }
+.pg-p { font: 700 19px/1.1 var(--title); }
 .pg { flex-wrap: wrap; row-gap: 10px; }
 .pg .mm { display: grid; gap: 4px; flex: 1 0 100%; margin: 0; padding-top: 9px; border-top: 1.5px dotted var(--line); font-size: 14px; font-weight: 700; }
 .pg .mm > div { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
@@ -324,7 +324,7 @@ textarea.field { min-height: 140px; resize: vertical; line-height: 28px; padding
 .sr .mk { width: 18px; text-align: center; font-size: 12px; line-height: 1; }
 .sr .k { flex: 1; font-size: 16px; min-width: 0; }
 .sr .k small { display: block; font-size: 11.5px; color: var(--muted); overflow-wrap: anywhere; }
-.sr .v { font-size: 20px; font-weight: 800; white-space: nowrap; }
+.sr .v { font: 800 18px/1.2 var(--title); white-space: nowrap; }
 .sr.hi .mk, .sr.hi .v { color: var(--hi); } .sr.avg .mk { color: var(--avg); font-size: 15px; } .sr.avg .v { color: var(--text); } .sr.lo .mk, .sr.lo .v { color: var(--lo); }
 .hr { display: grid; grid-template-columns: 1fr auto auto; gap: 10px; align-items: center; width: 100%; text-align: left; padding: 11px 0; border-top: 1.5px dotted var(--line); }
 .hr:first-of-type { border-top: 0; }
@@ -404,11 +404,11 @@ textarea.field { min-height: 140px; resize: vertical; line-height: 28px; padding
 
 /* 가격 판단 보드 */
 .pnow { text-align: right; line-height: 1.15; }
-.pnow b { display: block; font: 700 21px/1.1 var(--hand); font-variant-numeric: tabular-nums; }
+.pnow b { display: block; font: 700 20px/1.15 var(--title); font-variant-numeric: tabular-nums; }
 .pnow small { font-size: 11.5px; color: var(--muted); }
 .pg .pa { align-self: flex-start; }
 .pg .pnow { flex: 1 0 100%; display: flex; justify-content: space-between; align-items: baseline; gap: 8px; padding-top: 9px; border-top: 1.5px dotted var(--line); text-align: left; }
-.pg .pnow b { font-size: 24px; }
+.pg .pnow b { font-size: 21px; }
 .pg .rg, .judge .rg { flex: 1 0 100%; }
 .rg-t { position: relative; display: flex; height: 10px; }
 .rg-t i { flex: 1; height: 100%; }
@@ -425,7 +425,7 @@ textarea.field { min-height: 140px; resize: vertical; line-height: 28px; padding
 .cmp3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
 .cmp3 > div { background: #fbf6ea; border: 1.5px solid var(--line); border-radius: 12px; padding: 7px 4px; text-align: center; }
 .cmp3 span { display: block; font-size: 10.5px; color: var(--muted); }
-.cmp3 b { font: 700 15px/1.2 var(--hand); font-variant-numeric: tabular-nums; }
+.cmp3 b { font: 700 14px/1.2 var(--title); font-variant-numeric: tabular-nums; }
 .shr { display: flex; justify-content: space-between; align-items: center; padding: 9px 0; border-top: 1.5px dotted var(--line); font-weight: 600; }
 .shr small { color: var(--muted); font-weight: 400; margin-left: 6px; font-size: 11.5px; }
 .shr .spr { display: flex; align-items: center; gap: 6px; font-weight: 800; font-variant-numeric: tabular-nums; }
@@ -438,6 +438,10 @@ textarea.field { min-height: 140px; resize: vertical; line-height: 28px; padding
 .scanres.warn { color: var(--amber-ink); font-weight: 700; }
 .scanres .quick { margin-top: 6px; }
 .btn-sub.scan:disabled { opacity: .6; }
+
+.pbox { position: relative; }
+.pstar { position: absolute; left: 4px; bottom: 4px; padding: 2px 7px; border-radius: 999px; border: 0; background: #fffdf7e6; color: var(--muted); font: 700 12px/1.3 var(--sans, inherit); box-shadow: 0 1px 3px #3b2f2340; cursor: pointer; }
+.pstar.on { background: var(--amber); color: #3a2208; }
 </style>
 </head>
 
@@ -741,13 +745,14 @@ function addPhotoFlow(onFiles) {
   m.onclick = e => { if (e.target === m) m.hidden = true; };
 }
 /* 사진 칸(미리보기·삭제·추가). 다이어리와 가격 입력 화면이 함께 써요 */
-function mountPhotos(el, list) {
+function mountPhotos(el, list, opt = {}) {
   const draw = () => {
-    el.innerHTML = list.map((ph, n) => `<div class="pbox"><img src="${ph.thumb}" data-view="${n}" alt="사진 ${n + 1}"><button type="button" class="px" data-pdel="${n}" aria-label="사진 ${n + 1} 지우기">×</button></div>`).join('') +
+    el.innerHTML = list.map((ph, n) => `<div class="pbox"><img src="${ph.thumb}" data-view="${n}" alt="사진 ${n + 1}"><button type="button" class="px" data-pdel="${n}" aria-label="사진 ${n + 1} 지우기">×</button>${opt.pin ? `<button type="button" class="pstar ${ph.pin ? 'on' : ''}" data-ppin="${n}" aria-pressed="${!!ph.pin}" aria-label="사진 ${n + 1} 대표 사진으로 지정">${ph.pin ? '★ 대표' : '☆'}</button>` : ''}</div>`).join('') +
       (!PH.ok ? `<div class="pnote">이 브라우저에서는 사진을 저장할 수 없어요.</div>` :
         list.length < MAX_PHOTOS ? `<button type="button" class="padd" data-padd>${ic('i-camera')}<span>사진 추가</span><small>${list.length}/${MAX_PHOTOS}</small></button>` : '');
     el.querySelectorAll('[data-view]').forEach(im => im.onclick = () => openViewer(list, +im.dataset.view));
     el.querySelectorAll('[data-pdel]').forEach(b => b.onclick = () => { list.splice(+b.dataset.pdel, 1); draw(); });
+    el.querySelectorAll('[data-ppin]').forEach(b => b.onclick = () => { const p = list[+b.dataset.ppin], was = p.pin; list.forEach(x => { delete x.pin; }); if (!was) p.pin = true; draw(); });
     const add = el.querySelector('[data-padd]');
     if (add) add.onclick = () => addPhotoFlow(async files => {
       const room = MAX_PHOTOS - list.length;
@@ -760,7 +765,16 @@ function mountPhotos(el, list) {
   draw();
 }
 /* 한 위스키(가격 묶음)의 사진: 최근 기록의 사진부터 */
-const groupPhotos = list => { const out = []; for (let i = list.length - 1; i >= 0; i--) (photoMap[list[i].id] || []).forEach(p => out.push(p)); return out; };
+const groupPhotos = list => { const out = []; for (let i = list.length - 1; i >= 0; i--) (photoMap[list[i].id] || []).forEach(p => out.push(p)); const k = out.findIndex(p => p.pin); if (k > 0) out.unshift(out.splice(k, 1)[0]); return out; };
+/* 대표 사진은 위스키(이름+용량) 하나에 한 장만: 새로 지정하면 같은 위스키의 다른 기록에 있던 지정은 풀어요 */
+async function clearOtherPins(keepId, key) {
+  const grp = priceGroups().find(l => gkey(l[0]) === key); if (!grp) return;
+  for (const e of grp) {
+    if (e.id === keepId || !(photoMap[e.id] || []).some(p => p.pin)) continue;
+    const next = photoMap[e.id].map(p => { const q = { ...p }; delete q.pin; return q; });
+    if (await PH.set(e.id, next)) photoMap[e.id] = next;
+  }
+}
 
 /* 사진 크게 보기 (좌우 버튼·스와이프·방향키) */
 function openViewer(list, start) {
@@ -1108,13 +1122,10 @@ const gaugeHtml = (pos, mn, mx) => `<div class="rg"><div class="rg-t"><i class="
 function priceBody() {
   const groups = priceGroups().sort((a, b) => byTime(b[b.length - 1], a[a.length - 1]));
   const sig = new Map(groups.map(l => [gkey(l[0]), signalOf(l)]));
-  const cnt = { '': groups.length, low: 0, high: 0, down: 0 };
-  sig.forEach(v => { if (v.zone === 'low') cnt.low++; if (v.zone === 'high') cnt.high++; if (v.chg.kind === 'down') cnt.down++; });
-  const byPf = l => state.pf !== 'down' || sig.get(gkey(l[0])).chg.kind === 'down';
   const cur = l => l[l.length - 1].price;
-  const shown = groups.filter(byPf).filter(l => !state.pq || textHit(l[0].name + ' ' + l.map(e => e.shop).join(' '), state.pq));
+  const shown = groups.filter(l => !state.pq || textHit(l[0].name + ' ' + l.map(e => e.shop).join(' '), state.pq));
   if (state.pf === 'asc') shown.sort((a, b) => cur(a) - cur(b)); else if (state.pf === 'desc') shown.sort((a, b) => cur(b) - cur(a));
-  const pfChips = [['', '전체'], ['asc', '저가순'], ['desc', '고가순'], ['down', '내린 것']].map(([k, t]) => `<button type="button" class="chip ${state.pf === k ? 'on' : ''}" data-pf="${k}">${t}${k === '' || k === 'down' ? ' ' + cnt[k] : ''}</button>`).join('');
+  const pfChips = [['', '전체'], ['asc', '저가순'], ['desc', '고가순']].map(([k, t]) => `<button type="button" class="chip ${state.pf === k ? 'on' : ''}" data-pf="${k}">${t}</button>`).join('');
   const cards = shown.map(list => {
     const v = sig.get(gkey(list[list.length - 1])), last = v.last;
     const [icon, color] = typeStyle(last.name);
@@ -1130,7 +1141,7 @@ function priceBody() {
       </div>
       <div class="pnow"><b>${won(last.price)}</b>${last.ml ? `<small>${p100txt(last.price, last.ml)}</small>` : ''}</div>
       ${v.pos === null ? '' : gaugeHtml(v.pos, v.mn, v.mx)}
-      <div class="pcf">${sigChip(v.zone)}${chgHtml(v.chg)}<span class="when">${last.shop ? esc(last.shop) + ' · ' : ''}${fmtDate(last.date)}</span></div>
+      <div class="pcf">${chgHtml(v.chg)}<span class="when">${last.shop ? esc(last.shop) + ' · ' : ''}${fmtDate(last.date)}</span></div>
     </div>`;
   }).join('');
   const empty = groups.length
@@ -1381,7 +1392,7 @@ function openPriceForm(opts = {}) {
 
   const bind = () => {
     $('#pcancel').onclick = back;
-    mountPhotos($('#pphotos'), g.photos);
+    mountPhotos($('#pphotos'), g.photos, { pin: true });
     const scanBtn = $('#pscanBtn');
     if (scanBtn) scanBtn.onclick = () => {
       if (!navigator.onLine && !window.Tesseract) { toast('처음 한 번은 인터넷이 필요해요'); return; }
@@ -1389,7 +1400,7 @@ function openPriceForm(opts = {}) {
         const file = files[0], box = $('#pscan'); box.hidden = false; box.className = 'scanres'; box.textContent = '가격표 읽는 중…';
         scanBtn.disabled = true;
         /* 읽는 동안 사진도 이 기록에 붙여둬요 (3장이 넘으면 붙이지 않아요) */
-        if (g.photos.length < MAX_PHOTOS) { try { g.photos.push(await shrink(file)); mountPhotos($('#pphotos'), g.photos); } catch {} }
+        if (g.photos.length < MAX_PHOTOS) { try { g.photos.push(await shrink(file)); mountPhotos($('#pphotos'), g.photos, { pin: true }); } catch {} }
         try {
           const r = parseTag(await ocrRead(file, p => { box.textContent = `가격표 읽는 중… ${p}%`; }));
           read();
@@ -1512,6 +1523,7 @@ function openPriceForm(opts = {}) {
         photoFail = !(await PH.set(rec.id, g.photos));
         if (!photoFail) { if (g.photos.length) { photoMap[rec.id] = g.photos; try { navigator.storage && navigator.storage.persist && navigator.storage.persist(); } catch {} } else delete photoMap[rec.id]; }
       }
+      if (!photoFail && g.photos.some(p => p.pin)) await clearOtherPins(rec.id, gkey(rec));
       close(); state.tab = 'price'; render();
       if (opts.back) openPriceDetail(gkey(rec));
       toast(photoFail ? '가격은 저장했지만 사진은 저장하지 못했어요' : chgText(c));
@@ -1750,8 +1762,39 @@ function openForm(id, opts = {}) {
   [6] 시작
 ============================================================= */
 document.querySelectorAll('.tab').forEach(t => t.onclick = () => {
-  state.tab = t.dataset.tab; window.scrollTo(0, 0); render();
+  const next = t.dataset.tab, changed = next !== state.tab;
+  state.tab = next; window.scrollTo(0, 0); render();
+  if (changed) history.pushState({ tab: next }, '');
 });
+
+/* 폰의 뒤로가기: 앱이 닫히지 않고 한 단계씩 돌아가요
+   열려 있는 사진 보기·팝업·입력 화면을 먼저 닫고, 그다음엔 이전에 보던 탭으로 가요 */
+(() => {
+  const root = $('#sheetRoot');
+  const overlays = () => (root.firstElementChild ? 1 : 0) + document.querySelectorAll('.viewer').length + document.querySelectorAll('.modal:not([hidden])').length;
+  let pushed = 0, ignore = 0;
+  try { history.replaceState({ tab: state.tab }, ''); } catch {}
+  const sync = () => {
+    const n = overlays();
+    if (n > pushed) { while (pushed < n) { history.pushState({ ov: 1 }, ''); pushed++; } }
+    else if (n < pushed) { const d = pushed - n; pushed = n; ignore += d; history.go(-d); }   /* 취소·저장 등으로 직접 닫은 경우 기록 칸도 되돌려요 */
+  };
+  const closeTop = () => {
+    const v = document.querySelector('.viewer'); if (v) { const x = v.querySelector('.vx'); if (x) x.click(); else v.remove(); return; }
+    const m = document.querySelector('.modal:not([hidden])'); if (m) { m.hidden = true; return; }
+    root.innerHTML = ''; document.body.style.overflow = '';
+  };
+  window.addEventListener('popstate', e => {
+    if (ignore > 0) { ignore--; return; }
+    if (pushed > 0) { pushed--; closeTop(); return; }
+    const t = e.state && e.state.tab;
+    if (t && t !== state.tab) { state.tab = t; window.scrollTo(0, 0); render(); }
+  });
+  const ob = new MutationObserver(sync);
+  ob.observe(root, { childList: true });
+  ob.observe(document.body, { childList: true });
+  ob.observe(document.body, { attributes: true, attributeFilter: ['hidden'], subtree: true });
+})();
 $('#installClose').onclick = () => { $('#installModal').hidden = true; };
 $('#installModal').onclick = e => { if (e.target.id === 'installModal') e.currentTarget.hidden = true; };
 render();
