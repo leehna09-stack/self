@@ -469,7 +469,7 @@ textarea.field { min-height: 140px; resize: vertical; line-height: 28px; padding
 .hr .ham { grid-area: am; font-weight: 800; font-size: 13px; font-variant-numeric: tabular-nums; }
 .hr .hcg { grid-area: cg; justify-self: end; }
 .hr .hpm { grid-area: pm; color: var(--muted); font-size: 10px; font-weight: 500; }
-.hr .chg { font-size: 10px; padding: 1px 7px; }
+.hr .chg, .shr .chg { background: none; padding: 0; font-size: 10px; }
 .hr .ha { grid-area: ac; justify-self: end; display: flex; gap: 6px; align-items: center; }
 .shr .spr { white-space: nowrap; flex: none; }
 .shr > span:first-child { min-width: 0; overflow-wrap: anywhere; padding-right: 8px; }
@@ -1270,7 +1270,7 @@ function openPriceDetail(key) {
   const recHtml = () => (ord === 'new' ? rowsAsc.slice().reverse() : rowsAsc).map(({ e, c }) => `<div class="hr" data-hid="${esc(e.id)}">${(photoMap[e.id] || []).length ? `<img class="hth" src="${photoMap[e.id][0].thumb}" data-hthumb="${esc(e.id)}" alt="사진 보기">` : '<span class="hth none" aria-hidden="true"></span>'}<div class="hbody"><span class="hd"><b>${fmtDate(e.date)}</b>${e.src === 'diary' ? `<span class="dico" role="img" aria-label="다이어리 기록" title="다이어리 기록">${ic('i-book')}</span>` : ''}</span><span class="hshop${e.shop ? '' : ' none'}">${e.shop ? esc(e.shop) : '구매처 미입력'}</span><span class="ham">${won(e.price)}</span><span class="hcg">${chgHtml(c)}</span><span class="hpm">${e.ml ? p100txt(e.price, e.ml) : ''}</span><span class="ha"><button type="button" class="eic sm" data-hedit="${esc(e.id)}" data-hsrc="${e.src}" aria-label="${fmtDate(e.date)} 기록 수정" title="수정">${ic('i-pen')}</button></span></div></div>`).join('');
   const bestBy = new Map(); list.forEach(e => { if (e.shop && (!bestBy.has(e.shop) || e.price < bestBy.get(e.shop).price)) bestBy.set(e.shop, e); });
   const shopRows = [...bestBy.values()].sort((a, b) => a.price - b.price).slice(0, 6);
-  const shopBox = shopRows.length > 1 ? `<div class="box"><h3>${ic('i-shop')} 구매처별 최저가</h3>${shopRows.map((e, i) => `<div class="shr ${i ? '' : 'first'}"><span class="sn"><b class="no">${i + 1}</b><span><span class="snm">${esc(e.shop)}</span><small>${fmtDate(e.date)}</small></span></span><span class="spr"><span class="spv">${won(e.price)}</span>${i ? `<em>+${won(e.price - shopRows[0].price).replace('원', '')}</em>` : ''}</span></div>`).join('')}</div>` : '';
+  const shopBox = shopRows.length > 1 ? `<div class="box"><h3>${ic('i-shop')} 구매처별 최저가</h3>${shopRows.map((e, i) => `<div class="shr ${i ? '' : 'first'}"><span class="sn"><b class="no">${i + 1}</b><span><span class="snm">${esc(e.shop)}</span><small>${fmtDate(e.date)}</small></span></span><span class="spr"><span class="spv">${won(e.price)}</span>${i ? chgHtml(changeBetween({ price: e.price, ml: 0 }, { price: shopRows[0].price, ml: 0 })) : ''}</span></div>`).join('')}</div>` : '';
   root.innerHTML = `<div class="sheet"><div class="sheet-in">
     <div class="sheet-head"><button class="link" id="dclose">닫기</button><h2>${ic('i-won')} 가격 기록</h2><button class="link" id="dadd" style="color:var(--amber-ink);font-weight:700">+ 추가</button></div>
     <div class="pd-title">${gp.length ? `<button type="button" class="tile img big" id="dimg" aria-label="사진 크게 보기"><img src="${gp[0].thumb}" alt=""></button>` : `<span class="tile ${color}">${ic(icon)}</span>`}<div><h3>${esc(last.name)}</h3><div class="sub">${[last.ml ? volLabel(last.ml) : '', last.abv ? last.abv + '%' : ''].filter(Boolean).join(' · ')}</div></div></div>
