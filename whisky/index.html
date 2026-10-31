@@ -459,7 +459,7 @@ textarea.field { min-height: 140px; resize: vertical; line-height: 28px; padding
 /* 가격 기록 한 건: 날짜·구매처 / 금액·등락 / 100ml당·아이콘 */
 .hr { display: flex; gap: 10px; align-items: flex-start; width: 100%; text-align: left; padding: 11px 0; border-top: 1.5px dotted var(--line); }
 .hr:first-of-type { border-top: 0; }
-.hr .hbody { flex: 1; min-width: 0; display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: 'hd hs' 'am cg' 'pm ac'; gap: 3px 10px; align-items: center; }
+.hr .hbody { flex: 1; min-width: 0; display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: 'hd hs' 'am cg' 'pm ac'; gap: 8px 10px; align-items: center; }
 .hr .hd { grid-area: hd; display: flex; align-items: baseline; gap: 6px; min-width: 0; white-space: nowrap; }
 .hr .hd b { font-size: 10px; font-weight: 500; color: var(--muted); }
 .hr .dico { color: var(--amber-ink); font-size: 13px; line-height: 1; display: inline-flex; align-self: center; }
@@ -470,7 +470,9 @@ textarea.field { min-height: 140px; resize: vertical; line-height: 28px; padding
 .hr .hcg { grid-area: cg; justify-self: end; }
 .hr .hpm { grid-area: pm; color: var(--muted); font-size: 10px; font-weight: 500; }
 .hr .chg, .shr .chg { background: none; padding: 0; font-size: 10px; }
-.hr .ha { grid-area: ac; justify-self: end; display: flex; gap: 6px; align-items: center; }
+.hr .ha { grid-area: ac; justify-self: end; display: flex; gap: 6px; align-items: center; margin: -4px 0; }
+.hr .eic.sm { width: 22px; height: 22px; border-width: 1.5px; }
+.hr .eic.sm .ic { font-size: 12px; }
 .shr .spr { white-space: nowrap; flex: none; }
 .shr > span:first-child { min-width: 0; overflow-wrap: anywhere; padding-right: 8px; }
 
