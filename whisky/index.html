@@ -490,6 +490,14 @@ textarea.field { min-height: 140px; resize: vertical; line-height: 28px; padding
 .rt { gap: 4px; }
 #sortBtn { width: 34px; height: 34px; }
 #sortBtn .ic { font-size: 18px; }
+
+/* 기록 카드: 오픈일은 이름 오른쪽, 최저가는 금액 / 구매처 / ↓ , 맛은 최대 4개를 한 줄에 글자색만 */
+.buyline.lowest { gap: 8px; align-items: center; flex-wrap: nowrap; }
+.buyline.lowest b { color: var(--text); }
+.buyline.lowest .dn { color: var(--lo); display: inline-flex; }
+.buyline.lowest .dn .ic { width: 15px; height: 15px; stroke-width: 2.4; }
+.tags.flat { flex-wrap: nowrap; overflow: hidden; gap: clamp(5px, 2.2vw, 10px); margin-top: 7px; }
+.tags.flat .tag { background: none; padding: 0; flex: 0 1 auto; min-width: 0; white-space: nowrap; font-size: clamp(10.5px, 3.3vw, 12px); color: var(--amber-ink); font-weight: 600; overflow: hidden; text-overflow: ellipsis; }
 </style>
 </head>
 
@@ -512,6 +520,7 @@ textarea.field { min-height: 140px; resize: vertical; line-height: 28px; padding
   <symbol id="i-download" viewBox="0 0 24 24"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></symbol>
   <symbol id="i-won" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9.8"/><path d="M6.8 8.2l2.6 7.8 2.6-6 2.6 6 2.6-7.8"/><path d="M5.8 11.2h12.4M5.8 13.6h12.4"/></symbol>
   <symbol id="i-sort" viewBox="0 0 24 24"><path d="M4 5.5h16l-6.2 7.2v5.6l-3.6 2v-7.6z"/></symbol>
+  <symbol id="i-down" viewBox="0 0 24 24"><path d="M12 5v13M6.5 12.5 12 18l5.5-5.5"/></symbol>
   <symbol id="i-tag" viewBox="0 0 24 24"><path d="M3.5 12.2V4.5a1 1 0 0 1 1-1h7.7l8.3 8.3a1.5 1.5 0 0 1 0 2.1l-6.1 6.1a1.5 1.5 0 0 1-2.1 0z"/><circle cx="8" cy="8" r="1.4"/></symbol>
   <symbol id="i-shop" viewBox="0 0 24 24"><path d="M4 9.5V20h16V9.5"/><path d="M3 9.5 5 4h14l2 5.5a3 3 0 0 1-6 0 3 3 0 0 1-6 0 3 3 0 0 1-6 0z"/><path d="M10 20v-5h4v5"/></symbol>
   <symbol id="i-camera" viewBox="0 0 24 24"><path d="M4 8h3l1.6-2.5h6.8L17 8h3a1 1 0 0 1 1 1v9.5a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13.5" r="3.6"/></symbol>
@@ -886,15 +895,15 @@ function viewList() {
     <div class="card tape${i % 3}" role="button" tabindex="0" data-view="${l.id}" aria-label="${esc(l.name)} 기록 보기">
       ${ph ? `<span class="tile img"><img src="${ph.thumb}" alt=""></span>` : `<span class="tile ${color}">${ic(icon)}</span>`}
       <div class="cbody">
-        <div class="row1"><h3>${esc(l.name)}</h3><div class="rt"><div class="date">${fmtDate(l.date)}</div><button type="button" class="eic" data-edit="${l.id}" aria-label="${esc(l.name)} 수정" title="수정">${ic('i-pen')}</button></div></div>
-        <div class="meta">${l.ml ? `<span>${ic('i-bottle', 'sm')} ${volLabel(l.ml)}</span>` : ''}${l.abv ? `<span>${ic('i-drop', 'sm')} ${l.abv}%</span>` : ''}${l.openDate ? `<span>${ic('i-cal', 'sm')} ${fmtDate(l.openDate)} 오픈</span>` : ''}${l.rating ? stars(l.rating) : ''}</div>
+        <div class="row1"><h3>${esc(l.name)}</h3><div class="rt">${l.openDate ? `<div class="date" aria-label="오픈일">${fmtDate(l.openDate)}</div>` : ''}<button type="button" class="eic" data-edit="${l.id}" aria-label="${esc(l.name)} 수정" title="수정">${ic('i-pen')}</button></div></div>
+        <div class="meta">${l.ml ? `<span>${ic('i-bottle', 'sm')} ${volLabel(l.ml)}</span>` : ''}${l.abv ? `<span>${ic('i-drop', 'sm')} ${l.abv}%</span>` : ''}${l.rating ? stars(l.rating) : ''}</div>
         ${(() => {
           const gl = gmap.get(gkey(l));
           if (!gl) return `<div class="meta buyline"><span>${ic('i-won', 'sm')} 가격 기록 없음 <button type="button" class="lnk" data-gadd="${l.id}">가격 입력</button></span></div>`;
           const lo = gl.reduce((a, b) => b.price < a.price ? b : a);
-          return `<div class="meta buyline"><span>${ic('i-won', 'sm')} 지금 최저가 <b>${won(lo.price)}</b>${lo.shop ? ' · ' + esc(lo.shop) : ''}</span></div>`;
+          return `<div class="meta buyline lowest" title="지금 최저가"><span><b>${won(lo.price)}</b></span>${lo.shop ? `<span>${esc(lo.shop)}</span>` : ''}<span class="dn" role="img" aria-label="지금 최저가">${ic('i-down')}</span></div>`;
         })()}
-        ${(l.flavors || []).length ? `<div class="tags">${l.flavors.map(f => `<span class="tag">${FICON[f] || ''} ${esc(f)}</span>`).join('')}</div>` : ''}
+        ${(l.flavors || []).length ? `<div class="tags flat">${l.flavors.slice(0, 4).map(f => `<span class="tag">${FICON[f] || ''} ${esc(f)}</span>`).join('')}</div>` : ''}
         ${l.memo ? `<div class="memo">${esc(l.memo)}</div>` : ''}
       </div>
     </div>`;
