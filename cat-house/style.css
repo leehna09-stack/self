@@ -59,7 +59,7 @@ h1, h2, h3 {
 }
 
 .hero h1 {
-  font-size: 21px;
+  font-size: 19px;
   margin: 0;
   white-space: nowrap;
 }
@@ -352,7 +352,7 @@ button:active {
   border-radius: 12px;
   background: transparent;
   font-family: var(--font-title);
-  font-size: 18px;
+  font-size: 16px;
   line-height: 1.1;
   white-space: nowrap;
   font-variant-numeric: tabular-nums;
@@ -423,7 +423,7 @@ button.day:active {
 
 .day-empty-text {
   white-space: nowrap;
-  font-size: 10px;
+  font-size: 11px;
   font-weight: bold;
   line-height: 1.25;
   color: var(--ink);
@@ -511,7 +511,7 @@ button.day:active {
 .modal-title h2 {
   margin: 0;
   word-break: keep-all;
-  font-size: 18px;
+  font-size: 16px;
 }
 
 .modal h3 {
@@ -890,16 +890,16 @@ fieldset.people-check {
   position: absolute;
   top: 3px;
   right: 3px;
-  min-width: 14px;
-  height: 14px;
+  min-width: 16px;
+  height: 16px;
   padding: 0 3px;
   box-sizing: border-box;
   border-radius: 999px;
   background-color: #d92d20;
   color: #ffffff;
   font-family: var(--font-body);
-  font-size: 9px;
-  line-height: 14px;
+  font-size: 11px;
+  line-height: 16px;
   text-align: center;
 }
 
@@ -1166,7 +1166,7 @@ textarea:focus-visible {
   }
 
   .hero h1 {
-    font-size: 18px;
+    font-size: 17px;
   }
 
   /* 버튼 3개 + 연결 상태가 한 줄에 들어가게 */
@@ -1241,7 +1241,7 @@ textarea:focus-visible {
 
 .splash-text {
   font-family: var(--font-title);
-  font-size: 22px;
+  font-size: 20px;
   color: var(--ink);
 }
 
