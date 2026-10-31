@@ -877,9 +877,6 @@ function viewList() {
   const gmap = new Map(priceGroups().map(l => [gkey(l[0]), l]));
   const rated = logs.filter(l => l.rating);
   const avg = rated.length ? fmtNum(rated.reduce((s, l) => s + l.rating, 0) / rated.length) : '-';
-  /* 마신 기록에 구매가격을 적은 것만 합산 (가격 탭에서 확인한 가격은 제외) */
-  const sumAll = logs.reduce((t, l) => t + (l.price > 0 ? l.price : 0), 0);
-  const sumTxt = sumAll >= 10000 ? Math.round(sumAll / 10000).toLocaleString('ko-KR') + '만원' : sumAll ? won(sumAll) : '-';
   const arr = filtered();
   const chips = ['', ...FILTER_FLAVORS].map(f => `<button class="chip ${state.flavor === f ? 'on' : ''}" data-flavor="${esc(f)}">${f ? (FICON[f] || '🍎') + ' ' + f : '전체'}</button>`).join('');
   const cards = arr.map((l, i) => {
@@ -892,13 +889,10 @@ function viewList() {
         <div class="row1"><h3>${esc(l.name)}</h3><div class="rt"><div class="date">${fmtDate(l.date)}</div><button type="button" class="eic" data-edit="${l.id}" aria-label="${esc(l.name)} 수정" title="수정">${ic('i-pen')}</button></div></div>
         <div class="meta">${l.ml ? `<span>${ic('i-bottle', 'sm')} ${volLabel(l.ml)}</span>` : ''}${l.abv ? `<span>${ic('i-drop', 'sm')} ${l.abv}%</span>` : ''}${l.openDate ? `<span>${ic('i-cal', 'sm')} ${fmtDate(l.openDate)} 오픈</span>` : ''}${l.rating ? stars(l.rating) : ''}</div>
         ${(() => {
-          /* 내가 적은 구매 정보 줄. 그 값이 같은 위스키의 지금 최저가와 같으면 '지금 최저가' 표시를 이 줄에 합쳐요 */
-          const buy = merged => (l.price > 0 || l.shop) ? `<div class="meta buyline">${l.price > 0 ? `<span>${ic('i-won', 'sm')} <b>${won(l.price)}</b>${merged ? ' <span class="low">지금 최저가</span>' : isLowest(l) ? ' <span class="low">최저가</span>' : ''}</span>` : ''}${l.shop ? `<span>${ic('i-shop', 'sm')} ${esc(l.shop)}</span>` : ''}${l.price > 0 ? `<span>${fmtDate(buyDateOf(l))} 구매</span>` : ''}</div>` : '';
           const gl = gmap.get(gkey(l));
-          if (!gl) return `<div class="meta buyline"><span>${ic('i-won', 'sm')} 가격 기록 없음 <button type="button" class="lnk" data-gadd="${l.id}">가격 입력</button></span></div>` + buy(false);
+          if (!gl) return `<div class="meta buyline"><span>${ic('i-won', 'sm')} 가격 기록 없음 <button type="button" class="lnk" data-gadd="${l.id}">가격 입력</button></span></div>`;
           const lo = gl.reduce((a, b) => b.price < a.price ? b : a);
-          if (l.price > 0 && l.price === lo.price) return buy(true);
-          return `<div class="meta buyline"><span>${ic('i-won', 'sm')} 지금 최저가 <b>${won(lo.price)}</b>${lo.shop ? ' · ' + esc(lo.shop) : ''}</span></div>` + buy(false);
+          return `<div class="meta buyline"><span>${ic('i-won', 'sm')} 지금 최저가 <b>${won(lo.price)}</b>${lo.shop ? ' · ' + esc(lo.shop) : ''}</span></div>`;
         })()}
         ${(l.flavors || []).length ? `<div class="tags">${l.flavors.map(f => `<span class="tag">${FICON[f] || ''} ${esc(f)}</span>`).join('')}</div>` : ''}
         ${l.memo ? `<div class="memo">${esc(l.memo)}</div>` : ''}
@@ -917,10 +911,10 @@ function viewList() {
     ${arr.length ? cards + ORN() : empty}`;
   /* 요약 칸 '마신 기록'을 누르면 다이어리 목록, '가격 기록'을 누르면 가격 목록이 아래에 나와요 */
   return header('마신 기록') + `
-    <div class="hero"><div class="hero-t">나의 위스키 기록</div><div class="hero-g">
+    <div class="hero"><div class="hero-t">나의 위스키 기록</div><div class="hero-g two">
       <div class="hs">${ic('i-glass')}<b>${total}</b><span>마신 기록</span></div>
       <div class="hs">${ic('i-dram')}<b>${avg}</b><span>평균 점수</span></div>
-      <div class="hs">${ic('i-won')}<b>${sumTxt}</b><span>구매 금액 합계</span></div></div></div>` + drinkBody;
+</div></div>` + drinkBody;
 }
 
 function viewStats() {
@@ -936,7 +930,7 @@ function viewStats() {
   const now = new Date();
   for (let i = 5; i >= 0; i--) { const d = new Date(now.getFullYear(), now.getMonth() - i, 1); months.push(d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0')); }
   /* 최근 6개월에 오픈한 위스키: 같은 병(이름+용량+오픈일)의 여러 기록은 한 병으로 세고,
-     금액은 그 병에 적은 구매가격(없으면 가격 탭에 저장된 같은 위스키 가격)을 써요 */
+     금액은 가격 탭에 저장된 같은 위스키 가격 중 오픈일 이전(없으면 가장 오래된) 기록을 써요 */
   const bottlePrice = (name, ml, openDate) => {
     const list = priceGroups().find(g => gkey(g[0]) === norm(name) + '|' + (ml || 0));
     if (!list) return 0;
@@ -947,10 +941,9 @@ function viewStats() {
   logs.filter(l => l.openDate).forEach(l => {
     const k = norm(l.name) + '|' + (l.ml || 0) + '|' + l.openDate;
     const o = botMap[k] || (botMap[k] = { name: l.name, ml: l.ml, date: l.openDate, price: 0 });
-    if (!o.price && l.price > 0) o.price = l.price;
   });
   const bottles = Object.values(botMap).filter(o => months.includes(o.date.slice(0, 7)));
-  bottles.forEach(o => { if (!o.price) o.price = bottlePrice(o.name, o.ml, o.date); });
+  bottles.forEach(o => { o.price = bottlePrice(o.name, o.ml, o.date); });
   const priced6 = bottles.filter(o => o.price > 0);
   const sum6 = priced6.reduce((t, o) => t + o.price, 0), avg6 = priced6.length ? Math.round(sum6 / priced6.length) : 0;
   const mrows = months.map(m => { const bb = bottles.filter(o => o.date.startsWith(m)); return [m, bb.length, bb.reduce((t, o) => t + (o.price || 0), 0)]; });
@@ -976,22 +969,6 @@ function viewStats() {
   const moveHtml = (key, rank) => { const pr = prevRank[key]; return !pr ? '<span class="chg first">NEW</span>' : pr > rank ? `<span class="chg up">▲ ${pr - rank}</span>` : pr < rank ? `<span class="chg down">▼ ${rank - pr}</span>` : '<span class="chg same">―</span>'; };
   const rankBox = `<div class="box"><h3>${ic('i-glass')} 나의 최애 순위</h3>${ratedLogs.length ? favRank(ratedLogs).slice(0, 10).map((o, i) => `<div class="rk"><b class="rno r${i + 1}">${i + 1}</b>${(photoMap[o.id] || []).length ? `<img class="pth" src="${photoMap[o.id][0].thumb}" alt="">` : ic(typeStyle(o.name)[0])}<span class="rt2">${esc(o.name)}<small>평균 ${fmtNum(o.avg)}점 · ${o.n}회</small></span>${moveHtml(o.key, i + 1)}</div>`).join('') : '<span style="color:var(--muted)">아직 점수가 없어요</span>'}</div>`;
   const bar = (label, n, max) => `<div class="bar"><span>${label}</span><div class="tr"><div class="fi" style="width:${n ? Math.max(4, n / max * 100) : 0}%"></div></div><span class="n">${n}</span></div>`;
-  /* 구매 가격 비교 */
-  const priced = logs.filter(l => l.price > 0);
-  const groups = {};
-  priced.forEach(l => (groups[norm(l.name)] = groups[norm(l.name)] || []).push(l));
-  const gList = Object.values(groups).sort((a, b) => b.length - a.length || buyDateOf(b[0]).localeCompare(buyDateOf(a[0]))).slice(0, 10);
-  const monthKey = today().slice(0, 7);
-  const monthSum = priced.filter(l => buyDateOf(l).startsWith(monthKey)).reduce((t, l) => t + l.price, 0);
-  const priceBox = !priced.length
-    ? `<div class="box"><h3>${ic('i-tag')} 구매 가격 비교</h3><span style="color:var(--muted)">구매 기록이 없어요</span></div>`
-    : `<div class="box"><h3>${ic('i-tag')} 구매 가격 비교</h3>
-        <p class="sum">구매 ${priced.length}건 · 이번 달 <b>${won(monthSum)}</b></p>
-        ${gList.map(g => {
-          const best = g.length > 1 ? bestOf(g) : null;
-          const rows = g.slice().sort((a, b) => buyDateOf(b).localeCompare(buyDateOf(a)));
-          return `<div class="pc"><div class="pc-h">${groupPhotos(g.slice().sort(byTime)).length ? `<img class="pth" src="${groupPhotos(g.slice().sort(byTime))[0].thumb}" alt="">` : ic(typeStyle(g[0].name)[0])}${esc(g[0].name)}</div>${rows.map(l => `<div class="pc-r ${best && best.id === l.id ? 'best' : ''}"><span>${fmtDate(buyDateOf(l))} · ${esc(l.shop || '구매처 미입력')}<small>${l.ml ? volLabel(l.ml) : ''}${per100(l).replace(/^ · /, l.ml ? ' · ' : '')}</small></span><span class="pr">${won(l.price)}${best && best.id === l.id ? ' <span class="low">최저가</span>' : ''}</span></div>`).join('')}</div>`;
-        }).join('')}</div>`;
   return header('취향 리포트') + `
     <div class="kpis"><div class="kpi tape0"><span>${ic('i-drop', 'sm')} 평균 도수</span><b>${avgAbv}${avgAbv === '-' ? '' : '%'}</b></div>
     <div class="kpi tape1"><span>${ic('i-dram', 'sm')} 많이 고른 맛</span><b>${top.length ? (FICON[top[0][0]] || '') + ' ' + esc(top[0][0]) : '-'}</b></div></div>
@@ -999,7 +976,6 @@ function viewStats() {
     ${openBox}
     <div class="box"><h3>${ic('i-bottle')} 종류별</h3>${tEntries.map(([t, n]) => bar(esc(t), n, tMax)).join('')}</div>
     ${rankBox}
-    ${priceBox}
     ${ORN()}`;
 }
 
@@ -1626,17 +1602,14 @@ function openDiaryDetail(id) {
   const rows = [row('마신 날짜', fmtDate(l.date))];
   if (l.openDate) rows.push(row('오픈한 날짜', fmtDate(l.openDate)));
   if (l.rating) rows.push(row('나의 점수', stars(l.rating)));
-  const buy = [];
-  if (l.price > 0) buy.push(row('구매가격', `<b>${won(l.price)}</b>${isLowest(l) ? ' <span class="low">최저가</span>' : ''}`));
-  if (l.price > 0) buy.push(row('구매일', fmtDate(buyDateOf(l))));
-  if (l.shop) buy.push(row('구매 장소', esc(l.shop)));
+  const hasPrice = priceGroups().some(g => gkey(g[0]) === gkey(l));
   root.innerHTML = `<div class="sheet"><div class="sheet-in">
     <div class="sheet-head"><button class="link" id="vclose">닫기</button><h2>${ic('i-book')} 기록 보기</h2><button type="button" class="eic" id="vedit" aria-label="수정" title="수정">${ic('i-pen')}</button></div>
     ${photos.length ? `<div class="dph ${photos.length > 1 ? 'multi' : ''}" id="vph">${photos.map((p, n) => `<img src="${p.full}" data-vi="${n}" alt="사진 ${n + 1}">`).join('')}</div>` : ''}
     <div class="pd-title vt">${photos.length ? '' : `<span class="tile ${color}">${ic(icon)}</span>`}<div><h3>${esc(l.name)}</h3>${sub ? `<div class="sub">${esc(sub)}</div>` : ''}</div></div>
     <div class="box vbox plain">${rows.join('')}</div>
     ${(l.flavors || []).length ? `<div class="box vbox"><h3>${ic('i-dram')} 맛의 특징</h3><div class="tags">${l.flavors.map(f => `<span class="tag">${FICON[f] || ''} ${esc(f)}</span>`).join('')}</div></div>` : ''}
-    ${buy.length ? `<div class="box vbox"><h3>${ic('i-tag')} 구매 정보</h3>${buy.join('')}${l.price > 0 ? `<button type="button" class="btn-sub" id="vprice">${ic('i-won')} 가격 변동 보기</button>` : ''}</div>` : ''}
+    ${hasPrice ? `<button type="button" class="btn-sub" id="vprice" style="margin:0 0 14px">${ic('i-won')} 가격 변동 보기</button>` : ''}
     ${l.memo ? `<div class="box vbox"><h3>${ic('i-pen')} 메모</h3><div class="vmemo">${esc(l.memo)}</div></div>` : ''}
   </div></div>`;
   $('#vclose').onclick = close;
@@ -1683,18 +1656,6 @@ function openForm(id, opts = {}) {
       <label class="lb">${ic('i-camera')} 사진 <span style="color:var(--muted);font:12px var(--hand)">(최대 ${MAX_PHOTOS}장)</span></label>
       <div class="photos" id="photos"></div>
 
-      <label class="lb">${ic('i-tag')} 구매 정보 <span style="color:var(--muted);font:12px var(--hand)">(선택)</span></label>
-      <div class="buy">
-        <div class="grid2">
-          <div><label class="lb">${ic('i-won')} 구매가격</label><div class="unit"><input class="field" id="price" type="number" inputmode="numeric" min="0" step="100" value="${f.price || ''}" placeholder="0"><em>원</em></div></div>
-          <div><label class="lb">${ic('i-cal')} 구매일</label><input class="field" id="buydate" type="date" value="${esc(f.buyDate)}"></div>
-        </div>
-        <div class="hint" id="pricehint"></div>
-        <label class="lb">${ic('i-shop')} 구매 장소</label>
-        <input class="field" id="shop" placeholder="예: 코스트코 양재점, 면세점, 쿠팡" value="${esc(f.shop)}" maxlength="40" autocomplete="off">
-        <div class="quick">${shopChoices().map(sh => `<button type="button" class="chip ${f.shop === sh ? 'on' : ''}" data-shop="${esc(sh)}">${esc(sh)}</button>`).join('')}</div>
-      </div>
-
       <label class="lb">${ic('i-pen')} 메모</label>
       <textarea class="field" id="memo" placeholder="누구와, 어디서, 어떤 느낌이었는지 자유롭게 적어보세요">${esc(f.memo)}</textarea>
 
@@ -1706,7 +1667,6 @@ function openForm(id, opts = {}) {
   const readFields = () => {
     f.name = $('#name').value; f.ml = +$('#ml').value || 0; f.abv = +$('#abv').value || 0;
     f.date = $('#date').value; f.openDate = $('#opendate').value; f.memo = $('#memo').value;
-    f.price = Math.round(+$('#price').value) || 0; f.shop = $('#shop').value.trim(); f.buyDate = $('#buydate').value;
   };
 
   const bindForm = () => {
@@ -1730,26 +1690,6 @@ function openForm(id, opts = {}) {
     };
     /* 사진: 카메라 촬영 또는 앨범 선택 (화면 전체를 다시 그리지 않고 사진 영역만 갱신) */
     mountPhotos($('#photos'), f.photos);
-    /* 같은 위스키의 이전 최저가와 비교해서 알려주기 */
-    const hintEl = $('#pricehint');
-    const updateHint = () => {
-      const nm = $('#name').value.trim(), price = +$('#price').value || 0, ml = +$('#ml').value || 0;
-      const prev = nm ? purchasesOf(nm, old && old.id) : [];
-      if (!prev.length) { hintEl.textContent = ''; return; }
-      const b = bestOf(prev);
-      let t = `이전 최저가 ${won(b.price)} · ${b.shop || '구매처 미입력'} · ${fmtDate(buyDateOf(b))}`;
-      if (price > 0) {
-        const diff = Math.round(((ml ? price / ml : price) / unitPrice(b) - 1) * 100);
-        t += Math.abs(diff) < 1 ? ' → 최저가와 비슷해요' : diff < 0 ? ` → 지금 가격이 ${-diff}% 더 싸요` : ` → 최저가보다 ${diff}% 비싸요`;
-      }
-      hintEl.textContent = t;
-    };
-    ['name', 'price', 'ml'].forEach(id => $('#' + id).addEventListener('input', updateHint));
-    updateHint();
-    root.querySelectorAll('[data-shop]').forEach(b => b.onclick = () => {
-      $('#shop').value = b.dataset.shop;
-      root.querySelectorAll('[data-shop]').forEach(x => x.classList.toggle('on', x === b));
-    });
     if (old) $('#del').onclick = () => { if (confirm(`"${old.name}" 기록을 삭제할까요?`)) { logs = logs.filter(l => l.id !== old.id); store.save(logs); PH.set(old.id, null); delete photoMap[old.id]; close(); toast('삭제했어요'); render(); } };
     const name = $('#name'), ac = $('#ac');
     let hi = -1, res = [];
@@ -1816,9 +1756,8 @@ function openForm(id, opts = {}) {
       const nm = f.name.trim();
       if (!nm) { toast('위스키 이름을 입력해주세요'); $('#name').focus(); return; }
       if (f.abv > 100 || f.abv < 0) { toast('도수를 확인해주세요'); return; }
-      if (f.price < 0) { toast('구매가격을 확인해주세요'); return; }
       if (f.openDate && f.date && f.openDate > f.date) { toast('오픈한 날짜는 마신 날짜보다 늦을 수 없어요'); return; }
-      const rec = { id: old ? old.id : uid(), name: nm, ml: f.ml, abv: f.abv, flavors: f.flavors, memo: f.memo.trim(), date: f.date || today(), openDate: f.openDate || '', rating: f.rating, price: f.price, shop: f.shop, buyDate: f.price > 0 ? (f.buyDate || f.date || today()) : '', created: old ? old.created : Date.now() };
+      const rec = { id: old ? old.id : uid(), name: nm, ml: f.ml, abv: f.abv, flavors: f.flavors, memo: f.memo.trim(), date: f.date || today(), openDate: f.openDate || '', rating: f.rating, price: +f.price || 0, shop: f.shop || '', buyDate: +f.price > 0 ? (f.buyDate || f.date || today()) : '', created: old ? old.created : Date.now() };
       if (old) logs = logs.map(l => l.id === old.id ? rec : l); else logs.push(rec);
       $('#save').disabled = true;
       store.save(logs);
