@@ -326,25 +326,12 @@ textarea.field { min-height: 140px; resize: vertical; line-height: 28px; padding
 .sr .k small { display: block; font-size: 11.5px; color: var(--muted); overflow-wrap: anywhere; }
 .sr .v { font: 800 15px/1.2 var(--title); white-space: nowrap; }
 .sr.hi .mk, .sr.hi .v { color: var(--hi); } .sr.avg .mk { color: var(--avg); font-size: 15px; } .sr.avg .v { color: var(--text); } .sr.lo .mk, .sr.lo .v { color: var(--lo); }
-.hr { display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: 'hl ha' 'hp hp'; gap: 6px 10px; align-items: center; width: 100%; text-align: left; padding: 11px 0; border-top: 1.5px dotted var(--line); }
-.hr:first-of-type { border-top: 0; }
-.hr .hl b { display: block; font-size: 14px; }
-.hr .hl small { color: var(--muted); font-size: 12px; overflow-wrap: anywhere; }
-.hr .hp { grid-area: hp; display: flex; flex-direction: column; align-items: flex-start; gap: 5px; font-weight: 700; }
-.hr .hpl { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 10px; }
-.hr:has(.hth) .hp { padding-left: 50px; }
-.hr .ha { align-items: center; }
-.hshop { max-width: 9em; text-align: right; font-size: 12.5px; font-weight: 600; color: var(--text); overflow-wrap: anywhere; line-height: 1.25; }
-.hshop.none { color: var(--muted); font-weight: 400; }
-.hr .hl { grid-area: hl; }
-.hr .ha { grid-area: ha; }
 
 /* 사진이 있으면 아이콘 자리에 사진 */
 .tile.img { padding: 0; overflow: hidden; background: #fff; border: 2px solid #fff; border-radius: 12px; box-shadow: 0 1px 4px #3b2f2340; }
 .tile.img img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .pg .tile { width: 54px; height: 54px; }
 .pd-title .tile.big { width: 72px; height: 72px; border-radius: 14px; cursor: zoom-in; }
-.hr .hl { display: flex; align-items: center; gap: 10px; min-width: 0; }
 .hth { width: 40px; height: 40px; flex: none; border-radius: 8px; object-fit: cover; border: 2px solid #fff; box-shadow: 0 1px 3px #3b2f2340; }
 .pth { width: 26px; height: 26px; flex: none; border-radius: 6px; object-fit: cover; }
 .padd { font: inherit; }
@@ -456,6 +443,35 @@ textarea.field { min-height: 140px; resize: vertical; line-height: 28px; padding
 .utab.on { color: var(--amber-ink); font-weight: 800; border-bottom-color: var(--amber); }
 .utab:active { background: var(--amber-soft); }
 .search.sm { padding: 8px 12px 8px 34px; font-size: 13px; background-position: 11px center; background-size: 16px; border-radius: 10px; }
+
+/* 구매처별 최저가: 순위 표시, 1순위만 글자 하이라이트 */
+.sn { display: flex; align-items: center; gap: 9px; }
+.sn .no { width: 18px; text-align: center; font: 700 14px/1 var(--hand); color: var(--muted); }
+.shr.first .no { color: var(--amber-ink); font-size: 17px; }
+.shr .snm, .shr .spv { padding: 0 2px; }
+.shr.first .snm, .shr.first .spv { background: linear-gradient(transparent 55%, #ffe08a 55%); }
+.shr .sn small { display: block; margin-left: 0; }
+/* 가격 기록: 제목 줄 오른쪽 정렬 아이콘 (누를 때마다 최신순 ↔ 오래된순) */
+.bh { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+.bh h3 { margin: 0; }
+#sortBtn .ic { transition: transform .18s; }
+#sortBtn.asc .ic { transform: scaleY(-1); }
+/* 가격 기록 한 건: 날짜·구매처 / 금액·등락 / 100ml당·아이콘 */
+.hr { display: flex; gap: 10px; align-items: flex-start; width: 100%; text-align: left; padding: 11px 0; border-top: 1.5px dotted var(--line); }
+.hr:first-of-type { border-top: 0; }
+.hr .hbody { flex: 1; min-width: 0; display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: 'hd hs' 'am cg' 'pm ac'; gap: 3px 10px; align-items: center; }
+.hr .hd { grid-area: hd; display: flex; align-items: baseline; gap: 6px; min-width: 0; white-space: nowrap; }
+.hr .hd b { font-size: 14px; }
+.hr .hd small { color: var(--muted); font-size: 11.5px; }
+.hr .hshop { grid-area: hs; justify-self: end; text-align: right; font-size: 12.5px; font-weight: 600; color: var(--text); overflow-wrap: anywhere; line-height: 1.25; }
+.hr .hth.none { background: none; border: 0; box-shadow: none; visibility: hidden; }
+.hr .hshop.none { color: var(--muted); font-weight: 400; }
+.hr .ham { grid-area: am; font-weight: 800; font-size: 15px; font-variant-numeric: tabular-nums; }
+.hr .hcg { grid-area: cg; justify-self: end; }
+.hr .hpm { grid-area: pm; color: var(--muted); font-size: 11.5px; font-weight: 500; }
+.hr .ha { grid-area: ac; justify-self: end; display: flex; gap: 6px; align-items: center; }
+.shr .spr { white-space: nowrap; flex: none; }
+.shr > span:first-child { min-width: 0; overflow-wrap: anywhere; padding-right: 8px; }
 </style>
 </head>
 
@@ -477,6 +493,7 @@ textarea.field { min-height: 140px; resize: vertical; line-height: 28px; padding
   <symbol id="i-install" viewBox="0 0 24 24"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><path d="M3 6h18"/><path d="m10 11 4.5 2.5L10 16z"/></symbol>
   <symbol id="i-download" viewBox="0 0 24 24"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></symbol>
   <symbol id="i-won" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9.8"/><path d="M6.8 8.2l2.6 7.8 2.6-6 2.6 6 2.6-7.8"/><path d="M5.8 11.2h12.4M5.8 13.6h12.4"/></symbol>
+  <symbol id="i-sort" viewBox="0 0 24 24"><path d="M4 5.5h16l-6.2 7.2v5.6l-3.6 2v-7.6z"/></symbol>
   <symbol id="i-tag" viewBox="0 0 24 24"><path d="M3.5 12.2V4.5a1 1 0 0 1 1-1h7.7l8.3 8.3a1.5 1.5 0 0 1 0 2.1l-6.1 6.1a1.5 1.5 0 0 1-2.1 0z"/><circle cx="8" cy="8" r="1.4"/></symbol>
   <symbol id="i-shop" viewBox="0 0 24 24"><path d="M4 9.5V20h16V9.5"/><path d="M3 9.5 5 4h14l2 5.5a3 3 0 0 1-6 0 3 3 0 0 1-6 0 3 3 0 0 1-6 0z"/><path d="M10 20v-5h4v5"/></symbol>
   <symbol id="i-camera" viewBox="0 0 24 24"><path d="M4 8h3l1.6-2.5h6.8L17 8h3a1 1 0 0 1 1 1v9.5a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13.5" r="3.6"/></symbol>
@@ -1247,10 +1264,12 @@ function openPriceDetail(key) {
   const [icon, color] = typeStyle(last.name);
   const gp = groupPhotos(list);
   const info = e => `${e.shop ? esc(e.shop) + ' · ' : ''}${fmtDate(e.date)}`;
-  const rows = list.map((e, i) => ({ e, c: changeBetween(e, i ? list[i - 1] : null) })).reverse();
+  const rowsAsc = list.map((e, i) => ({ e, c: changeBetween(e, i ? list[i - 1] : null) }));
+  let ord = 'new';   /* 기본 최신순 */
+  const recHtml = () => (ord === 'new' ? rowsAsc.slice().reverse() : rowsAsc).map(({ e, c }) => `<div class="hr" data-hid="${esc(e.id)}">${(photoMap[e.id] || []).length ? `<img class="hth" src="${photoMap[e.id][0].thumb}" data-hthumb="${esc(e.id)}" alt="사진 보기">` : '<span class="hth none" aria-hidden="true"></span>'}<div class="hbody"><span class="hd"><b>${fmtDate(e.date)}</b>${e.src === 'diary' ? '<small>다이어리 기록</small>' : ''}</span><span class="hshop${e.shop ? '' : ' none'}">${e.shop ? esc(e.shop) : '구매처 미입력'}</span><span class="ham">${won(e.price)}</span><span class="hcg">${chgHtml(c)}</span><span class="hpm">${e.ml ? p100txt(e.price, e.ml) : ''}</span><span class="ha"><button type="button" class="eic sm" data-hedit="${esc(e.id)}" data-hsrc="${e.src}" aria-label="${fmtDate(e.date)} 기록 수정" title="수정">${ic('i-pen')}</button></span></div></div>`).join('');
   const bestBy = new Map(); list.forEach(e => { if (e.shop && (!bestBy.has(e.shop) || e.price < bestBy.get(e.shop).price)) bestBy.set(e.shop, e); });
   const shopRows = [...bestBy.values()].sort((a, b) => a.price - b.price).slice(0, 6);
-  const shopBox = shopRows.length > 1 ? `<div class="box"><h3>${ic('i-shop')} 구매처별 최저가</h3>${shopRows.map((e, i) => `<div class="shr ${i ? '' : 'best'}"><span>${esc(e.shop)}<small>${fmtDate(e.date)}</small></span><span class="spr">${won(e.price)}${i ? `<em>+${won(e.price - shopRows[0].price).replace('원', '')}</em>` : '<span class="sg ok">✓ 최저</span>'}</span></div>`).join('')}</div>` : '';
+  const shopBox = shopRows.length > 1 ? `<div class="box"><h3>${ic('i-shop')} 구매처별 최저가</h3>${shopRows.map((e, i) => `<div class="shr ${i ? '' : 'first'}"><span class="sn"><b class="no">${i + 1}</b><span><span class="snm">${esc(e.shop)}</span><small>${fmtDate(e.date)}</small></span></span><span class="spr"><span class="spv">${won(e.price)}</span>${i ? `<em>+${won(e.price - shopRows[0].price).replace('원', '')}</em>` : ''}</span></div>`).join('')}</div>` : '';
   root.innerHTML = `<div class="sheet"><div class="sheet-in">
     <div class="sheet-head"><button class="link" id="dclose">닫기</button><h2>${ic('i-won')} 가격 기록</h2><button class="link" id="dadd" style="color:var(--amber-ink);font-weight:700">+ 추가</button></div>
     <div class="pd-title">${gp.length ? `<button type="button" class="tile img big" id="dimg" aria-label="사진 크게 보기"><img src="${gp[0].thumb}" alt=""></button>` : `<span class="tile ${color}">${ic(icon)}</span>`}<div><h3>${esc(last.name)}</h3><div class="sub">${[last.ml ? volLabel(last.ml) : '', last.abv ? last.abv + '%' : ''].filter(Boolean).join(' · ')}</div></div></div>
@@ -1261,14 +1280,24 @@ function openPriceDetail(key) {
       <div class="sr lo"><span class="mk">▼</span><span class="k">최저가<small>${info(loE)}</small></span><span class="vv"><span class="v">${won(mn)}</span>${last.ml ? `<small>${p100txt(mn, last.ml)}</small>` : ''}</span></div>
     </div>
     ${shopBox}
-    <div class="box"><h3>${ic('i-book')} 가격 기록 ${list.length}건</h3>${rows.map(({ e, c }) => `<div class="hr" data-hid="${esc(e.id)}"><span class="hl">${(photoMap[e.id] || []).length ? `<img class="hth" src="${photoMap[e.id][0].thumb}" data-hthumb="${esc(e.id)}" alt="사진 보기">` : ''}<span><b>${fmtDate(e.date)}</b>${e.src === 'diary' ? '<small>다이어리 기록</small>' : ''}</span></span><span class="hp"><span class="hpl">${won(e.price)}${e.ml ? `<small>${p100txt(e.price, e.ml)}</small>` : ''}</span>${chgHtml(c)}</span><span class="ha"><span class="hshop${e.shop ? '' : ' none'}">${e.shop ? esc(e.shop) : '구매처 미입력'}</span><button type="button" class="eic sm" data-hcam="${esc(e.id)}" aria-label="${fmtDate(e.date)} 기록에 사진 추가" title="사진 추가">${ic('i-camera')}</button><button type="button" class="eic sm" data-hedit="${esc(e.id)}" data-hsrc="${e.src}" aria-label="${fmtDate(e.date)} 기록 수정" title="수정">${ic('i-pen')}</button></span></div>`).join('')}</div>
+    <div class="box"><div class="bh"><h3>${ic('i-book')} 가격 기록</h3><button type="button" class="eic sm" id="sortBtn" aria-label="정렬: 최신순. 누르면 오래된순">${ic('i-sort')}</button></div><div id="recList"></div></div>
   </div></div>`;
+  const bindRec = () => {
+    root.querySelectorAll('[data-hedit]').forEach(b => b.onclick = () => editPriceEntry(b.dataset.hedit, b.dataset.hsrc, key));
+    root.querySelectorAll('[data-hthumb]').forEach(im => im.onclick = () => openViewer(photoMap[im.dataset.hthumb], 0));
+  };
+  const sbtn = $('#sortBtn');
+  const drawRec = () => { $('#recList').innerHTML = recHtml(); bindRec(); };
+  sbtn.onclick = () => {
+    ord = ord === 'new' ? 'old' : 'new';
+    sbtn.classList.toggle('asc', ord === 'old');
+    sbtn.setAttribute('aria-label', ord === 'new' ? '정렬: 최신순. 누르면 오래된순' : '정렬: 오래된순. 누르면 최신순');
+    drawRec(); toast(ord === 'new' ? '최신순' : '오래된순');
+  };
+  drawRec();
   $('#dclose').onclick = close;
   const dimg = $('#dimg'); if (dimg) dimg.onclick = () => openViewer(gp, 0);
   $('#dadd').onclick = () => openPriceForm({ preset: { name: last.name, ml: last.ml, abv: last.abv }, back: key });
-  root.querySelectorAll('[data-hedit]').forEach(b => b.onclick = () => editPriceEntry(b.dataset.hedit, b.dataset.hsrc, key));
-  root.querySelectorAll('[data-hcam]').forEach(b => b.onclick = () => quickPhoto(b.dataset.hcam, key));
-  root.querySelectorAll('[data-hthumb]').forEach(im => im.onclick = () => openViewer(photoMap[im.dataset.hthumb], 0));
 }
 
 /* 가격 입력/수정 화면 */
