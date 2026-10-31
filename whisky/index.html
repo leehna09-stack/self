@@ -1101,10 +1101,10 @@ function changeBetween(cur, prev) {
   const diff = Math.round(a - b), pct = b ? Math.round((a / b - 1) * 1000) / 10 : 0;
   return { kind: diff > 0 ? 'up' : diff < 0 ? 'down' : 'same', diff, pct, perMl: !same };
 }
-const chgHtml = c => c.kind === 'first' ? '<span class="chg first">첫 기록</span>'
+const chgHtml = c => c.kind === 'first' ? ''
   : c.kind === 'same' ? '<span class="chg same">변동 없음</span>'
   : `<span class="chg ${c.kind}">${c.kind === 'up' ? '▲' : '▼'} ${won(Math.abs(c.diff))}${c.perMl ? ' (100ml당)' : ''} · ${Math.abs(c.pct)}%</span>`;
-const chgText = c => c.kind === 'first' ? '첫 가격을 기록했어요'
+const chgText = c => c.kind === 'first' ? '가격을 기록했어요'
   : c.kind === 'same' ? '이전과 같은 가격이에요'
   : `${c.kind === 'up' ? '▲ 상승' : '▼ 하락'} ${won(Math.abs(c.diff))}${c.perMl ? '(100ml당)' : ''} · ${Math.abs(c.pct)}%`;
 const textHit = (text, raw) => {
@@ -1145,7 +1145,7 @@ function priceBody() {
       </div>
       <div class="pnow"><b>${won(last.price)}</b>${last.ml ? `<small>${p100txt(last.price, last.ml)}</small>` : ''}</div>
       ${gaugeHtml(v.pos === null ? .5 : v.pos, v.mn, v.mx)}
-      <div class="pcf">${v.chg.kind === 'first' ? '' : chgHtml(v.chg)}<span class="when">${last.shop ? esc(last.shop) + ' · ' : ''}${fmtDate(last.date)}</span></div>
+      <div class="pcf">${chgHtml(v.chg)}<span class="when">${last.shop ? esc(last.shop) + ' · ' : ''}${fmtDate(last.date)}</span></div>
     </div>`;
   }).join('');
   const empty = groups.length
