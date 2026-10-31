@@ -322,15 +322,22 @@ textarea.field { min-height: 140px; resize: vertical; line-height: 28px; padding
 .sr { display: flex; align-items: center; gap: 12px; padding: 13px 0; border-top: 1.5px dotted var(--line); }
 .sr:first-child { border-top: 0; }
 .sr .mk { width: 18px; text-align: center; font-size: 12px; line-height: 1; }
-.sr .k { flex: 1; font-size: 16px; min-width: 0; }
+.sr .k { flex: 1; font-size: 13px; min-width: 0; }
 .sr .k small { display: block; font-size: 11.5px; color: var(--muted); overflow-wrap: anywhere; }
-.sr .v { font: 800 18px/1.2 var(--title); white-space: nowrap; }
+.sr .v { font: 800 15px/1.2 var(--title); white-space: nowrap; }
 .sr.hi .mk, .sr.hi .v { color: var(--hi); } .sr.avg .mk { color: var(--avg); font-size: 15px; } .sr.avg .v { color: var(--text); } .sr.lo .mk, .sr.lo .v { color: var(--lo); }
-.hr { display: grid; grid-template-columns: 1fr auto auto; gap: 10px; align-items: center; width: 100%; text-align: left; padding: 11px 0; border-top: 1.5px dotted var(--line); }
+.hr { display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: 'hl ha' 'hp hp'; gap: 6px 10px; align-items: center; width: 100%; text-align: left; padding: 11px 0; border-top: 1.5px dotted var(--line); }
 .hr:first-of-type { border-top: 0; }
 .hr .hl b { display: block; font-size: 14px; }
 .hr .hl small { color: var(--muted); font-size: 12px; overflow-wrap: anywhere; }
-.hr .hp { display: flex; flex-direction: column; align-items: flex-end; gap: 3px; font-weight: 700; white-space: nowrap; }
+.hr .hp { grid-area: hp; display: flex; flex-direction: column; align-items: flex-start; gap: 5px; font-weight: 700; }
+.hr .hpl { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 10px; }
+.hr:has(.hth) .hp { padding-left: 50px; }
+.hr .ha { align-items: center; }
+.hshop { max-width: 9em; text-align: right; font-size: 12.5px; font-weight: 600; color: var(--text); overflow-wrap: anywhere; line-height: 1.25; }
+.hshop.none { color: var(--muted); font-weight: 400; }
+.hr .hl { grid-area: hl; }
+.hr .ha { grid-area: ha; }
 
 /* 사진이 있으면 아이콘 자리에 사진 */
 .tile.img { padding: 0; overflow: hidden; background: #fff; border: 2px solid #fff; border-radius: 12px; box-shadow: 0 1px 4px #3b2f2340; }
@@ -1247,7 +1254,7 @@ function openPriceDetail(key) {
       <div class="sr lo"><span class="mk">▼</span><span class="k">최저가<small>${info(loE)}</small></span><span class="vv"><span class="v">${won(mn)}</span>${last.ml ? `<small>${p100txt(mn, last.ml)}</small>` : ''}</span></div>
     </div>
     ${shopBox}
-    <div class="box"><h3>${ic('i-book')} 가격 기록 ${list.length}건</h3>${rows.map(({ e, c }) => `<div class="hr" data-hid="${esc(e.id)}"><span class="hl">${(photoMap[e.id] || []).length ? `<img class="hth" src="${photoMap[e.id][0].thumb}" data-hthumb="${esc(e.id)}" alt="사진 보기">` : ''}<span><b>${fmtDate(e.date)}</b><small>${e.shop ? esc(e.shop) : '구매처 미입력'}${e.src === 'diary' ? ' · 다이어리 기록' : ''}</small></span></span><span class="hp">${won(e.price)}${e.ml ? `<small>${p100txt(e.price, e.ml)}</small>` : ''}${chgHtml(c)}</span><span class="ha"><button type="button" class="eic sm" data-hcam="${esc(e.id)}" aria-label="${fmtDate(e.date)} 기록에 사진 추가" title="사진 추가">${ic('i-camera')}</button><button type="button" class="eic sm" data-hedit="${esc(e.id)}" data-hsrc="${e.src}" aria-label="${fmtDate(e.date)} 기록 수정" title="수정">${ic('i-pen')}</button></span></div>`).join('')}</div>
+    <div class="box"><h3>${ic('i-book')} 가격 기록 ${list.length}건</h3>${rows.map(({ e, c }) => `<div class="hr" data-hid="${esc(e.id)}"><span class="hl">${(photoMap[e.id] || []).length ? `<img class="hth" src="${photoMap[e.id][0].thumb}" data-hthumb="${esc(e.id)}" alt="사진 보기">` : ''}<span><b>${fmtDate(e.date)}</b>${e.src === 'diary' ? '<small>다이어리 기록</small>' : ''}</span></span><span class="hp"><span class="hpl">${won(e.price)}${e.ml ? `<small>${p100txt(e.price, e.ml)}</small>` : ''}</span>${chgHtml(c)}</span><span class="ha"><span class="hshop${e.shop ? '' : ' none'}">${e.shop ? esc(e.shop) : '구매처 미입력'}</span><button type="button" class="eic sm" data-hcam="${esc(e.id)}" aria-label="${fmtDate(e.date)} 기록에 사진 추가" title="사진 추가">${ic('i-camera')}</button><button type="button" class="eic sm" data-hedit="${esc(e.id)}" data-hsrc="${e.src}" aria-label="${fmtDate(e.date)} 기록 수정" title="수정">${ic('i-pen')}</button></span></div>`).join('')}</div>
   </div></div>`;
   $('#dclose').onclick = close;
   const dimg = $('#dimg'); if (dimg) dimg.onclick = () => openViewer(gp, 0);
