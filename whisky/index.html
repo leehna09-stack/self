@@ -891,8 +891,15 @@ function viewList() {
       <div class="cbody">
         <div class="row1"><h3>${esc(l.name)}</h3><div class="rt"><div class="date">${fmtDate(l.date)}</div><button type="button" class="eic" data-edit="${l.id}" aria-label="${esc(l.name)} 수정" title="수정">${ic('i-pen')}</button></div></div>
         <div class="meta">${l.ml ? `<span>${ic('i-bottle', 'sm')} ${volLabel(l.ml)}</span>` : ''}${l.abv ? `<span>${ic('i-drop', 'sm')} ${l.abv}%</span>` : ''}${l.openDate ? `<span>${ic('i-cal', 'sm')} ${fmtDate(l.openDate)} 오픈</span>` : ''}${l.rating ? stars(l.rating) : ''}</div>
-        ${(() => { const gl = gmap.get(gkey(l)); if (!gl) return `<div class="meta buyline"><span>${ic('i-won', 'sm')} 가격 기록 없음 <button type="button" class="lnk" data-gadd="${l.id}">가격 입력</button></span></div>`; const lo = gl.reduce((a, b) => b.price < a.price ? b : a); return `<div class="meta buyline"><span>${ic('i-won', 'sm')} 지금 최저가 <b>${won(lo.price)}</b>${lo.shop ? ' · ' + esc(lo.shop) : ''}</span></div>`; })()}
-        ${(l.price > 0 || l.shop) ? `<div class="meta buyline">${l.price > 0 ? `<span>${ic('i-won', 'sm')} <b>${won(l.price)}</b>${isLowest(l) ? ' <span class="low">최저가</span>' : ''}</span>` : ''}${l.shop ? `<span>${ic('i-shop', 'sm')} ${esc(l.shop)}</span>` : ''}${l.price > 0 ? `<span>${fmtDate(buyDateOf(l))} 구매</span>` : ''}</div>` : ''}
+        ${(() => {
+          /* 내가 적은 구매 정보 줄. 그 값이 같은 위스키의 지금 최저가와 같으면 '지금 최저가' 표시를 이 줄에 합쳐요 */
+          const buy = merged => (l.price > 0 || l.shop) ? `<div class="meta buyline">${l.price > 0 ? `<span>${ic('i-won', 'sm')} <b>${won(l.price)}</b>${merged ? ' <span class="low">지금 최저가</span>' : isLowest(l) ? ' <span class="low">최저가</span>' : ''}</span>` : ''}${l.shop ? `<span>${ic('i-shop', 'sm')} ${esc(l.shop)}</span>` : ''}${l.price > 0 ? `<span>${fmtDate(buyDateOf(l))} 구매</span>` : ''}</div>` : '';
+          const gl = gmap.get(gkey(l));
+          if (!gl) return `<div class="meta buyline"><span>${ic('i-won', 'sm')} 가격 기록 없음 <button type="button" class="lnk" data-gadd="${l.id}">가격 입력</button></span></div>` + buy(false);
+          const lo = gl.reduce((a, b) => b.price < a.price ? b : a);
+          if (l.price > 0 && l.price === lo.price) return buy(true);
+          return `<div class="meta buyline"><span>${ic('i-won', 'sm')} 지금 최저가 <b>${won(lo.price)}</b>${lo.shop ? ' · ' + esc(lo.shop) : ''}</span></div>` + buy(false);
+        })()}
         ${(l.flavors || []).length ? `<div class="tags">${l.flavors.map(f => `<span class="tag">${FICON[f] || ''} ${esc(f)}</span>`).join('')}</div>` : ''}
         ${l.memo ? `<div class="memo">${esc(l.memo)}</div>` : ''}
       </div>
