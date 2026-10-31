@@ -124,7 +124,7 @@ input, textarea, select { font: inherit; color: var(--text); }
 .c4 { background: var(--sky); color: var(--sky-ink); }
 .cbody { flex: 1; min-width: 0; }
 .row1 { display: flex; justify-content: space-between; gap: 10px; align-items: flex-start; }
-.card h3 { margin: 0; font-size: 16px; letter-spacing: -.01em; overflow-wrap: anywhere; }
+.card h3 { margin: 0; font: 700 19px/1.2 var(--hand); letter-spacing: -.01em; overflow-wrap: anywhere; }
 .card .meta { color: var(--muted); font-size: 12.5px; margin-top: 3px; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; }
 .card .date { font: 700 15px/1.2 var(--hand); color: var(--amber-ink); white-space: nowrap; }
 .tags { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 9px; }
@@ -249,7 +249,7 @@ textarea.field { min-height: 140px; resize: vertical; line-height: 28px; padding
 .low { display: inline-block; padding: 1px 8px; border-radius: 999px; background: var(--mint); color: var(--mint-ink); font-size: 11px; font-weight: 700; }
 .pc { padding: 12px 0; border-top: 1.5px dotted var(--line); }
 .pc:first-of-type { border-top: 0; padding-top: 2px; }
-.pc-h { display: flex; align-items: center; gap: 7px; font-weight: 700; margin-bottom: 4px; overflow-wrap: anywhere; }
+.pc-h { display: flex; align-items: center; gap: 7px; font: 700 18px/1.2 var(--hand); margin-bottom: 4px; overflow-wrap: anywhere; }
 .pc-h .ic { color: var(--amber-ink); font-size: 18px; }
 .pc-r { display: grid; grid-template-columns: 1fr auto; gap: 2px 10px; font-size: 13px; padding: 4px 0; }
 .pc-r small { color: var(--muted); display: block; font-size: 11.5px; }
@@ -280,7 +280,7 @@ textarea.field { min-height: 140px; resize: vertical; line-height: 28px; padding
 .pg:active { transform: translateY(1px); box-shadow: none; }
 .pg:focus-visible { outline: 2px solid var(--amber); outline-offset: 2px; }
 .pg-b { flex: 1; min-width: 0; }
-.pg h3 { margin: 0; font-size: 15.5px; letter-spacing: -.01em; overflow-wrap: anywhere; }
+.pg h3 { margin: 0; font: 700 19px/1.2 var(--hand); letter-spacing: -.01em; overflow-wrap: anywhere; }
 .pg .sub, .pd-title .sub { color: var(--muted); font-size: 12.5px; margin-top: 1px; }
 .pg-r { text-align: right; white-space: nowrap; display: flex; flex-direction: column; align-items: flex-end; gap: 3px; }
 .pg-p { font: 700 21px/1.1 var(--hand); }
@@ -304,7 +304,7 @@ textarea.field { min-height: 140px; resize: vertical; line-height: 28px; padding
 .chg.same { background: #efe9dc; color: var(--muted); }
 .chg.first { background: var(--amber-soft); color: var(--amber-ink); }
 .pd-title { display: flex; gap: 12px; align-items: center; margin: 4px 0 12px; }
-.pd-title h3 { margin: 0; font-size: 18px; overflow-wrap: anywhere; }
+.pd-title h3 { margin: 0; font: 700 22px/1.2 var(--hand); overflow-wrap: anywhere; }
 .chart-box { background: var(--paper); border: 1.5px solid var(--line); border-radius: 14px; padding: 8px 6px 4px; }
 .chart-box svg { display: block; width: 100%; height: auto; }
 .ch-grid { stroke: #ece3cf; stroke-width: 1; }
@@ -1109,9 +1109,11 @@ function priceBody() {
   const sig = new Map(groups.map(l => [gkey(l[0]), signalOf(l)]));
   const cnt = { '': groups.length, low: 0, high: 0, down: 0 };
   sig.forEach(v => { if (v.zone === 'low') cnt.low++; if (v.zone === 'high') cnt.high++; if (v.chg.kind === 'down') cnt.down++; });
-  const byPf = l => { const v = sig.get(gkey(l[0])); return !state.pf || (state.pf === 'down' ? v.chg.kind === 'down' : v.zone === state.pf); };
+  const byPf = l => state.pf !== 'down' || sig.get(gkey(l[0])).chg.kind === 'down';
+  const cur = l => l[l.length - 1].price;
   const shown = groups.filter(byPf).filter(l => !state.pq || textHit(l[0].name + ' ' + l.map(e => e.shop).join(' '), state.pq));
-  const pfChips = [['', '전체'], ['low', '저가'], ['high', '고가'], ['down', '내린 것']].map(([k, t]) => `<button type="button" class="chip ${state.pf === k ? 'on' : ''}" data-pf="${k}">${t} ${cnt[k]}</button>`).join('');
+  if (state.pf === 'asc') shown.sort((a, b) => cur(a) - cur(b)); else if (state.pf === 'desc') shown.sort((a, b) => cur(b) - cur(a));
+  const pfChips = [['', '전체'], ['asc', '저가순'], ['desc', '고가순'], ['down', '내린 것']].map(([k, t]) => `<button type="button" class="chip ${state.pf === k ? 'on' : ''}" data-pf="${k}">${t}${k === '' || k === 'down' ? ' ' + cnt[k] : ''}</button>`).join('');
   const cards = shown.map(list => {
     const v = sig.get(gkey(list[list.length - 1])), last = v.last;
     const [icon, color] = typeStyle(last.name);
@@ -1136,7 +1138,7 @@ function priceBody() {
   return `
     ${groups.length ? `<div class="filters">${pfChips}</div>
     <input class="search" id="pq" placeholder="위스키·구매처 검색 (초성 가능)" value="${esc(state.pq)}" enterkeyhint="search">
-    <div class="sortrow"><span>${shown.length}종 · 기록 ${priceEntries().length}건</span><span>최근 기록순</span></div>` : ''}
+    <div class="sortrow"><span>${shown.length}종 · 기록 ${priceEntries().length}건</span><span>${state.pf === 'asc' ? '현재가 낮은순' : state.pf === 'desc' ? '현재가 높은순' : '최근 기록순'}</span></div>` : ''}
     ${shown.length ? cards + ORN() : empty}`;
 }
 function viewPrice() { return header('가격 판단 보드') + priceBody(); }
