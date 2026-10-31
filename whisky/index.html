@@ -828,8 +828,8 @@ function viewList() {
   const gmap = new Map(priceGroups().map(l => [gkey(l[0]), l]));
   const rated = logs.filter(l => l.rating);
   const avg = rated.length ? fmtNum(rated.reduce((s, l) => s + l.rating, 0) / rated.length) : '-';
-  /* 마신 기록의 구매가격 + 가격 탭에 적은 모든 가격 */
-  const sumAll = priceEntries().reduce((t, e) => t + (e.price > 0 ? e.price : 0), 0);
+  /* 마신 기록에 구매가격을 적은 것만 합산 (가격 탭에서 확인한 가격은 제외) */
+  const sumAll = logs.reduce((t, l) => t + (l.price > 0 ? l.price : 0), 0);
   const sumTxt = sumAll >= 10000 ? Math.round(sumAll / 10000).toLocaleString('ko-KR') + '만원' : sumAll ? won(sumAll) : '-';
   const arr = filtered();
   const chips = ['', ...FILTER_FLAVORS].map(f => `<button class="chip ${state.flavor === f ? 'on' : ''}" data-flavor="${esc(f)}">${f ? (FICON[f] || '🍎') + ' ' + f : '전체'}</button>`).join('');
@@ -864,7 +864,7 @@ function viewList() {
     <div class="hero"><div class="hero-t">나의 위스키 기록</div><div class="hero-g">
       <div class="hs">${ic('i-glass')}<b>${total}</b><span>마신 기록</span></div>
       <div class="hs">${ic('i-dram')}<b>${avg}</b><span>평균 점수</span></div>
-      <div class="hs">${ic('i-won')}<b>${sumTxt}</b><span>기록 가격 합계</span></div></div></div>` + drinkBody;
+      <div class="hs">${ic('i-won')}<b>${sumTxt}</b><span>구매 금액 합계</span></div></div></div>` + drinkBody;
 }
 
 function viewStats() {
