@@ -38,6 +38,7 @@
   --hi: #4aa24c;          /* 최고가·상승(초록) */
   --lo: #e1706a;          /* 최저가·하락(빨강) */
   --avg: #4a8be8;         /* 평균가(파랑) */
+  --title: "NanumBarunGothic", "Nanum Barun Gothic", "나눔바른고딕", "Gaegu", "Pretendard Variable", sans-serif;
   --hand: "Gaegu", "Nanum Pen Script", "Pretendard Variable", cursive;
   --radius: 14px;
   --safe-b: env(safe-area-inset-bottom, 0px);
@@ -65,7 +66,7 @@ input, textarea, select { font: inherit; color: var(--text); }
 /* 상단 제목 */
 .top { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
 .logo { width: 46px; height: 46px; border-radius: 14px; background: var(--amber-soft); color: var(--amber-ink); display: grid; place-items: center; font-size: 28px; transform: rotate(-4deg); box-shadow: 0 2px 0 #e9cf9a; }
-.top h1 { margin: 0; font: 700 29px/1 var(--hand); letter-spacing: -.01em; }
+.top h1 { margin: 0; font: 700 24px/1.1 var(--title); letter-spacing: -.02em; }
 .top small { display: block; color: var(--muted); font-size: 12.5px; margin-top: 3px; }
 
 /* 마스킹테이프 */
@@ -124,7 +125,7 @@ input, textarea, select { font: inherit; color: var(--text); }
 .c4 { background: var(--sky); color: var(--sky-ink); }
 .cbody { flex: 1; min-width: 0; }
 .row1 { display: flex; justify-content: space-between; gap: 10px; align-items: flex-start; }
-.card h3 { margin: 0; font: 700 19px/1.2 var(--hand); letter-spacing: -.01em; overflow-wrap: anywhere; }
+.card h3 { margin: 0; font: 700 17px/1.25 var(--title); letter-spacing: -.01em; overflow-wrap: anywhere; }
 .card .meta { color: var(--muted); font-size: 12.5px; margin-top: 3px; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; }
 .card .date { font: 700 15px/1.2 var(--hand); color: var(--amber-ink); white-space: nowrap; }
 .tags { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 9px; }
@@ -249,7 +250,7 @@ textarea.field { min-height: 140px; resize: vertical; line-height: 28px; padding
 .low { display: inline-block; padding: 1px 8px; border-radius: 999px; background: var(--mint); color: var(--mint-ink); font-size: 11px; font-weight: 700; }
 .pc { padding: 12px 0; border-top: 1.5px dotted var(--line); }
 .pc:first-of-type { border-top: 0; padding-top: 2px; }
-.pc-h { display: flex; align-items: center; gap: 7px; font: 700 18px/1.2 var(--hand); margin-bottom: 4px; overflow-wrap: anywhere; }
+.pc-h { display: flex; align-items: center; gap: 7px; font: 700 16px/1.25 var(--title); margin-bottom: 4px; overflow-wrap: anywhere; }
 .pc-h .ic { color: var(--amber-ink); font-size: 18px; }
 .pc-r { display: grid; grid-template-columns: 1fr auto; gap: 2px 10px; font-size: 13px; padding: 4px 0; }
 .pc-r small { color: var(--muted); display: block; font-size: 11.5px; }
@@ -280,7 +281,7 @@ textarea.field { min-height: 140px; resize: vertical; line-height: 28px; padding
 .pg:active { transform: translateY(1px); box-shadow: none; }
 .pg:focus-visible { outline: 2px solid var(--amber); outline-offset: 2px; }
 .pg-b { flex: 1; min-width: 0; }
-.pg h3 { margin: 0; font: 700 19px/1.2 var(--hand); letter-spacing: -.01em; overflow-wrap: anywhere; }
+.pg h3 { margin: 0; font: 700 17px/1.25 var(--title); letter-spacing: -.01em; overflow-wrap: anywhere; }
 .pg .sub, .pd-title .sub { color: var(--muted); font-size: 12.5px; margin-top: 1px; }
 .pg-r { text-align: right; white-space: nowrap; display: flex; flex-direction: column; align-items: flex-end; gap: 3px; }
 .pg-p { font: 700 21px/1.1 var(--hand); }
@@ -304,7 +305,7 @@ textarea.field { min-height: 140px; resize: vertical; line-height: 28px; padding
 .chg.same { background: #efe9dc; color: var(--muted); }
 .chg.first { background: var(--amber-soft); color: var(--amber-ink); }
 .pd-title { display: flex; gap: 12px; align-items: center; margin: 4px 0 12px; }
-.pd-title h3 { margin: 0; font: 700 22px/1.2 var(--hand); overflow-wrap: anywhere; }
+.pd-title h3 { margin: 0; font: 700 20px/1.25 var(--title); overflow-wrap: anywhere; }
 .chart-box { background: var(--paper); border: 1.5px solid var(--line); border-radius: 14px; padding: 8px 6px 4px; }
 .chart-box svg { display: block; width: 100%; height: auto; }
 .ch-grid { stroke: #ece3cf; stroke-width: 1; }
