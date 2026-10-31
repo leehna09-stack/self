@@ -449,6 +449,13 @@ textarea.field { min-height: 140px; resize: vertical; line-height: 28px; padding
 .pbox { position: relative; }
 .pstar { position: absolute; left: 4px; bottom: 4px; padding: 2px 7px; border-radius: 999px; border: 0; background: #fffdf7e6; color: var(--muted); font: 700 12px/1.3 var(--sans, inherit); box-shadow: 0 1px 3px #3b2f2340; cursor: pointer; }
 .pstar.on { background: var(--amber); color: #3a2208; }
+
+/* 가격 홈: 전체·저가순·고가순 밑줄 탭 */
+.utabs { display: grid; grid-template-columns: repeat(3, 1fr); border-bottom: 1.5px solid var(--line); margin: 6px 0 10px; }
+.utab { background: none; border: 0; border-bottom: 2.5px solid transparent; margin-bottom: -1.5px; padding: 9px 0 8px; font: inherit; font-size: 12px; color: var(--muted); cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.utab.on { color: var(--amber-ink); font-weight: 800; border-bottom-color: var(--amber); }
+.utab:active { background: var(--amber-soft); }
+.search.sm { padding: 8px 12px 8px 34px; font-size: 13px; background-position: 11px center; background-size: 16px; border-radius: 10px; }
 </style>
 </head>
 
@@ -1136,7 +1143,7 @@ function priceBody() {
   const cur = l => l[l.length - 1].price;
   const shown = groups.filter(l => !state.pq || textHit(l[0].name + ' ' + l.map(e => e.shop).join(' '), state.pq));
   if (state.pf === 'asc') shown.sort((a, b) => cur(a) - cur(b)); else if (state.pf === 'desc') shown.sort((a, b) => cur(b) - cur(a));
-  const pfChips = [['', '전체'], ['asc', '저가순'], ['desc', '고가순']].map(([k, t]) => `<button type="button" class="chip ${state.pf === k ? 'on' : ''}" data-pf="${k}">${t}</button>`).join('');
+  const pfChips = [['', '전체'], ['asc', '저가순'], ['desc', '고가순']].map(([k, t]) => `<button type="button" role="tab" aria-selected="${state.pf === k}" class="utab ${state.pf === k ? 'on' : ''}" data-pf="${k}">${t}</button>`).join('');
   const cards = shown.map(list => {
     const v = sig.get(gkey(list[list.length - 1])), last = v.last;
     const [icon, color] = typeStyle(last.name);
@@ -1159,8 +1166,8 @@ function priceBody() {
     ? `<div class="empty">${ic('i-flask')}<br>조건에 맞는 위스키가 없어요</div>`
     : `<div class="empty">${ic('i-won')}<br>아직 가격 기록이 없어요</div>`;
   return `
-    ${groups.length ? `<div class="filters">${pfChips}</div>
-    <input class="search" id="pq" placeholder="위스키·구매처 검색 (초성 가능)" value="${esc(state.pq)}" enterkeyhint="search">
+    ${groups.length ? `<div class="utabs" role="tablist">${pfChips}</div>
+    <input class="search sm" id="pq" placeholder="위스키·구매처 검색 (초성 가능)" value="${esc(state.pq)}" enterkeyhint="search">
     <div class="sortrow"><span>${shown.length}종 · 기록 ${priceEntries().length}건</span><span>${state.pf === 'asc' ? '현재가 낮은순' : state.pf === 'desc' ? '현재가 높은순' : '최근 기록순'}</span></div>` : ''}
     ${shown.length ? cards + ORN() : empty}`;
 }
