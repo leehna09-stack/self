@@ -1762,8 +1762,39 @@ function openForm(id, opts = {}) {
   [6] 시작
 ============================================================= */
 document.querySelectorAll('.tab').forEach(t => t.onclick = () => {
-  state.tab = t.dataset.tab; window.scrollTo(0, 0); render();
+  const next = t.dataset.tab, changed = next !== state.tab;
+  state.tab = next; window.scrollTo(0, 0); render();
+  if (changed) history.pushState({ tab: next }, '');
 });
+
+/* 폰의 뒤로가기: 앱이 닫히지 않고 한 단계씩 돌아가요
+   열려 있는 사진 보기·팝업·입력 화면을 먼저 닫고, 그다음엔 이전에 보던 탭으로 가요 */
+(() => {
+  const root = $('#sheetRoot');
+  const overlays = () => (root.firstElementChild ? 1 : 0) + document.querySelectorAll('.viewer').length + document.querySelectorAll('.modal:not([hidden])').length;
+  let pushed = 0, ignore = 0;
+  try { history.replaceState({ tab: state.tab }, ''); } catch {}
+  const sync = () => {
+    const n = overlays();
+    if (n > pushed) { while (pushed < n) { history.pushState({ ov: 1 }, ''); pushed++; } }
+    else if (n < pushed) { const d = pushed - n; pushed = n; ignore += d; history.go(-d); }   /* 취소·저장 등으로 직접 닫은 경우 기록 칸도 되돌려요 */
+  };
+  const closeTop = () => {
+    const v = document.querySelector('.viewer'); if (v) { const x = v.querySelector('.vx'); if (x) x.click(); else v.remove(); return; }
+    const m = document.querySelector('.modal:not([hidden])'); if (m) { m.hidden = true; return; }
+    root.innerHTML = ''; document.body.style.overflow = '';
+  };
+  window.addEventListener('popstate', e => {
+    if (ignore > 0) { ignore--; return; }
+    if (pushed > 0) { pushed--; closeTop(); return; }
+    const t = e.state && e.state.tab;
+    if (t && t !== state.tab) { state.tab = t; window.scrollTo(0, 0); render(); }
+  });
+  const ob = new MutationObserver(sync);
+  ob.observe(root, { childList: true });
+  ob.observe(document.body, { childList: true });
+  ob.observe(document.body, { attributes: true, attributeFilter: ['hidden'], subtree: true });
+})();
 $('#installClose').onclick = () => { $('#installModal').hidden = true; };
 $('#installModal').onclick = e => { if (e.target.id === 'installModal') e.currentTarget.hidden = true; };
 render();
