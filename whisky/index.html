@@ -399,8 +399,8 @@ textarea.field { min-height: 140px; resize: vertical; line-height: 28px; padding
 
 /* 헤더 오른쪽 +추가 */
 .top .tt { min-width: 0; }
-.hadd { margin-left: auto; flex: none; padding: 9px 15px; border-radius: 999px; background: var(--amber); color: #3a2208; font-weight: 800; font-size: 14px; box-shadow: 0 3px 0 #c47f17; white-space: nowrap; }
-.hadd:active { transform: translateY(2px); box-shadow: 0 1px 0 #c47f17; }
+.hadd { margin-left: auto; flex: none; min-height: 44px; padding: 0 12px; border-radius: 12px; background: none; border: 0; box-shadow: none; color: #7b4a1e; font-weight: 800; font-size: 16px; white-space: nowrap; cursor: pointer; -webkit-tap-highlight-color: transparent; transition: background-color .12s; }
+.hadd:active, .hadd:focus-visible { background: var(--amber-soft); outline: none; }
 
 /* 가격 판단 보드 */
 .pnow { text-align: right; line-height: 1.15; }
@@ -828,6 +828,9 @@ function viewList() {
   const gmap = new Map(priceGroups().map(l => [gkey(l[0]), l]));
   const rated = logs.filter(l => l.rating);
   const avg = rated.length ? fmtNum(rated.reduce((s, l) => s + l.rating, 0) / rated.length) : '-';
+  /* 마신 기록에 구매가격을 적은 것만 합산 (가격 탭에서 확인한 가격은 제외) */
+  const sumAll = logs.reduce((t, l) => t + (l.price > 0 ? l.price : 0), 0);
+  const sumTxt = sumAll >= 10000 ? Math.round(sumAll / 10000).toLocaleString('ko-KR') + '만원' : sumAll ? won(sumAll) : '-';
   const arr = filtered();
   const chips = ['', ...FILTER_FLAVORS].map(f => `<button class="chip ${state.flavor === f ? 'on' : ''}" data-flavor="${esc(f)}">${f ? (FICON[f] || '🍎') + ' ' + f : '전체'}</button>`).join('');
   const cards = arr.map((l, i) => {
@@ -858,9 +861,10 @@ function viewList() {
     ${arr.length ? cards + ORN() : empty}`;
   /* 요약 칸 '마신 기록'을 누르면 다이어리 목록, '가격 기록'을 누르면 가격 목록이 아래에 나와요 */
   return header('마신 기록') + `
-    <div class="hero"><div class="hero-t">우리의 위스키 기록</div><div class="hero-g two">
+    <div class="hero"><div class="hero-t">나의 위스키 기록</div><div class="hero-g">
       <div class="hs">${ic('i-glass')}<b>${total}</b><span>마신 기록</span></div>
-      <div class="hs">${ic('i-dram')}<b>${avg}</b><span>평균 점수</span></div></div></div>` + drinkBody;
+      <div class="hs">${ic('i-dram')}<b>${avg}</b><span>평균 점수</span></div>
+      <div class="hs">${ic('i-won')}<b>${sumTxt}</b><span>구매 금액 합계</span></div></div></div>` + drinkBody;
 }
 
 function viewStats() {
@@ -1141,7 +1145,7 @@ function priceBody() {
       </div>
       <div class="pnow"><b>${won(last.price)}</b>${last.ml ? `<small>${p100txt(last.price, last.ml)}</small>` : ''}</div>
       ${v.pos === null ? '' : gaugeHtml(v.pos, v.mn, v.mx)}
-      <div class="pcf">${chgHtml(v.chg)}<span class="when">${last.shop ? esc(last.shop) + ' · ' : ''}${fmtDate(last.date)}</span></div>
+      <div class="pcf">${v.chg.kind === 'first' ? '<span class="sg mid">보통</span>' : chgHtml(v.chg)}<span class="when">${last.shop ? esc(last.shop) + ' · ' : ''}${fmtDate(last.date)}</span></div>
     </div>`;
   }).join('');
   const empty = groups.length
