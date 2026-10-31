@@ -1141,7 +1141,7 @@ function priceBody() {
       </div>
       <div class="pnow"><b>${won(last.price)}</b>${last.ml ? `<small>${p100txt(last.price, last.ml)}</small>` : ''}</div>
       ${v.pos === null ? '' : gaugeHtml(v.pos, v.mn, v.mx)}
-      <div class="pcf">${chgHtml(v.chg)}<span class="when">${last.shop ? esc(last.shop) + ' · ' : ''}${fmtDate(last.date)}</span></div>
+      <div class="pcf">${v.chg.kind === 'first' ? '<span class="sg mid">보통</span>' : chgHtml(v.chg)}<span class="when">${last.shop ? esc(last.shop) + ' · ' : ''}${fmtDate(last.date)}</span></div>
     </div>`;
   }).join('');
   const empty = groups.length
