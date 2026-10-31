@@ -877,9 +877,6 @@ function viewList() {
   const gmap = new Map(priceGroups().map(l => [gkey(l[0]), l]));
   const rated = logs.filter(l => l.rating);
   const avg = rated.length ? fmtNum(rated.reduce((s, l) => s + l.rating, 0) / rated.length) : '-';
-  /* 마신 기록에 구매가격을 적은 것만 합산 (가격 탭에서 확인한 가격은 제외) */
-  const sumAll = logs.reduce((t, l) => t + (l.price > 0 ? l.price : 0), 0);
-  const sumTxt = sumAll >= 10000 ? Math.round(sumAll / 10000).toLocaleString('ko-KR') + '만원' : sumAll ? won(sumAll) : '-';
   const arr = filtered();
   const chips = ['', ...FILTER_FLAVORS].map(f => `<button class="chip ${state.flavor === f ? 'on' : ''}" data-flavor="${esc(f)}">${f ? (FICON[f] || '🍎') + ' ' + f : '전체'}</button>`).join('');
   const cards = arr.map((l, i) => {
@@ -892,13 +889,10 @@ function viewList() {
         <div class="row1"><h3>${esc(l.name)}</h3><div class="rt"><div class="date">${fmtDate(l.date)}</div><button type="button" class="eic" data-edit="${l.id}" aria-label="${esc(l.name)} 수정" title="수정">${ic('i-pen')}</button></div></div>
         <div class="meta">${l.ml ? `<span>${ic('i-bottle', 'sm')} ${volLabel(l.ml)}</span>` : ''}${l.abv ? `<span>${ic('i-drop', 'sm')} ${l.abv}%</span>` : ''}${l.openDate ? `<span>${ic('i-cal', 'sm')} ${fmtDate(l.openDate)} 오픈</span>` : ''}${l.rating ? stars(l.rating) : ''}</div>
         ${(() => {
-          /* 내가 적은 구매 정보 줄. 그 값이 같은 위스키의 지금 최저가와 같으면 '지금 최저가' 표시를 이 줄에 합쳐요 */
-          const buy = merged => (l.price > 0 || l.shop) ? `<div class="meta buyline">${l.price > 0 ? `<span>${ic('i-won', 'sm')} <b>${won(l.price)}</b>${merged ? ' <span class="low">지금 최저가</span>' : isLowest(l) ? ' <span class="low">최저가</span>' : ''}</span>` : ''}${l.shop ? `<span>${ic('i-shop', 'sm')} ${esc(l.shop)}</span>` : ''}${l.price > 0 ? `<span>${fmtDate(buyDateOf(l))} 구매</span>` : ''}</div>` : '';
           const gl = gmap.get(gkey(l));
-          if (!gl) return `<div class="meta buyline"><span>${ic('i-won', 'sm')} 가격 기록 없음 <button type="button" class="lnk" data-gadd="${l.id}">가격 입력</button></span></div>` + buy(false);
+          if (!gl) return `<div class="meta buyline"><span>${ic('i-won', 'sm')} 가격 기록 없음 <button type="button" class="lnk" data-gadd="${l.id}">가격 입력</button></span></div>`;
           const lo = gl.reduce((a, b) => b.price < a.price ? b : a);
-          if (l.price > 0 && l.price === lo.price) return buy(true);
-          return `<div class="meta buyline"><span>${ic('i-won', 'sm')} 지금 최저가 <b>${won(lo.price)}</b>${lo.shop ? ' · ' + esc(lo.shop) : ''}</span></div>` + buy(false);
+          return `<div class="meta buyline"><span>${ic('i-won', 'sm')} 지금 최저가 <b>${won(lo.price)}</b>${lo.shop ? ' · ' + esc(lo.shop) : ''}</span></div>`;
         })()}
         ${(l.flavors || []).length ? `<div class="tags">${l.flavors.map(f => `<span class="tag">${FICON[f] || ''} ${esc(f)}</span>`).join('')}</div>` : ''}
         ${l.memo ? `<div class="memo">${esc(l.memo)}</div>` : ''}
@@ -917,10 +911,10 @@ function viewList() {
     ${arr.length ? cards + ORN() : empty}`;
   /* 요약 칸 '마신 기록'을 누르면 다이어리 목록, '가격 기록'을 누르면 가격 목록이 아래에 나와요 */
   return header('마신 기록') + `
-    <div class="hero"><div class="hero-t">나의 위스키 기록</div><div class="hero-g">
+    <div class="hero"><div class="hero-t">나의 위스키 기록</div><div class="hero-g two">
       <div class="hs">${ic('i-glass')}<b>${total}</b><span>마신 기록</span></div>
       <div class="hs">${ic('i-dram')}<b>${avg}</b><span>평균 점수</span></div>
-      <div class="hs">${ic('i-won')}<b>${sumTxt}</b><span>구매 금액 합계</span></div></div></div>` + drinkBody;
+</div></div>` + drinkBody;
 }
 
 function viewStats() {
@@ -1626,17 +1620,14 @@ function openDiaryDetail(id) {
   const rows = [row('마신 날짜', fmtDate(l.date))];
   if (l.openDate) rows.push(row('오픈한 날짜', fmtDate(l.openDate)));
   if (l.rating) rows.push(row('나의 점수', stars(l.rating)));
-  const buy = [];
-  if (l.price > 0) buy.push(row('구매가격', `<b>${won(l.price)}</b>${isLowest(l) ? ' <span class="low">최저가</span>' : ''}`));
-  if (l.price > 0) buy.push(row('구매일', fmtDate(buyDateOf(l))));
-  if (l.shop) buy.push(row('구매 장소', esc(l.shop)));
+  const hasPrice = priceGroups().some(g => gkey(g[0]) === gkey(l));
   root.innerHTML = `<div class="sheet"><div class="sheet-in">
     <div class="sheet-head"><button class="link" id="vclose">닫기</button><h2>${ic('i-book')} 기록 보기</h2><button type="button" class="eic" id="vedit" aria-label="수정" title="수정">${ic('i-pen')}</button></div>
     ${photos.length ? `<div class="dph ${photos.length > 1 ? 'multi' : ''}" id="vph">${photos.map((p, n) => `<img src="${p.full}" data-vi="${n}" alt="사진 ${n + 1}">`).join('')}</div>` : ''}
     <div class="pd-title vt">${photos.length ? '' : `<span class="tile ${color}">${ic(icon)}</span>`}<div><h3>${esc(l.name)}</h3>${sub ? `<div class="sub">${esc(sub)}</div>` : ''}</div></div>
     <div class="box vbox plain">${rows.join('')}</div>
     ${(l.flavors || []).length ? `<div class="box vbox"><h3>${ic('i-dram')} 맛의 특징</h3><div class="tags">${l.flavors.map(f => `<span class="tag">${FICON[f] || ''} ${esc(f)}</span>`).join('')}</div></div>` : ''}
-    ${buy.length ? `<div class="box vbox"><h3>${ic('i-tag')} 구매 정보</h3>${buy.join('')}${l.price > 0 ? `<button type="button" class="btn-sub" id="vprice">${ic('i-won')} 가격 변동 보기</button>` : ''}</div>` : ''}
+    ${hasPrice ? `<button type="button" class="btn-sub" id="vprice" style="margin:0 0 14px">${ic('i-won')} 가격 변동 보기</button>` : ''}
     ${l.memo ? `<div class="box vbox"><h3>${ic('i-pen')} 메모</h3><div class="vmemo">${esc(l.memo)}</div></div>` : ''}
   </div></div>`;
   $('#vclose').onclick = close;
