@@ -431,6 +431,12 @@ textarea.field { min-height: 140px; resize: vertical; line-height: 28px; padding
 .shr .spr em { font-style: normal; color: var(--muted); font-size: 12px; font-weight: 600; }
 .lnk { background: none; border: 0; padding: 0 2px; font: inherit; font-weight: 700; color: var(--amber-ink); text-decoration: underline; cursor: pointer; }
 .hero-g.two { grid-template-columns: repeat(2, 1fr); }
+
+.scanres { margin: 0 2px 8px; font-size: 12.5px; color: var(--muted); }
+.scanres.ok { color: var(--hi); font-weight: 700; }
+.scanres.warn { color: var(--amber-ink); font-weight: 700; }
+.scanres .quick { margin-top: 6px; }
+.btn-sub.scan:disabled { opacity: .6; }
 </style>
 </head>
 
@@ -1095,7 +1101,7 @@ function signalOf(list) {
   const pos = (last.price - mn) / (mx - mn);
   return { last, mn, mx, pos, zone: pos <= 1 / 3 ? 'low' : pos >= 2 / 3 ? 'high' : 'mid', chg };
 }
-const sigChip = z => z === 'low' ? '<span class="sg ok">✓ 최저가 근처</span>' : z === 'high' ? '<span class="sg hi">비싼 편</span>' : z === 'mid' ? '<span class="sg mid">보통</span>' : '';
+const sigChip = z => z === 'low' ? '<span class="sg ok">저가</span>' : z === 'high' ? '<span class="sg hi">고가</span>' : z === 'mid' ? '<span class="sg mid">보통</span>' : '';
 const gaugeHtml = (pos, mn, mx) => `<div class="rg"><div class="rg-t"><i class="s1"></i><i class="s2"></i><i class="s3"></i><b class="mk" style="left:${Math.round(pos * 100)}%"></b></div><div class="rg-z"><span>싼 편</span><span>보통</span><span>비싼 편</span></div><div class="rg-n"><span>최저 ${won(mn)}</span><span>최고 ${won(mx)}</span></div></div>`;
 
 function priceBody() {
@@ -1105,7 +1111,7 @@ function priceBody() {
   sig.forEach(v => { if (v.zone === 'low') cnt.low++; if (v.zone === 'high') cnt.high++; if (v.chg.kind === 'down') cnt.down++; });
   const byPf = l => { const v = sig.get(gkey(l[0])); return !state.pf || (state.pf === 'down' ? v.chg.kind === 'down' : v.zone === state.pf); };
   const shown = groups.filter(byPf).filter(l => !state.pq || textHit(l[0].name + ' ' + l.map(e => e.shop).join(' '), state.pq));
-  const pfChips = [['', '전체'], ['low', '최저가 근처'], ['high', '비싼 편'], ['down', '내린 것']].map(([k, t]) => `<button type="button" class="chip ${state.pf === k ? 'on' : ''}" data-pf="${k}">${t} ${cnt[k]}</button>`).join('');
+  const pfChips = [['', '전체'], ['low', '저가'], ['high', '고가'], ['down', '내린 것']].map(([k, t]) => `<button type="button" class="chip ${state.pf === k ? 'on' : ''}" data-pf="${k}">${t} ${cnt[k]}</button>`).join('');
   const cards = shown.map(list => {
     const v = sig.get(gkey(list[list.length - 1])), last = v.last;
     const [icon, color] = typeStyle(last.name);
@@ -1269,6 +1275,61 @@ function judgeHtml(price, nm, ml, exceptId) {
     <div class="cmp3"><div><span>평균 대비</span><b>${d(price - avg)}</b></div><div><span>최고 대비</span><b>${d(price - mx)}</b></div><div><span>최저 대비</span><b>${d(price - mn)}</b></div></div>`;
 }
 
+/* 가격표 사진 읽기 (기기 안 OCR, Tesseract.js). 처음 한 번만 글자 인식 파일(약 2MB)을 내려받아요 */
+const OCR_JS = 'https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js';
+const OCR_LANG = 'https://cdn.jsdelivr.net/npm/@tesseract.js-data/kor/4.0.0_best_int';
+let ocrLoad = null;
+const loadOcr = () => window.Tesseract ? Promise.resolve() : (ocrLoad = ocrLoad || new Promise((ok, no) => {
+  const sc = document.createElement('script'); sc.src = OCR_JS; sc.onload = ok; sc.onerror = () => { ocrLoad = null; no(new Error('load')); }; document.head.appendChild(sc);
+}));
+async function ocrRead(file, onStatus) {
+  await loadOcr();
+  const url = URL.createObjectURL(file);
+  let cv; try { cv = scaled(await loadImg(url), 1800); } finally { URL.revokeObjectURL(url); }
+  /* 글자가 또렷하도록 흑백·대비를 올려요 (지원하지 않는 브라우저는 그대로 읽어요) */
+  const g = document.createElement('canvas'); g.width = cv.width; g.height = cv.height;
+  const gx = g.getContext('2d'); try { gx.filter = 'grayscale(1) contrast(1.35)'; } catch {} gx.drawImage(cv, 0, 0);
+  const worker = await Tesseract.createWorker('kor', 1, { langPath: OCR_LANG, logger: m => { if (m.status === 'recognizing text') onStatus(Math.round(m.progress * 100)); } });
+  try { return (await worker.recognize(g, {}, { blocks: true })).data; } finally { worker.terminate(); }
+}
+/* 읽은 글자에서 위스키·용량·도수·가격·구매처 찾기 */
+function parseTag(data) {
+  const text = data.text || '', nt = norm(text);
+  const lines = (data.lines || (data.blocks || []).flatMap(b => (b.paragraphs || []).flatMap(p => p.lines || []))).map(l => ({ t: (l.text || '').trim(), h: l.bbox ? l.bbox.y1 - l.bbox.y0 : 10 })).filter(l => l.t);
+  /* 가격: 글자가 가장 큰 줄의 숫자를 판매가로 봐요 (100ml당·정상가 줄은 낮춰요) */
+  const cand = new Map();
+  lines.forEach(l => {
+    if (/100\s*ml|ml\s*당|㎖|\d\s*%/i.test(l.t) && !/원/.test(l.t)) return;
+    const per = /100\s*ml|ml\s*당|당\s*\d/i.test(l.t);
+    for (const m of l.t.matchAll(/(\d{1,3}(?:\s?[,.]\s?\d{3})+|\d{4,7})/g)) {
+      const n = +m[1].replace(/[\s,.]/g, '');
+      if (n < 5000 || n > 5000000 || (n >= 1990 && n <= 2100 && !/[,원]/.test(m[1] + l.t))) continue;
+      const w = l.h * (/원|₩|￦/.test(l.t) ? 1.15 : 1) * (/정상|정가|소비자|원가|할인전/.test(l.t) ? .5 : 1) * (per ? .3 : 1);
+      if (!cand.has(n) || cand.get(n) < w) cand.set(n, w);
+    }
+  });
+  const top = Math.max(0, ...cand.values()), prices = [...cand].filter(x => x[1] >= top * .4).sort((a, b) => b[1] - a[1]).map(x => x[0]).slice(0, 4);
+  /* 용량·도수 */
+  let ml = 0; const mm = text.match(/(\d{3,4})\s*(?:ml|㎖|mL|ML)/i) || text.match(/(\d(?:\.\d+)?)\s*(?:L|ℓ|리터)\b/);
+  if (mm) { const v = mm[0].match(/ml|㎖/i) ? +mm[1] : Math.round(+mm[1] * 1000); if (v >= 100 && v <= 4500) ml = v; }
+  let abv = 0; const am = text.match(/(\d{2}(?:\.\d)?)\s*%/); if (am && +am[1] >= 30 && +am[1] <= 75) abv = +am[1];
+  /* 위스키 이름: 내장 목록과 저장된 이름 중 글자가 가장 많이 겹치는 것 */
+  let best = null;
+  const tryName = (ko, en, src, c) => {
+    for (const nm of [ko, en]) {
+      const toks = (nm || '').split(/\s+/).map(norm).filter(Boolean); if (!toks.length) continue;
+      const hit = toks.filter(t => nt.includes(t)), chars = hit.join('').length, ratio = hit.length / toks.length;
+      if (ratio < .66 || chars < 4) continue;
+      const sc = ratio * 10 + chars + (src === 'saved' ? 2 : 0);
+      if (!best || sc > best.sc) best = { sc, ko, ml: c.ml, abv: c.abv };
+    }
+  };
+  savedGroups().forEach(c => tryName(c.ko, '', 'saved', c));
+  DB.forEach(d => tryName(d[0], d[1], 'db', { ml: d[3], abv: d[4] }));
+  const shop = [...new Set([...shopChoices(), ...SHOPS_DEFAULT, '홈플러스', '롯데슈퍼', '하이마트', '쿠팡', '더본', '와인25플러스', '데일리샷', '조선호텔', '신세계'])].find(sh => nt.includes(norm(sh))) || '';
+  return { prices, ml, abv, name: best ? best.ko : '', nameMl: best ? best.ml : 0, nameAbv: best ? best.abv : 0, shop, text };
+}
+
 function openPriceForm(opts = {}) {
   const old = opts.id ? prices.find(p => p.id === opts.id) : null;
   const g = old ? { ...old } : { name: '', ml: 700, abv: '', price: '', shop: '', date: today(), ...(opts.preset || {}) };
@@ -1283,6 +1344,7 @@ function openPriceForm(opts = {}) {
     root.innerHTML = `<div class="sheet"><div class="sheet-in">
       <div class="sheet-head"><button class="link" id="pcancel">취소</button><h2>${ic('i-won')} ${old ? '가격 수정' : '가격 기록'}</h2><button class="link" id="pdel" style="${old ? '' : 'visibility:hidden'}"><span style="color:var(--red)">삭제</span></button></div>
 
+      ${old ? '' : `<button type="button" class="btn-sub scan" id="pscanBtn" style="margin:0 0 4px">${ic('i-camera')} 가격표 찍어서 채우기</button><div class="scanres" id="pscan" hidden></div>`}
       <label class="lb">${ic('i-bottle')} 위스키 이름</label>
       <div class="ac-wrap"><input class="field" id="pname" placeholder="예: 맥캘란, glenfiddich, ㄱㄹㅍㄷ" value="${esc(g.name)}" autocomplete="off" autocapitalize="off"><div class="ac" id="pac" hidden></div></div>
       <div class="autonote" id="pnote"></div>
@@ -1317,6 +1379,35 @@ function openPriceForm(opts = {}) {
   const bind = () => {
     $('#pcancel').onclick = back;
     mountPhotos($('#pphotos'), g.photos);
+    const scanBtn = $('#pscanBtn');
+    if (scanBtn) scanBtn.onclick = () => {
+      if (!navigator.onLine && !window.Tesseract) { toast('처음 한 번은 인터넷이 필요해요'); return; }
+      addPhotoFlow(async files => {
+        const file = files[0], box = $('#pscan'); box.hidden = false; box.className = 'scanres'; box.textContent = '가격표 읽는 중…';
+        scanBtn.disabled = true;
+        /* 읽는 동안 사진도 이 기록에 붙여둬요 (3장이 넘으면 붙이지 않아요) */
+        if (g.photos.length < MAX_PHOTOS) { try { g.photos.push(await shrink(file)); mountPhotos($('#pphotos'), g.photos); } catch {} }
+        try {
+          const r = parseTag(await ocrRead(file, p => { box.textContent = `가격표 읽는 중… ${p}%`; }));
+          read();
+          if (r.name) { g.name = r.name; g.ml = r.ml || r.nameMl || g.ml; g.abv = r.abv || r.nameAbv || g.abv; }
+          else { if (r.ml) g.ml = r.ml; if (r.abv) g.abv = r.abv; }
+          if (r.prices[0]) g.price = r.prices[0];
+          if (r.shop) g.shop = r.shop;
+          const found = [r.name && '이름', r.prices[0] && '가격', r.ml && '용량', r.shop && '구매처'].filter(Boolean);
+          const keepPhotos = g.photos; draw();
+          const bx = $('#pscan'); bx.hidden = false;
+          if (!found.length) { bx.className = 'scanres warn'; bx.textContent = '읽지 못했어요. 가격표가 화면에 크게 나오게 다시 찍어 보세요.'; return; }
+          bx.className = 'scanres ok';
+          const others = r.prices.slice(1);
+          bx.innerHTML = `읽은 값을 채웠어요 (${found.join('·')}). 확인해 주세요.` + (others.length ? `<div class="quick">${others.map(n => `<button type="button" class="chip" data-alt="${n}">${won(n)}</button>`).join('')}</div>` : '');
+          bx.querySelectorAll('[data-alt]').forEach(b => b.onclick = () => { $('#pprice').value = b.dataset.alt; $('#pprice').dispatchEvent(new Event('input')); toast('가격을 바꿨어요'); });
+          g.photos = keepPhotos;
+        } catch (e) {
+          box.className = 'scanres warn'; box.textContent = navigator.onLine ? '가격표를 읽지 못했어요. 직접 입력해 주세요.' : '인터넷에 연결되면 다시 시도해 주세요.';
+        } finally { const b = $('#pscanBtn'); if (b) b.disabled = false; }
+      });
+    };
     if (old) $('#pdel').onclick = () => {
       if (!confirm(`"${old.name}" 가격 기록을 삭제할까요?`)) return;
       prices = prices.filter(p => p.id !== old.id); savePrices(); PH.set(old.id, null); delete photoMap[old.id]; toast('삭제했어요');
