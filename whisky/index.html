@@ -930,7 +930,7 @@ function viewStats() {
   const now = new Date();
   for (let i = 5; i >= 0; i--) { const d = new Date(now.getFullYear(), now.getMonth() - i, 1); months.push(d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0')); }
   /* 최근 6개월에 오픈한 위스키: 같은 병(이름+용량+오픈일)의 여러 기록은 한 병으로 세고,
-     금액은 그 병에 적은 구매가격(없으면 가격 탭에 저장된 같은 위스키 가격)을 써요 */
+     금액은 가격 탭에 저장된 같은 위스키 가격 중 오픈일 이전(없으면 가장 오래된) 기록을 써요 */
   const bottlePrice = (name, ml, openDate) => {
     const list = priceGroups().find(g => gkey(g[0]) === norm(name) + '|' + (ml || 0));
     if (!list) return 0;
@@ -941,10 +941,9 @@ function viewStats() {
   logs.filter(l => l.openDate).forEach(l => {
     const k = norm(l.name) + '|' + (l.ml || 0) + '|' + l.openDate;
     const o = botMap[k] || (botMap[k] = { name: l.name, ml: l.ml, date: l.openDate, price: 0 });
-    if (!o.price && l.price > 0) o.price = l.price;
   });
   const bottles = Object.values(botMap).filter(o => months.includes(o.date.slice(0, 7)));
-  bottles.forEach(o => { if (!o.price) o.price = bottlePrice(o.name, o.ml, o.date); });
+  bottles.forEach(o => { o.price = bottlePrice(o.name, o.ml, o.date); });
   const priced6 = bottles.filter(o => o.price > 0);
   const sum6 = priced6.reduce((t, o) => t + o.price, 0), avg6 = priced6.length ? Math.round(sum6 / priced6.length) : 0;
   const mrows = months.map(m => { const bb = bottles.filter(o => o.date.startsWith(m)); return [m, bb.length, bb.reduce((t, o) => t + (o.price || 0), 0)]; });
@@ -970,22 +969,6 @@ function viewStats() {
   const moveHtml = (key, rank) => { const pr = prevRank[key]; return !pr ? '<span class="chg first">NEW</span>' : pr > rank ? `<span class="chg up">▲ ${pr - rank}</span>` : pr < rank ? `<span class="chg down">▼ ${rank - pr}</span>` : '<span class="chg same">―</span>'; };
   const rankBox = `<div class="box"><h3>${ic('i-glass')} 나의 최애 순위</h3>${ratedLogs.length ? favRank(ratedLogs).slice(0, 10).map((o, i) => `<div class="rk"><b class="rno r${i + 1}">${i + 1}</b>${(photoMap[o.id] || []).length ? `<img class="pth" src="${photoMap[o.id][0].thumb}" alt="">` : ic(typeStyle(o.name)[0])}<span class="rt2">${esc(o.name)}<small>평균 ${fmtNum(o.avg)}점 · ${o.n}회</small></span>${moveHtml(o.key, i + 1)}</div>`).join('') : '<span style="color:var(--muted)">아직 점수가 없어요</span>'}</div>`;
   const bar = (label, n, max) => `<div class="bar"><span>${label}</span><div class="tr"><div class="fi" style="width:${n ? Math.max(4, n / max * 100) : 0}%"></div></div><span class="n">${n}</span></div>`;
-  /* 구매 가격 비교 */
-  const priced = logs.filter(l => l.price > 0);
-  const groups = {};
-  priced.forEach(l => (groups[norm(l.name)] = groups[norm(l.name)] || []).push(l));
-  const gList = Object.values(groups).sort((a, b) => b.length - a.length || buyDateOf(b[0]).localeCompare(buyDateOf(a[0]))).slice(0, 10);
-  const monthKey = today().slice(0, 7);
-  const monthSum = priced.filter(l => buyDateOf(l).startsWith(monthKey)).reduce((t, l) => t + l.price, 0);
-  const priceBox = !priced.length
-    ? `<div class="box"><h3>${ic('i-tag')} 구매 가격 비교</h3><span style="color:var(--muted)">구매 기록이 없어요</span></div>`
-    : `<div class="box"><h3>${ic('i-tag')} 구매 가격 비교</h3>
-        <p class="sum">구매 ${priced.length}건 · 이번 달 <b>${won(monthSum)}</b></p>
-        ${gList.map(g => {
-          const best = g.length > 1 ? bestOf(g) : null;
-          const rows = g.slice().sort((a, b) => buyDateOf(b).localeCompare(buyDateOf(a)));
-          return `<div class="pc"><div class="pc-h">${groupPhotos(g.slice().sort(byTime)).length ? `<img class="pth" src="${groupPhotos(g.slice().sort(byTime))[0].thumb}" alt="">` : ic(typeStyle(g[0].name)[0])}${esc(g[0].name)}</div>${rows.map(l => `<div class="pc-r ${best && best.id === l.id ? 'best' : ''}"><span>${fmtDate(buyDateOf(l))} · ${esc(l.shop || '구매처 미입력')}<small>${l.ml ? volLabel(l.ml) : ''}${per100(l).replace(/^ · /, l.ml ? ' · ' : '')}</small></span><span class="pr">${won(l.price)}${best && best.id === l.id ? ' <span class="low">최저가</span>' : ''}</span></div>`).join('')}</div>`;
-        }).join('')}</div>`;
   return header('취향 리포트') + `
     <div class="kpis"><div class="kpi tape0"><span>${ic('i-drop', 'sm')} 평균 도수</span><b>${avgAbv}${avgAbv === '-' ? '' : '%'}</b></div>
     <div class="kpi tape1"><span>${ic('i-dram', 'sm')} 많이 고른 맛</span><b>${top.length ? (FICON[top[0][0]] || '') + ' ' + esc(top[0][0]) : '-'}</b></div></div>
@@ -993,7 +976,6 @@ function viewStats() {
     ${openBox}
     <div class="box"><h3>${ic('i-bottle')} 종류별</h3>${tEntries.map(([t, n]) => bar(esc(t), n, tMax)).join('')}</div>
     ${rankBox}
-    ${priceBox}
     ${ORN()}`;
 }
 
