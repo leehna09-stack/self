@@ -1095,7 +1095,7 @@ function signalOf(list) {
   const pos = (last.price - mn) / (mx - mn);
   return { last, mn, mx, pos, zone: pos <= 1 / 3 ? 'low' : pos >= 2 / 3 ? 'high' : 'mid', chg };
 }
-const sigChip = z => z === 'low' ? '<span class="sg ok">✓ 최저가 근처</span>' : z === 'high' ? '<span class="sg hi">비싼 편</span>' : z === 'mid' ? '<span class="sg mid">보통</span>' : '';
+const sigChip = z => z === 'low' ? '<span class="sg ok">저가</span>' : z === 'high' ? '<span class="sg hi">고가</span>' : z === 'mid' ? '<span class="sg mid">보통</span>' : '';
 const gaugeHtml = (pos, mn, mx) => `<div class="rg"><div class="rg-t"><i class="s1"></i><i class="s2"></i><i class="s3"></i><b class="mk" style="left:${Math.round(pos * 100)}%"></b></div><div class="rg-z"><span>싼 편</span><span>보통</span><span>비싼 편</span></div><div class="rg-n"><span>최저 ${won(mn)}</span><span>최고 ${won(mx)}</span></div></div>`;
 
 function priceBody() {
@@ -1105,7 +1105,7 @@ function priceBody() {
   sig.forEach(v => { if (v.zone === 'low') cnt.low++; if (v.zone === 'high') cnt.high++; if (v.chg.kind === 'down') cnt.down++; });
   const byPf = l => { const v = sig.get(gkey(l[0])); return !state.pf || (state.pf === 'down' ? v.chg.kind === 'down' : v.zone === state.pf); };
   const shown = groups.filter(byPf).filter(l => !state.pq || textHit(l[0].name + ' ' + l.map(e => e.shop).join(' '), state.pq));
-  const pfChips = [['', '전체'], ['low', '최저가 근처'], ['high', '비싼 편'], ['down', '내린 것']].map(([k, t]) => `<button type="button" class="chip ${state.pf === k ? 'on' : ''}" data-pf="${k}">${t} ${cnt[k]}</button>`).join('');
+  const pfChips = [['', '전체'], ['low', '저가'], ['high', '고가'], ['down', '내린 것']].map(([k, t]) => `<button type="button" class="chip ${state.pf === k ? 'on' : ''}" data-pf="${k}">${t} ${cnt[k]}</button>`).join('');
   const cards = shown.map(list => {
     const v = sig.get(gkey(list[list.length - 1])), last = v.last;
     const [icon, color] = typeStyle(last.name);
