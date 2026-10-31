@@ -471,7 +471,8 @@ textarea.field { min-height: 140px; resize: vertical; line-height: 28px; padding
 .hr .hpm { grid-area: pm; color: var(--muted); font-size: 10px; font-weight: 500; }
 .hr .chg, .shr .chg { background: none; padding: 0; font-size: 10px; }
 .hr .ha { grid-area: ac; justify-self: end; display: flex; gap: 6px; align-items: center; margin: -4px 0; }
-.hr .eic.sm { width: 22px; height: 22px; border-width: 1.5px; }
+.hr .eic.sm { width: 22px; height: 22px; border: 0; background: none; box-shadow: none; -webkit-tap-highlight-color: transparent; }
+.hr .eic.sm:active { background: var(--amber-soft); }
 .hr .eic.sm .ic { font-size: 12px; }
 .shr .spr { white-space: nowrap; flex: none; }
 .shr > span:first-child { min-width: 0; overflow-wrap: anywhere; padding-right: 8px; }
