@@ -1,0 +1,9 @@
+/* 웨딩 앱 공통 색 — 웨딩홀 비교와 로드맵이 같은 팔레트를 쓴다. 총액·강조 = 와인, 거리·완료 = 청록 */
+:root {
+  color-scheme: light;
+  --bg: #f3f5f8; --surface: #fff; --card: #fff; --text: #18212b; --muted: #6b7785; --line: #e1e6ec;
+  --accent: #9b2c4a; --accent-hi: #b44762; --accent-soft: #f6e7ec; --accent-glow: rgba(155, 44, 74, .25);
+  --wine: #9b2c4a; --wine-tint: #f6e7ec; --wine-fill: #e8bccb;
+  --teal: #14706f; --teal-tint: #e0f0ef; --teal-fill: #a8d5d2;
+  --ok: #14706f; --ok-soft: #e0f0ef; --warn: #b3261e; --gold: #e0a526;
+}

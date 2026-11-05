@@ -1,10 +1,4 @@
 /* 웨딩홀 비교 화면 테마(견적 보드) — 총액=와인, 거리=청록. 글자는 나눔바른고딕, 크기는 기존 화면보다 키우지 않는다. */
-:root {
-  --bg: #f3f5f8; --surface: #fff; --text: #18212b; --muted: #6b7785; --line: #e1e6ec;
-  --accent: #9b2c4a; --accent-soft: #f6e7ec;
-  --wine: #9b2c4a; --wine-tint: #f6e7ec; --wine-fill: #e8bccb;
-  --teal: #14706f; --teal-tint: #e0f0ef; --teal-fill: #a8d5d2;
-}
 body { background: var(--bg); }
 .wrap { padding-bottom: 40px; }
 h1 { font-size: 21px; letter-spacing: -0.03em; }

@@ -23,7 +23,6 @@ document.body.insertAdjacentHTML('beforeend', `
 <main class="wrap">
   <header>
     <div class="ttl">
-      <a class="backbtn" href="roadmap.html" aria-label="로드맵으로 돌아가기"><svg class="i" aria-hidden="true"><use href="#i-back"/></svg></a>
       <h1><svg class="i" aria-hidden="true"><use href="#i-gem"/></svg> 웨딩홀 비교</h1>
     </div>
     <div class="hbtns">
@@ -798,3 +797,5 @@ if (UI.setup) UI.setup(API);
 renderOrigins();
 render();
 ensureDistances();
+// 로드맵 화면의 설정에서 '기본 주소 관리'를 누르면 이 화면으로 와서 팝업을 바로 연다
+if (new URLSearchParams(location.search).get('origins') === '1') { history.replaceState(null, '', location.pathname); openOrigins(); }
