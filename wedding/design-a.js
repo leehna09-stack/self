@@ -2,7 +2,8 @@
    hall.js의 훅(window.HALL_UI)으로 카드·목록 위 영역을 바꾼다. */
 window.HALL_UI = (() => {
   let A;                                    // hall.js가 setup에서 넘겨주는 도구 모음
-  const open = new Set();                   // 펼친 행
+  let openId = null;                        // 펼친 행 (B처럼 한 번에 하나만)
+  let reveal = null;                        // 방금 펼친 행: 화면 밖으로 잘렸으면 보이게 스크롤
   let focusId = null;                       // 요약 칩을 눌러 이동할 행
   const CHIPS = [['all', '전체'], ['cheap', '저가순'], ['expensive', '고가순'], ['near', '가까운순'], ['far', '먼순']];
 
@@ -26,26 +27,16 @@ window.HALL_UI = (() => {
   }
 
   function details(h) {
-    const { esc, icon, fmtPrice, total } = A, t = total(h);
-    const meal = h.meal && h.guests ? h.meal * h.guests : 0;
-    const rows = [];
-    rows.push(`<div><dt>대관료</dt><dd>${fmtPrice(h.price)}</dd></div>`);
-    if (meal) rows.push(`<div><dt>식대</dt><dd>${h.meal}만 × ${h.guests}명 = ${fmtPrice(meal)}</dd></div>`);
-    rows.push(`<div class="tot"><dt>총액</dt><dd>${fmtPrice(t)}</dd></div>`);
-    (h.extras || []).forEach(e => rows.push(`<div class="alt"><dt>${esc(e.label)}</dt><dd>${fmtPrice(total(h, e.price))}</dd></div>`));
+    const { esc, icon, fmtPrice, total } = A, meal = h.meal && h.guests ? h.meal * h.guests : 0;
     const addr = A.addrOf(h), link = A.linkOf(h);
     return `<div class="qmore">
-      <dl class="qsum">${rows.join('')}</dl>
-      ${addr ? `<div class="qline">${icon('pin')} ${esc(addr)}</div>` : ''}
-      ${h.phone ? `<div class="qline"><a href="tel:${esc(h.phone.replace(/[^\d+]/g, ''))}">${esc(h.phone)}</a></div>` : ''}
-      ${link ? `<div class="qline"><a href="${esc(link)}" target="_blank" rel="noopener">지도에서 보기</a></div>` : ''}
+      <div class="qsum">대관료 ${fmtPrice(h.price)}${meal ? ` + 식대 ${h.meal}만×${h.guests}명 (${fmtPrice(meal)})` : ''}</div>
+      ${(h.extras || []).map(e => `<div class="qsum alt">${esc(e.label)} · 총액 ${fmtPrice(total(h, e.price))}</div>`).join('')}
+      ${addr ? `<div class="qsum">${icon('pin')} ${esc(addr)}</div>` : ''}
+      ${h.phone ? `<div class="qsum"><a href="tel:${esc(h.phone.replace(/[^\d+]/g, ''))}">${esc(h.phone)}</a></div>` : ''}
+      ${link ? `<div class="qsum"><a href="${esc(link)}" target="_blank" rel="noopener">지도에서 보기</a></div>` : ''}
       ${h.memo ? `<div class="qmemo">${esc(h.memo)}</div>` : ''}
-      <div class="qact">
-        <a class="qbtn go" href="${esc(A.dirUrl(h))}" target="_blank" rel="noopener">${icon('nav')} 길찾기</a>
-        <button type="button" class="qbtn" data-id="${h.id}" data-act="edit">${icon('edit')} 수정</button>
-        ${h.photos?.length ? `<button type="button" class="qbtn" data-id="${h.id}" data-act="view">${icon('photo')} 사진 ${h.photos.length}</button>` : ''}
-        <button type="button" class="qbtn danger" data-id="${h.id}" data-act="del">${icon('trash')} 삭제</button>
-      </div>
+      ${h.photos?.length ? `<button type="button" class="qphoto" data-id="${h.id}" data-act="view">${icon('photo')} 사진 ${h.photos.length}장 보기</button>` : ''}
     </div>`;
   }
 
@@ -67,8 +58,8 @@ window.HALL_UI = (() => {
       // 행 펼치기/접기, 요약 칩으로 이동
       document.addEventListener('click', e => {
         const f = e.target.closest('[data-act="focus"]'); if (f) { focusId = f.dataset.id; A.rerender(); return; }
-        const t = e.target.closest('.qname, .qbars, .qaddr'); if (!t) return;
-        const id = t.closest('.qrow').dataset.id; open.has(id) ? open.delete(id) : open.add(id); A.rerender();
+        const row = e.target.closest('.qrow'); if (!row || e.target.closest('a, [data-act]')) return;
+        const id = row.dataset.id; openId = openId === id ? null : id; reveal = openId; A.rerender();
       });
     },
     lead() {
@@ -79,12 +70,16 @@ window.HALL_UI = (() => {
       return `<div class="facts">${bp ? f('fp', '가장 저렴', bp, A.fmtPrice(S.minP)) : '<span></span>'}${bd ? f('fd', '가장 가까움', bd, S.minD + 'km') : '<span></span>'}</div>`;
     },
     cardHtml(h) {
-      const S = scale(), isOpen = open.has(h.id), addr = A.addrOf(h);
+      const S = scale(), isOpen = openId === h.id, addr = A.addrOf(h);
       return `<article class="qrow${isOpen ? ' open' : ''}${h.liked ? ' liked' : ''}" data-id="${h.id}">
         <div class="qtop">
           <button type="button" class="qname" aria-expanded="${isOpen}">${A.esc(h.name)}</button>
           <button class="starbtn${h.liked ? ' on' : ''}" data-id="${h.id}" data-act="like" aria-pressed="${!!h.liked}" aria-label="관심" title="관심">${A.icon('star', h.liked ? 'on' : '')}</button>
-          <span class="qcaret" aria-hidden="true"></span>
+          ${isOpen ? `<div class="tools">
+            <a class="tool navi" href="${A.esc(A.dirUrl(h))}" target="_blank" rel="noopener" aria-label="길찾기" title="길찾기">${A.icon('nav')}</a>
+            <button class="tool" data-id="${h.id}" data-act="edit" aria-label="수정" title="수정">${A.icon('edit')}</button>
+            <button class="tool danger" data-id="${h.id}" data-act="del" aria-label="삭제" title="삭제">${A.icon('trash')}</button>
+          </div>` : '<span class="qcaret" aria-hidden="true"></span>'}
         </div>
         <div class="qbars">${cells(h, S)}</div>
         <div class="qaddr">${addr ? A.esc(addr) : '주소 없음'}</div>
@@ -93,6 +88,10 @@ window.HALL_UI = (() => {
     },
     afterRender() {
       syncChips();
+      if (reveal) {                                                    // 펼친 행이 화면 아래로 잘리면 보이게
+        const el = document.querySelector(`.qrow[data-id="${reveal}"]`); reveal = null;
+        if (el) el.scrollIntoView({ block: 'nearest', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+      }
       if (focusId) {
         const el = document.querySelector(`.qrow[data-id="${focusId}"]`); focusId = null;
         if (el) { el.scrollIntoView({ block: 'center', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' }); el.classList.add('flash'); setTimeout(() => el.classList.remove('flash'), 1400); }
