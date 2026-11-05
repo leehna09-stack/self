@@ -1,23 +1,11 @@
 /* 웨딩 앱 공통 색·모서리 — 웨딩홀 비교와 로드맵이 함께 쓴다.
-   색은 "3색 이내": 글자(ink) · 총액·강조(accent) · 거리·완료(dist). 나머지는 이 세 색에서 뽑은 연한 면(tint)과 선이다.
-   기본값 = 조합 A. html[data-palette="b|c"]는 색 조합 미리보기용(확정되면 정리). */
+   색은 "3색 이내": 글자(ink 그래파이트) · 총액·강조(accent 코랄) · 거리·완료(dist 슬레이트). 나머지는 이 세 색에서 뽑은 연한 면(tint)과 선이다. */
 :root {
   color-scheme: light;
   --radius: 15px;
   --surface: #fff; --card: #fff;
-  /* 조합 A · 네이비 + 로즈 */
-  --text: #1c2b4b; --muted: #5d6a84; --line: #e3e8f0; --bg: #f4f6fa; --soft: #f4f6fa;
-  --accent: #1c2b4b; --accent-hi: #2c4070; --accent-soft: #e8ecf4; --accent-fill: #c7d1e5;
-  --dist: #a8425a; --dist-soft: #f8e6ea; --dist-fill: #ebb7c3;
-  --ok: var(--dist); --ok-soft: var(--dist-soft); --warn: var(--accent);
-}
-html[data-palette="b"] {   /* 조합 B · 포레스트 + 샴페인 */
-  --text: #1d2b25; --muted: #5b6a63; --line: #e1e7e3; --bg: #f4f6f4; --soft: #f4f6f4;
-  --accent: #1f5a47; --accent-hi: #174839; --accent-soft: #e4efea; --accent-fill: #b9d4c8;
-  --dist: #7d5a1c; --dist-soft: #f5ecd6; --dist-fill: #e2c98f;
-}
-html[data-palette="c"] {   /* 조합 C · 그래파이트 + 코랄 */
   --text: #20242c; --muted: #626978; --line: #e4e6ea; --bg: #f4f5f7; --soft: #f4f5f7;
   --accent: #b73a2e; --accent-hi: #992e24; --accent-soft: #fbe9e6; --accent-fill: #f2b9b2;
   --dist: #44586e; --dist-soft: #e6ebf1; --dist-fill: #b7c4d3;
+  --ok: var(--dist); --ok-soft: var(--dist-soft); --warn: var(--accent);
 }
