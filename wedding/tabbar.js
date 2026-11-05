@@ -60,7 +60,9 @@
     const R = read(RKEY, {}), O = read(OKEY, null), d = O?.list?.find(x => x.id === O.defId) || O?.list?.[0];
     $('wsDate').value = R.date || ''; $('wsBudget').value = R.budget || '';
     $('wsOriginName').textContent = d ? `${d.name} · ${d.addr}` : '집 (기본)';
-    $('wsKey').value = localStorage.getItem(KKEY) || ''; msg($('wsKeyHint'), localStorage.getItem(KKEY) ? '키가 저장돼 있어요.' : '키가 없으면 무료 OpenStreetMap 검색을 써요.', localStorage.getItem(KKEY) ? 'ok' : '');
+    const k = localStorage.getItem(KKEY) || '', st = localStorage.getItem('wedding-kakao-status') || '';
+    $('wsKey').value = k;
+    msg($('wsKeyHint'), !k ? '키가 없으면 무료 OpenStreetMap 검색을 써요.' : st === 'bad' ? '저장된 키가 거부됐어요. 키를 확인해 주세요.' : st === 'ok' ? '연결돼 있어요.' : '키가 저장돼 있어요.', !k ? '' : st === 'bad' ? 'err' : 'ok');
     msg($('wsMsg'), ''); sheet.showModal();
   }
   $('wtSet').onclick = open;
@@ -78,12 +80,23 @@
   $('wsOrigins').onclick = () => {
     if (typeof openOrigins === 'function') { sheet.close(); openOrigins(); } else location.href = 'index.html?origins=1';
   };
-  $('wsKeySave').onclick = () => {
-    const v = $('wsKey').value.trim();
-    if (typeof saveKey === 'function') saveKey(v);                       // 웨딩홀 화면이면 입력창 안내도 함께 갱신
-    else try { v ? localStorage.setItem(KKEY, v) : localStorage.removeItem(KKEY); } catch {}
-    msg($('wsKeyHint'), v ? '키를 저장했어요. 이제 이름만으로도 주소를 찾을 수 있어요.' : '키를 삭제했어요. 무료 OpenStreetMap 검색으로 돌아가요.', 'ok');
+  // 카카오 키: 저장하면 바로 한 번 확인한다. 정상이면 웨딩홀 입력창에서 키 안내가 사라진다.
+  const SKEY = 'wedding-kakao-status';
+  const setStatus = st => { try { st ? localStorage.setItem(SKEY, st) : localStorage.removeItem(SKEY); } catch {} window.dispatchEvent(new Event('wedding-kakao-changed')); };
+  $('wsKeySave').onclick = async () => {
+    const v = $('wsKey').value.trim(), btn = $('wsKeySave'), hint = $('wsKeyHint');
+    try { v ? localStorage.setItem(KKEY, v) : localStorage.removeItem(KKEY); } catch {}
+    if (!v) { setStatus(''); return msg(hint, '키를 삭제했어요. 무료 OpenStreetMap 검색으로 돌아가요.', 'ok'); }
+    btn.disabled = true; msg(hint, '키를 확인하는 중…');
+    try {
+      const r = await fetch('https://dapi.kakao.com/v2/local/search/keyword.json?size=1&query=' + encodeURIComponent('웨딩홀'), { headers: { Authorization: 'KakaoAK ' + v } });
+      if (r.ok) { setStatus('ok'); msg(hint, '연결됐어요. 이제 웨딩홀 입력창에는 키 안내가 나오지 않아요.', 'ok'); }
+      else if (r.status === 401 || r.status === 403) { setStatus('bad'); msg(hint, '키가 거부됐어요. REST API 키인지, 카카오맵 사용 설정이 켜져 있는지 확인해 주세요.', 'err'); }
+      else { setStatus(''); msg(hint, '키를 저장했어요. 지금은 확인하지 못했어요(' + r.status + ').', ''); }
+    } catch { setStatus(''); msg(hint, '키를 저장했어요. 네트워크 문제로 확인은 못 했어요.', ''); }
+    btn.disabled = false;
   };
+  window.openSettings = open;
 
   // 백업: 로드맵 + 웨딩홀 + 기본 주소 (카카오 키는 개인 키라 파일에 넣지 않는다)
   $('wsExport').onclick = () => {

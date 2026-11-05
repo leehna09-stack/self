@@ -1,75 +1,81 @@
 /* 웨딩홀 비교 화면 테마(견적 보드) — 총액=와인, 거리=청록. 글자는 나눔바른고딕, 크기는 기존 화면보다 키우지 않는다. */
 body { background: var(--bg); }
 .wrap { padding-bottom: 40px; }
-h1 { font-size: 21px; letter-spacing: -0.03em; }
-.hico.star { color: #b7791f; }
+h1 { font-size: 20px; letter-spacing: -0.03em; }
+.hico.star { color: var(--accent); }
 
 /* 버튼은 평평하게: 그라데이션·그림자 없이 색 면으로 */
-.btn.primary { background: var(--wine); box-shadow: none; text-shadow: none; }
-.btn.primary:hover { background: #812340; }
-.searchrow input { border-radius: 10px; }
+.btn.primary { background: var(--accent); box-shadow: none; text-shadow: none; }
+.btn.primary:hover { background: var(--accent-hi); }
+.searchrow input { border-radius: var(--radius); }
 
 /* 툴바: 검색 → 정렬 칩 → 건수/범례 */
 .sortsel { display: none; }
 .countrow { align-items: center; }
-.countrow .count { line-height: 1.4; font-size: 11px; font-weight: 400; }
+.countrow .count { line-height: 1.4; font-size: 10px; font-weight: 400; }
 .chips { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; padding: 1px 0; margin: 0 -16px; padding-inline: 16px; }
 .chips::-webkit-scrollbar { display: none; }
-.chip { flex: none; min-height: 32px; padding: 0 13px; border-radius: 999px; border: 1px solid var(--line); background: #fff; color: var(--muted); font-size: 12px; font-weight: 700; transition: background-color .15s, color .15s; }
+.chip { flex: none; min-height: 32px; padding: 0 13px; border-radius: var(--radius); border: 1px solid var(--line); background: #fff; color: var(--muted); font-size: 11px; font-weight: 700; transition: background-color .15s, color .15s; }
 .chip.on { background: var(--text); border-color: var(--text); color: #fff; }
 .legend { display: flex; gap: 10px; font-size: 10px; color: var(--muted); }
 .legend span::before { content: ""; display: inline-block; width: 8px; height: 8px; border-radius: 2px; margin-right: 4px; vertical-align: -0.5px; }
-.legend .lgp::before { background: var(--wine); }
-.legend .lgd::before { background: var(--teal); }
+.legend .lgp::before { background: var(--accent); }
+.legend .lgd::before { background: var(--dist); }
 
 /* 가장 저렴/가장 가까운 곳 요약 */
 .facts { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 2px 0 8px; }
-.fact { display: grid; gap: 1px; text-align: left; border: 0; border-radius: 10px; background: #fff; padding: 8px 10px 8px 12px; box-shadow: inset 0 0 0 1px var(--line); position: relative; min-width: 0; }
+.fact { display: grid; gap: 1px; text-align: left; border: 0; border-radius: var(--radius); background: #fff; padding: 8px 10px 8px 12px; box-shadow: inset 0 0 0 1px var(--line); position: relative; min-width: 0; }
 .fact::before { content: ""; position: absolute; left: 0; top: 8px; bottom: 8px; width: 3px; border-radius: 3px; }
-.fact.fp::before { background: var(--wine); } .fact.fd::before { background: var(--teal); }
+.fact.fp::before { background: var(--accent); } .fact.fd::before { background: var(--dist); }
 .fact span { font-size: 10px; font-weight: 700; color: var(--muted); }
-.fact b { font-size: 13px; line-height: 1.3; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.fact em { font-style: normal; font-size: 12px; font-weight: 700; }
-.fact.fp em { color: var(--wine); } .fact.fd em { color: var(--teal); }
+.fact b { font-size: 12px; line-height: 1.3; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.fact em { font-style: normal; font-size: 11px; font-weight: 700; }
+.fact.fp em { color: var(--accent); } .fact.fd em { color: var(--dist); }
 
 /* 목록: 한 줄 = 한 곳 */
 .grid { grid-template-columns: 1fr; gap: 8px; }
-.qrow { display: grid; gap: 6px; padding: 10px 12px; background: #fff; border-radius: 12px; box-shadow: inset 0 0 0 1px var(--line); position: relative; transition: box-shadow .25s; }
-.qrow.liked { box-shadow: inset 3px 0 0 #e0a526, inset 0 0 0 1px var(--line); }
+.qrow { display: grid; gap: 6px; padding: 10px 12px; background: #fff; border-radius: var(--radius); box-shadow: inset 0 0 0 1px var(--line); position: relative; transition: box-shadow .25s; }
+.qrow.liked { box-shadow: inset 3px 0 0 var(--accent), inset 0 0 0 1px var(--line); }
 .qrow.flash { animation: flash 1.2s ease; }
-@keyframes flash { 0%, 60% { box-shadow: 0 0 0 3px rgba(20, 112, 111, .45); } 100% { box-shadow: inset 0 0 0 1px var(--line); } }
+@keyframes flash { 0%, 60% { box-shadow: 0 0 0 3px var(--dist-fill); } 100% { box-shadow: inset 0 0 0 1px var(--line); } }
 .qtop { display: flex; align-items: center; gap: 4px; min-width: 0; }
-.qname { all: unset; cursor: pointer; font-size: 14px; font-weight: 700; line-height: 1.35; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.qname { all: unset; cursor: pointer; font-size: 13px; font-weight: 700; line-height: 1.35; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .qname:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
-.qcaret { margin-left: auto; width: 7px; height: 7px; margin-right: 4px; border-right: 2px solid #9aa6b3; border-bottom: 2px solid #9aa6b3; transform: rotate(45deg) translateY(-2px); transition: transform .2s; flex: none; }
+.qcaret { margin-left: auto; width: 7px; height: 7px; margin-right: 4px; border-right: 2px solid var(--muted); border-bottom: 2px solid var(--muted); transform: rotate(45deg) translateY(-2px); transition: transform .2s; flex: none; }
 .qrow.open .qcaret { transform: rotate(-135deg) translateY(-2px); }
 
 /* 막대 셀 — 이 시안의 서명: 두 열의 막대가 줄마다 정렬되어 위아래로 훑으면 바로 비교된다 */
 .qbars { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; cursor: pointer; }
-.cell { position: relative; display: flex; align-items: center; height: 28px; border-radius: 8px; overflow: hidden; font-size: 12px; font-weight: 700; white-space: nowrap; }
-.cell i { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 0 6px 6px 0; }
+.cell { position: relative; display: flex; align-items: center; height: 28px; border-radius: var(--radius); overflow: hidden; font-size: 11px; font-weight: 700; white-space: nowrap; }
+.cell i { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 0 var(--radius) var(--radius) 0; }
 .cell em { position: relative; font-style: normal; padding: 0 8px; }
 .cell u { position: relative; margin-left: auto; padding-right: 8px; font-size: 10px; text-decoration: none; opacity: .92; }
-.cell.cp { background: var(--wine-tint); color: var(--wine); } .cell.cp i { background: var(--wine-fill); }
-.cell.cd { background: var(--teal-tint); color: var(--teal); } .cell.cd i { background: var(--teal-fill); }
-.cell.cp.best { background: var(--wine); color: #fff; } .cell.cd.best { background: var(--teal); color: #fff; }
+.cell.cp { background: var(--accent-soft); color: var(--accent); } .cell.cp i { background: var(--accent-fill); }
+.cell.cd { background: var(--dist-soft); color: var(--dist); } .cell.cd i { background: var(--dist-fill); }
+.cell.cp.best { background: var(--accent); color: #fff; } .cell.cd.best { background: var(--dist); color: #fff; }
 .cell.best i { display: none; }
-.cell.pend { background: repeating-linear-gradient(135deg, #edf0f4 0 6px, #f6f8fa 6px 12px); color: var(--muted); font-weight: 400; }
-.qaddr { font-size: 11px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer; }
+.cell.pend { background: repeating-linear-gradient(135deg, var(--line) 0 6px, var(--bg) 6px 12px); color: var(--muted); font-weight: 400; }
+.qaddr { font-size: 10px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer; }
 
 /* 펼친 모습 (B와 같은 방식): 테두리 강조 + 위쪽 아이콘 + 정보 줄 */
 .qrow { cursor: pointer; }
-.qrow.open { box-shadow: inset 0 0 0 2px var(--wine); }
+.qrow.open { box-shadow: inset 0 0 0 2px var(--accent); }
 .qrow.open .qaddr { display: none; }   /* 펼치면 아래 정보 줄에 주소가 나오므로 중복을 없앤다 */
-.qrow.open.liked { box-shadow: inset 3px 0 0 #e0a526, inset 0 0 0 2px var(--wine); }
+.qrow.open.liked { box-shadow: inset 3px 0 0 var(--accent), inset 0 0 0 2px var(--accent); }
 .qtop .tools { margin-left: auto; }
-.qmore { display: grid; gap: 5px; padding-top: 7px; border-top: 1px dashed var(--line); font-size: 12px; cursor: default; animation: rise .22s ease; }
+.qmore { display: grid; gap: 5px; padding-top: 7px; border-top: 1px dashed var(--line); font-size: 11px; cursor: default; animation: rise .22s ease; }
 @keyframes rise { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
 .qsum { display: flex; align-items: center; gap: 5px; color: var(--text); } .qsum.alt { color: var(--muted); }
-.qsum a { color: var(--teal); font-weight: 700; text-decoration: none; }
+.qsum a { color: var(--dist); font-weight: 700; text-decoration: none; }
 .qsum .i { width: 13px; height: 13px; color: var(--muted); vertical-align: 0; flex: none; }
-.qmemo { background: #f7f9fb; border-radius: 8px; padding: 7px 9px; white-space: pre-wrap; word-break: break-word; }
-.qphoto { justify-self: start; display: inline-flex; align-items: center; gap: 5px; min-height: 34px; padding: 0 12px; border: 0; border-radius: 9px; background: #fff; box-shadow: inset 0 0 0 1px var(--line); font-size: 12px; font-weight: 700; color: var(--text); }
+.qmemo { background: var(--bg); border-radius: var(--radius); padding: 7px 9px; white-space: pre-wrap; word-break: break-word; }
+.qphoto { justify-self: start; display: inline-flex; align-items: center; gap: 5px; min-height: 34px; padding: 0 12px; border: 0; border-radius: var(--radius); background: #fff; box-shadow: inset 0 0 0 1px var(--line); font-size: 11px; font-weight: 700; color: var(--text); }
 .qphoto .i { width: 14px; height: 14px; vertical-align: 0; }
 .empty { padding: 36px 0; }
 @media (prefers-reduced-motion: reduce) { .qrow.flash, .qmore { animation: none; } }
+
+/* 상담일 칩 — 예정은 강조색, 완료는 회색조 */
+.vchip { display: inline-flex; align-items: center; gap: 3px; margin-right: 6px; padding: 1px 6px; border-radius: var(--radius); font-size: 10px; font-weight: 700; vertical-align: 1px; }
+.vchip .i { width: 11px; height: 11px; }
+.vchip.plan { background: var(--accent-soft); color: var(--accent); }
+.vchip.done { background: var(--bg); color: var(--muted); box-shadow: inset 0 0 0 1px var(--line); }

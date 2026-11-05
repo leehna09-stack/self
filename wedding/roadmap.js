@@ -125,7 +125,6 @@ const STAGES = [
     ] }
 ];
 
-STAGES.forEach((st, i) => { st.h = i % 2 ? 178 : 345; st.c1 = i % 2 ? '#2f9c98' : '#b9425f'; st.c2 = i % 2 ? '#0f5e5d' : '#7f1f3b'; });   // 아이콘 색: 와인·청록 번갈아
 const DEF = { date: '', budget: 0, checks: {}, started: {}, memo: {}, est: {}, act: {}, custom: {} };
 let S = load();
 let openId = null;
@@ -156,7 +155,7 @@ function hallStats() {
   try { const h = JSON.parse(localStorage.getItem(HALL_KEY)) || []; return { n: h.length, liked: h.filter(x => x.liked).length }; } catch { return { n: 0, liked: 0 }; }
 }
 const man = v => (Number(v) || 0).toLocaleString('ko-KR');
-const tile = (st, state, cls = '') => `<span class="tile ${state} ${cls}" style="--h:${st.h};--c1:${st.c1};--c2:${st.c2}">${gl(st.icon)}${state === 'done' ? `<span class="bdg">${gl('check')}</span>` : state === 'lock' ? `<span class="bdg">${gl('lock')}</span>` : ''}</span>`;
+const tile = (st, state, cls = '') => `<span class="tile ${state} ${cls}">${gl(st.icon)}${state === 'done' ? `<span class="bdg">${gl('check')}</span>` : state === 'lock' ? `<span class="bdg">${gl('lock')}</span>` : ''}</span>`;
 
 /* 뼈대 주입 */
 document.body.insertAdjacentHTML('beforeend', `

@@ -3,9 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#f3f5f8">
+<meta name="theme-color" content="#f4f6fa">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
+<script src="palette.js"></script>
 <link rel="stylesheet" href="fonts.css">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" type="image/svg+xml" href="icon.svg">
@@ -18,28 +19,21 @@
 <link rel="stylesheet" href="tabbar.css">
 <link rel="stylesheet" href="brand.css">
 <style>
-/* 로드맵 — 색은 brand.css(웨딩홀 비교와 공통), 여기서는 로드맵 고유의 모양만 정한다 */
+/* 로드맵 — 색·모서리는 brand.css(웨딩홀 비교와 공통). 여기서는 로드맵 고유의 배치 값만 정한다 */
 :root {
   --font: "Wedding Sans", "Malgun Gothic", "맑은 고딕", "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
-  --soft: #f3f5f8; --field: #f3f5f8; --sheet: #fff;
-  --r: 16px; --r-sm: 12px; --gap: 10px;
+  --field: var(--bg); --sheet: #fff;
+  --r: var(--radius); --r-sm: var(--radius); --gap: 10px;
   --shadow-card: inset 0 0 0 1px var(--line);
   --ctl: #fff; --ctl-shadow: inset 0 0 0 1px var(--line);
-  --ring-track: #f0e3e8; --ring1: #d98aa2; --ring2: #9b2c4a; --dot-cur: #e8bccb; --ring-glow: none;
+  --ring-track: var(--accent-soft); --ring1: var(--accent-fill); --ring2: var(--accent); --dot-cur: var(--accent-fill); --ring-glow: none;
   --now-bg: var(--accent-soft);
-  --task-bg: transparent; --tasks-bg: #f6f8fa; --task-line: 1px solid var(--line);
-  --chk-bg: #fff; --chk-border: 1.6px solid #c3ccd6; --chk-on: var(--teal); --chk-on-shadow: none;
+  --task-bg: transparent; --tasks-bg: var(--bg); --task-line: 1px solid var(--line);
+  --chk-bg: #fff; --chk-border: 1.6px solid var(--line); --chk-on: var(--dist); --chk-on-shadow: none;
   --btn-bg: #fff; --btn-shadow: inset 0 0 0 1px var(--line);
-  --toast-bg: #18212b; --toast-fg: #fff;
+  --toast-bg: var(--text); --toast-fg: #fff;
 }
-.btn.primary { background: var(--accent); box-shadow: none; text-shadow: none; }
-.btn.primary:hover { background: #812340; }
-/* 스퀘어클 아이콘: 입체 광택 한 겹 추가 (색은 와인·청록 두 가지로 통일) */
-.tile { --tile-r: 22.5%; border-radius: 22.5%; }
-.tile { background: linear-gradient(160deg, var(--c1), var(--c2));
-  box-shadow: inset 0 1.5px 0 rgba(255,255,255,.55), inset 0 -4px 7px rgba(0,0,0,.22), 0 6px 12px rgba(24,33,43,.2), 0 1px 2px rgba(0,0,0,.2); }
-.tile .gl { filter: drop-shadow(0 1px 0 rgba(0,0,0,.3)) drop-shadow(0 2px 0 rgba(0,0,0,.22)) drop-shadow(0 4px 3px rgba(0,0,0,.28)); }
-.tile::after { content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; box-shadow: inset 0 0 0 .5px rgba(0,0,0,.18), inset 0 0 12px rgba(255,255,255,.18); }
+.btn.primary:hover { background: var(--accent-hi); }
 .hero { padding: 18px; }
 .now .t { color: var(--text); }
 .stage.open .shead { padding-bottom: 8px; }
