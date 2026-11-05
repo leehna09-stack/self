@@ -1,0 +1,11 @@
+/* 웨딩 앱 공통 색·모서리 — 웨딩홀 비교와 로드맵이 함께 쓴다.
+   색은 "3색 이내": 글자(ink 그래파이트) · 총액·강조(accent 코랄) · 거리·완료(dist 슬레이트). 나머지는 이 세 색에서 뽑은 연한 면(tint)과 선이다. */
+:root {
+  color-scheme: light;
+  --radius: 15px;
+  --surface: #fff; --card: #fff;
+  --text: #20242c; --muted: #626978; --line: #e4e6ea; --bg: #f4f5f7; --soft: #f4f5f7;
+  --accent: #b73a2e; --accent-hi: #992e24; --accent-soft: #fbe9e6; --accent-fill: #f2b9b2;
+  --dist: #44586e; --dist-soft: #e6ebf1; --dist-fill: #b7c4d3;
+  --ok: var(--dist); --ok-soft: var(--dist-soft); --warn: var(--accent);
+}

@@ -1,8 +1,8 @@
 /* 웨딩 앱 서비스워커 — 설치 가능 조건을 채우고, 인터넷이 없어도 앱이 열리게 한다.
    화면 파일은 "네트워크 우선"이라 새 버전을 올리면 다음 접속에서 바로 바뀌고, 오프라인일 때만 저장해 둔 파일을 쓴다. */
-const VER = 'wedding-v2';
+const VER = 'wedding-v5';
 const CORE = [
-  './', 'index.html', 'roadmap.html', 'hall.js', 'hall.css', 'theme.js', 'theme.css', 'roadmap.js', 'roadmap.css', 'install.js',
+  './', 'index.html', 'roadmap.html', 'hall.js', 'hall.css', 'theme.js', 'theme.css', 'brand.css', 'tabbar.js', 'tabbar.css', 'roadmap.js', 'roadmap.css', 'install.js',
   'fonts.css', 'fonts/WeddingSans-Regular.woff2', 'fonts/WeddingSans-Bold.woff2',
   'manifest.webmanifest', 'icon.svg', 'icon-192.png', 'icon-512.png', 'apple-touch-icon.png'
 ];

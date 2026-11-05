@@ -5,6 +5,7 @@ document.body.insertAdjacentHTML('beforeend', `
   <symbol id="i-gem" viewBox="0 0 24 24"><path d="M6 3h12l4 6-10 13L2 9Z"/><path d="M11 3 8 9l4 13 4-13-3-6M2 9h20"/></symbol>
   <symbol id="i-table" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18M15 3v18"/></symbol>
   <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-cal" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></symbol>
   <symbol id="i-pin" viewBox="0 0 24 24"><path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></symbol>
   <symbol id="i-star" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></symbol>
   <symbol id="i-nav" viewBox="0 0 24 24"><polygon points="3 11 22 2 13 21 11 13 3 11"/></symbol>
@@ -23,7 +24,6 @@ document.body.insertAdjacentHTML('beforeend', `
 <main class="wrap">
   <header>
     <div class="ttl">
-      <a class="backbtn" href="roadmap.html" aria-label="로드맵으로 돌아가기"><svg class="i" aria-hidden="true"><use href="#i-back"/></svg></a>
       <h1><svg class="i" aria-hidden="true"><use href="#i-gem"/></svg> 웨딩홀 비교</h1>
     </div>
     <div class="hbtns">
@@ -92,6 +92,7 @@ document.body.insertAdjacentHTML('beforeend', `
       <label>보증인원(명)<input name="guests" type="number" min="0" inputmode="numeric"></label>
     </div>
     <div class="hint" id="totalHint" aria-live="polite"></div>
+    <label>상담 예정일 · 상담일<input name="visit" type="date"><small class="sub">오늘이거나 앞선 날짜면 “상담 예정”, 지난 날짜면 “상담 완료”로 표시돼요.</small></label>
     <label>메모<textarea name="memo" rows="3" placeholder="주차, 홀 분위기, 연회장 등"></textarea></label>
     <button type="button" class="btn" id="photoBtn"><svg class="i" aria-hidden="true"><use href="#i-photo"/></svg> 사진 추가</button>
     <input id="files" class="sr-only" type="file" accept="image/*" multiple tabindex="-1" aria-hidden="true">
@@ -107,14 +108,6 @@ document.body.insertAdjacentHTML('beforeend', `
 <dialog id="odlg" aria-labelledby="oh">
   <div class="edit">
     <h2 id="oh">기본 주소 관리</h2>
-    <div class="keybox">
-      <label for="kkey">카카오 REST API 키 (선택 · 이름만으로 주소·전화번호 자동 입력)</label>
-      <div class="keyrow">
-        <input id="kkey" placeholder="developers.kakao.com에서 발급한 REST API 키" autocomplete="off">
-        <button type="button" class="btn primary" id="kSave">저장</button>
-      </div>
-      <div class="hint" id="kHint" aria-live="polite"></div>
-    </div>
     <div class="sect">현재 주소지</div>
     <div class="hint">“기본으로 설정”한 위치가 앱을 열 때 기준이 되고, 위치를 바꾸면 거리가까운순으로 자동 정렬돼요.</div>
     <div id="olist"></div>
@@ -224,7 +217,18 @@ async function nomGet(qs) {
 }
 const nominatim = q => nomGet('search?format=json&limit=1&countrycodes=kr&q=' + encodeURIComponent(q));
 const KAKAO_DENIED = '카카오 API 사용이 거부됐어요. REST API 키와, 카카오 개발자 콘솔의 “카카오맵” 사용 설정을 확인해 주세요.';
+// 상담일: 날짜만 저장('YYYY-MM-DD'). 오늘 포함 앞날이면 예정, 지난 날이면 완료
+const WD = ['일', '월', '화', '수', '목', '금', '토'];
+function visitInfo(h) {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(h.visit || ''); if (!m) return null;
+  const d = new Date(+m[1], +m[2] - 1, +m[3]), t = new Date(); t.setHours(0, 0, 0, 0);
+  const diff = Math.round((d - t) / 864e5), md = `${d.getMonth() + 1}/${d.getDate()}(${WD[d.getDay()]})`;
+  const plan = diff >= 0, tag = plan ? '상담 예정' : '상담 완료';
+  return { plan, diff, md, tag, short: `${md} ${plan ? '예정' : '완료'}`, label: `${md} · ${tag}${diff === 0 ? ' (오늘)' : plan ? ` (D-${diff})` : ''}` };
+}
 const kakaoKey = () => { try { return localStorage.getItem('wedding-kakao-key') || ''; } catch { return ''; } };
+const kakaoStatus = () => { try { return localStorage.getItem('wedding-kakao-status') || ''; } catch { return ''; } };
+function markKakao(st) { if (kakaoStatus() === st) return; try { st ? localStorage.setItem('wedding-kakao-status', st) : localStorage.removeItem('wedding-kakao-status'); } catch {} drawKeyHint(); }
 async function geocode(text) {
   const link = coordsFromLink(text);
   if (link) return link;
@@ -235,7 +239,8 @@ async function geocode(text) {
       let r;
       try { r = await fetch(`https://dapi.kakao.com/v2/local/search/${api}.json?size=1&query=${encodeURIComponent(text)}`, { headers: { Authorization: 'KakaoAK ' + key } }); }
       catch { throw new Error('카카오 주소 검색에 연결하지 못했어요.'); }
-      if (r.status === 401 || r.status === 403) throw new Error(KAKAO_DENIED);
+      if (r.status === 401 || r.status === 403) { markKakao('bad'); throw new Error(KAKAO_DENIED); }
+      if (r.ok) markKakao('ok');
       const d = (await r.json()).documents?.[0];
       if (d) return { lat: +d.y, lon: +d.x };
     }
@@ -287,7 +292,8 @@ async function kakaoApi(path, params) {
   let r;
   try { r = await fetch('https://dapi.kakao.com/v2/local/' + path + '?' + new URLSearchParams(params), { headers: { Authorization: 'KakaoAK ' + kakaoKey() } }); }
   catch { throw new Error('카카오 검색에 연결하지 못했어요.'); }
-  if (r.status === 401 || r.status === 403) throw new Error(KAKAO_DENIED);
+  if (r.status === 401 || r.status === 403) { markKakao('bad'); throw new Error(KAKAO_DENIED); }
+  if (r.ok) markKakao('ok');
   if (!r.ok) throw new Error('카카오 검색에 실패했어요. 잠시 후 다시 시도해 주세요.');
   return r.json();
 }
@@ -564,6 +570,7 @@ function openEditor(id) {
   f.meal.value = h?.meal ?? '';
   f.guests.value = h?.guests ?? '';
   f.memo.value = h?.memo ?? '';
+  f.visit.value = h?.visit ?? '';
   draftPhotos = [...(h?.photos ?? [])];
   draftExtras = (h?.extras ?? []).map(e => ({ ...e }));
   draftGeo = null; warnedAddr = null; lastLook = ''; draftCands = []; previewJob++; lookJob++;
@@ -604,7 +611,7 @@ $('form').link.addEventListener('keydown', e => { if (e.key === 'Enter') { e.pre
 $('linkGo').onclick = () => lookup(true);
 $('lookBtn').onclick = () => lookup(true);
 $('cands').onclick = e => { const b = e.target.closest('.cand'); if (b) applyPlace(draftCands[+b.dataset.i]); };
-$('keyBtn').onclick = () => openOrigins();
+$('keyBtn').onclick = () => (window.openSettings ? window.openSettings() : openOrigins());
 ['price', 'meal', 'guests'].forEach(n => $('form')[n].addEventListener('input', updateTotal));
 $('addEx').onclick = () => { draftExtras.push({ label: '', price: '' }); drawExtras(); };
 $('extras').oninput = e => { const { i, k } = e.target.dataset; if (i != null) draftExtras[+i][k] = e.target.value; };
@@ -659,6 +666,7 @@ $('form').onsubmit = async e => {
       guests: f.guests.value === '' ? null : Math.round(Number(f.guests.value)),
       extras: draftExtras.filter(x => x.label.trim() && x.price !== '' && !isNaN(x.price)).map(x => ({ label: x.label.trim(), price: Number(x.price) })),
       memo: f.memo.value.trim(),
+      visit: f.visit.value || '',
       photos: draftPhotos,
       lat: geo?.lat ?? null, lon: geo?.lon ?? null,
       dists: keep ? old.dists ?? {} : {},
@@ -688,29 +696,19 @@ $('list').onclick = e => {
 $('lb').onclick = () => $('lb').close();
 
 // ───────── 기준 위치 관리창 ─────────
-// 카카오 키 상태는 항상 보여 준다 (있으면 변경, 없으면 설정)
+// 카카오 키: 설정에서 한 번 연결돼 정상이면 입력창에서는 숨긴다. 키가 없거나 거부됐을 때만 안내한다.
 function drawKeyHint() {
-  const has = !!kakaoKey();
-  $('keyState').textContent = has ? '카카오 키 설정됨 ·' : '이름만으로 정확히 찾으려면';
-  $('keyBtn').textContent = has ? '키 변경' : '카카오 REST API 키 설정 (무료 발급)';
+  const has = !!kakaoKey(), bad = has && kakaoStatus() === 'bad', box = $('keyHint');
+  box.hidden = has && !bad;
+  $('keyState').textContent = bad ? '카카오 키를 확인해 주세요 ·' : '이름만으로 정확히 찾으려면';
+  $('keyBtn').textContent = bad ? '설정에서 키 확인' : '설정에서 카카오 키 연결';
 }
-const KEY_HINT = '키가 없으면 무료 OpenStreetMap 검색을 쓰는데, 국내 상세주소·건물명은 못 찾는 경우가 많아요. 키는 이 브라우저에만 저장돼요.';
+window.addEventListener('wedding-kakao-changed', () => { lastLook = ''; drawKeyHint(); });
 function openOrigins() {
-  resetOForm(); $('kkey').value = kakaoKey(); setHint($('oHint'), '');
-  setHint($('kHint'), kakaoKey() ? '키가 저장돼 있어요. 다른 키로 바꾸려면 새로 입력하고 저장을 눌러 주세요.' : KEY_HINT, false, !!kakaoKey());
+  resetOForm(); setHint($('oHint'), '');
   renderOrigins(); $('odlg').showModal();
 }
 $('originBtn').onclick = openOrigins;
-function saveKey(v) {
-  v = v.trim();
-  try { if (v) localStorage.setItem('wedding-kakao-key', v); else localStorage.removeItem('wedding-kakao-key'); } catch {}
-  drawKeyHint(); lastLook = ''; return v;
-}
-$('kSave').onclick = () => {
-  const v = saveKey($('kkey').value);
-  setHint($('kHint'), v ? '키를 저장했어요. 이제 이름만으로도 주소를 찾을 수 있어요.' : '키를 삭제했어요. 무료 OpenStreetMap 검색으로 돌아가요.', false, true);
-};
-$('kkey').onchange = e => saveKey(e.target.value);       // 칸 밖을 눌러도 저장
 $('oclose').onclick = () => $('odlg').close();
 $('olist').onclick = e => {
   const b = e.target.closest('[data-oact]');
@@ -780,6 +778,7 @@ $('cmpBtn').onclick = () => {
         ${row('거리', h => { const d = distFor(h); return `<td class="${d != null && d === bd ? 'best' : ''}">${d != null ? d + 'km' : '-'}</td>`; })}
         ${row('주소', h => `<td>${esc(addrOf(h) || '-')}${linkOf(h) ? `<br><a href="${esc(linkOf(h))}" target="_blank" rel="noopener">지도 링크</a>` : ''}</td>`)}
         ${row('전화', h => `<td>${h.phone ? `<a href="tel:${esc(h.phone.replace(/[^\d+]/g, ''))}">${esc(h.phone)}</a>` : '-'}</td>`)}
+        ${row('상담', h => { const v = visitInfo(h); return `<td>${v ? esc(v.label) : '-'}</td>`; })}
         ${row('메모', h => `<td>${esc(h.memo || '-')}</td>`)}
       </table></div><div class="hint" style="margin-top:6px">거리는 “${esc(curOrigin().name)}” 기준 · 강조 표시는 최저 총액/가장 가까운 곳</div>`;
     })();
@@ -792,9 +791,11 @@ $('searchForm').onsubmit = e => { e.preventDefault(); query = $('q').value.trim(
 $('q').addEventListener('input', () => { if (query && !$('q').value.trim()) { query = ''; render(); } });   // 검색어를 지우면 전체 목록
 
 $('sort').value = sort;
-const API = { esc, icon, fmtPrice, total, byPrice, distFor, addrOf, linkOf, dirUrl, distText, curOrigin, isUrl, needsGeo, rerender: () => render(), get halls() { return halls; }, get sort() { return sort; } };
+const API = { esc, icon, fmtPrice, total, byPrice, distFor, addrOf, linkOf, dirUrl, distText, visitInfo, curOrigin, isUrl, needsGeo, rerender: () => render(), get halls() { return halls; }, get sort() { return sort; } };
 window.HALL_API = API;
 if (UI.setup) UI.setup(API);
 renderOrigins();
 render();
 ensureDistances();
+// 로드맵 화면의 설정에서 '기본 주소 관리'를 누르면 이 화면으로 와서 팝업을 바로 연다
+if (new URLSearchParams(location.search).get('origins') === '1') { history.replaceState(null, '', location.pathname); openOrigins(); }

@@ -15,11 +15,11 @@
   function css() {
     if (document.getElementById('install-css')) return;
     const st = document.createElement('style'); st.id = 'install-css';
-    st.textContent = `.installbar{display:flex;align-items:center;gap:10px;margin:0 0 10px;padding:9px 10px 9px 12px;border-radius:14px;background:var(--card,#fff);color:var(--text,#1c1c1e);box-shadow:0 1px 2px rgba(0,0,0,.06),0 6px 18px rgba(60,60,90,.08);font-size:12px;line-height:1.4}
-.installbar img{width:34px;height:34px;border-radius:9px;flex:none;box-shadow:0 1px 3px rgba(0,0,0,.25)}
-.installbar .it{flex:1;min-width:0}.installbar b{display:block;font-size:12px}.installbar span{color:var(--muted,#8a8a8e);font-size:11px;display:block}
-.installbar button{border:0;border-radius:10px;min-height:34px;padding:0 12px;font:inherit;font-size:12px;font-weight:700;cursor:pointer}
-.installbar .go{background:var(--accent,#ff2d55);color:#fff}.installbar .x{background:none;color:var(--muted,#8a8a8e);font-size:18px;padding:0 6px;min-width:30px}`;
+    st.textContent = `.installbar{display:flex;align-items:center;gap:10px;margin:0 0 10px;padding:9px 10px 9px 12px;border-radius:var(--radius);background:var(--card);color:var(--text);box-shadow:0 1px 2px rgba(0,0,0,.06),0 6px 18px rgba(60,60,90,.08);font-size:11px;line-height:1.4}
+.installbar img{width:34px;height:34px;border-radius:var(--radius);flex:none;box-shadow:0 1px 3px rgba(0,0,0,.25)}
+.installbar .it{flex:1;min-width:0}.installbar b{display:block;font-size:11px}.installbar span{color:var(--muted);font-size:10px;display:block}
+.installbar button{border:0;border-radius:var(--radius);min-height:34px;padding:0 12px;font:inherit;font-size:11px;font-weight:700;cursor:pointer}
+.installbar .go{background:var(--accent);color:#fff}.installbar .x{background:none;color:var(--muted);font-size:17px;padding:0 6px;min-width:30px}`;
     document.head.appendChild(st);
   }
   function show(kind) {

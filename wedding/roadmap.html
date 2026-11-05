@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#f2f2f7">
+<meta name="theme-color" content="#f4f5f7">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <link rel="stylesheet" href="fonts.css">
@@ -15,39 +15,33 @@
 <meta name="apple-mobile-web-app-title" content="웨딩">
 <title>결혼 로드맵</title>
 <link rel="stylesheet" href="roadmap.css">
+<link rel="stylesheet" href="tabbar.css">
+<link rel="stylesheet" href="brand.css">
 <style>
-/* iOS Light: 홈 화면 앱 아이콘처럼 광택 있는 스퀘어클 타일, 그룹 리스트, 반투명 탭바 */
+/* 로드맵 — 색·모서리는 brand.css(웨딩홀 비교와 공통). 여기서는 로드맵 고유의 배치 값만 정한다 */
 :root {
-  color-scheme: light;
   --font: "Wedding Sans", "Malgun Gothic", "맑은 고딕", "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
-  --bg: #f2f2f7; --card: #ffffff; --text: #1c1c1e; --muted: #8a8a8e;
-  --accent: #ff2d55; --accent-hi: #ff6f8e; --accent-glow: rgba(255, 45, 85, .32);
-  --soft: #f2f2f7; --field: #f2f2f7; --sheet: #f2f2f7;
-  --r: 22px; --r-sm: 14px; --gap: 12px;
-  --shadow-card: 0 1px 2px rgba(0,0,0,.05), 0 10px 28px rgba(60,60,90,.07);
-  --ctl: #fff; --ctl-shadow: 0 1px 2px rgba(0,0,0,.08), 0 4px 12px rgba(0,0,0,.06);
-  --ring-track: #f3e4e8; --ring1: #ff8aa6; --ring2: #ff2d55; --dot-cur: #ffc3d1;
-  --ring-glow: drop-shadow(0 3px 5px rgba(255,45,85,.35));
-  --now-bg: #fff0f3; --ok: #1f9d55; --ok-soft: #e9f8ee; --warn: #e5322d;
-  --task-bg: transparent; --tasks-bg: #f7f7fa; --task-line: .5px solid rgba(60,60,67,.18);
-  --chk-bg: #fff; --chk-border: 1.6px solid #c4c4c9; --chk-on: linear-gradient(180deg, #ff7391, #ff2d55);
-  --chk-on-shadow: 0 2px 6px rgba(255,45,85,.4), inset 0 1px 0 rgba(255,255,255,.4);
-  --btn-bg: #fff; --btn-shadow: 0 1px 2px rgba(0,0,0,.08), inset 0 0 0 .5px rgba(60,60,67,.15);
-  --tab-bg: rgba(249,249,251,.78); --tab-border: 0; --tab-off: #8e8e93;
-  --toast-bg: rgba(28,28,30,.92); --toast-fg: #fff;
+  --field: var(--bg); --sheet: #fff;
+  --r: var(--radius); --r-sm: var(--radius); --gap: 10px;
+  --shadow-card: inset 0 0 0 1px var(--line);
+  --ctl: #fff; --ctl-shadow: inset 0 0 0 1px var(--line);
+  --ring-track: var(--accent-soft); --ring1: var(--accent-fill); --ring2: var(--accent); --dot-cur: var(--accent-fill); --ring-glow: none;
+  --now-bg: var(--accent-soft);
+  --task-bg: transparent; --tasks-bg: var(--bg); --task-line: 1px solid var(--line);
+  --chk-bg: #fff; --chk-border: 1.6px solid var(--line); --chk-on: var(--dist); --chk-on-shadow: none;
+  --btn-bg: #fff; --btn-shadow: inset 0 0 0 1px var(--line);
+  --toast-bg: var(--text); --toast-fg: #fff;
 }
-.tabbar { border-top: .5px solid rgba(60,60,67,.22); box-shadow: 0 -1px 0 rgba(255,255,255,.6) inset; }
-/* 스퀘어클 아이콘: 입체 광택 한 겹 추가 */
-.tile { --tile-r: 22.5%; border-radius: 22.5%; }
-.tile::after { content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; box-shadow: inset 0 0 0 .5px rgba(0,0,0,.18), inset 0 0 12px rgba(255,255,255,.18); }
-.hero { padding: 20px; }
+.btn.primary:hover { background: var(--accent-hi); }
+.hero { padding: 18px; }
 .now .t { color: var(--text); }
-.sheet h2 { text-align: center; font-size: 14px; }
 .stage.open .shead { padding-bottom: 8px; }
+.stage.cur { box-shadow: var(--shadow-card), 0 0 0 2px var(--accent); }
 </style>
 </head>
 <body>
 <script src="roadmap.js"></script>
+<script src="tabbar.js"></script>
 <script src="install.js"></script>
 </body>
 </html>

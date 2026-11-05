@@ -155,45 +155,17 @@ function hallStats() {
   try { const h = JSON.parse(localStorage.getItem(HALL_KEY)) || []; return { n: h.length, liked: h.filter(x => x.liked).length }; } catch { return { n: 0, liked: 0 }; }
 }
 const man = v => (Number(v) || 0).toLocaleString('ko-KR');
-const tile = (st, state, cls = '') => `<span class="tile ${state} ${cls}" style="--h:${st.h}">${gl(st.icon)}${state === 'done' ? `<span class="bdg">${gl('check')}</span>` : state === 'lock' ? `<span class="bdg">${gl('lock')}</span>` : ''}</span>`;
+const tile = (st, state, cls = '') => `<span class="tile ${state} ${cls}">${gl(st.icon)}${state === 'done' ? `<span class="bdg">${gl('check')}</span>` : state === 'lock' ? `<span class="bdg">${gl('lock')}</span>` : ''}</span>`;
 
 /* 뼈대 주입 */
 document.body.insertAdjacentHTML('beforeend', `
 <main class="wrap">
   <header class="nav">
     <div><p class="eyebrow">작은 걸음부터 하나씩</p><h1>결혼 로드맵</h1></div>
-    <button class="iconbtn" id="setBtn" aria-label="설정">${gl('gear')}</button>
   </header>
   <div id="app"></div>
   <p class="note">단계 순서와 권장 시기는 웨딩홀·스드메·청첩장 준비 일정에 관한 공개 체크리스트와 가이드를 종합한 일반적인 기준이에요. 시즌·지역·업체 사정에 따라 달라질 수 있어요. 비용(한국소비자원 참가격 기준 웨딩홀 패키지+스드메 전국 평균 약 2,141만원)과 대출·세제·혼인신고 서류는 바뀔 수 있으니 반드시 해당 기관에서 최신 기준을 확인하세요. 모든 기록은 이 브라우저에만 저장돼요.</p>
 </main>
-<nav class="tabbar" aria-label="메뉴">
-  <button class="tab on" id="tabHome" aria-current="page">${gl('list')}<span>로드맵</span></button>
-  <a class="tab" href="index.html">${gl('landmark')}<span>웨딩홀</span></a>
-  <button class="tab" id="tabSet">${gl('gear')}<span>설정</span></button>
-</nav>
-<dialog id="sdlg" aria-labelledby="sh">
-  <form class="sheet" id="sform" method="dialog">
-    <div class="grab" aria-hidden="true"></div>
-    <h2 id="sh">설정</h2>
-    <label>결혼식 날짜 <small>정해지면 입력하세요. 단계별 권장 기한이 계산돼요.</small>
-      <input type="date" id="fDate">
-    </label>
-    <label>총 예산 (만원)
-      <input type="number" id="fBudget" min="0" inputmode="numeric" placeholder="예: 5000">
-    </label>
-    <div class="sublbl">백업</div>
-    <div class="actions">
-      <button type="button" class="btn sm" id="exp">내보내기</button>
-      <label class="btn sm filebtn">가져오기<input type="file" id="imp" accept="application/json" hidden></label>
-      <button type="button" class="btn sm danger" id="reset">전체 초기화</button>
-    </div>
-    <div class="foot">
-      <button type="button" class="btn" id="sclose">닫기</button>
-      <button type="submit" class="btn primary">저장</button>
-    </div>
-  </form>
-</dialog>
 <div class="toast" id="toast" role="status" hidden></div>`);
 
 function render() {
@@ -343,35 +315,8 @@ app.addEventListener('input', e => {
   S.memo[el.dataset.id] = el.value; save();
 });
 
-/* 설정 시트 */
-const openSettings = () => { $('fDate').value = S.date || ''; $('fBudget').value = S.budget || ''; $('sdlg').showModal(); };
-$('setBtn').onclick = openSettings;
-$('tabSet').onclick = openSettings;
-$('tabHome').onclick = () => window.scrollTo({ top: 0, behavior: 'smooth' });
-$('sclose').onclick = () => $('sdlg').close();
-$('sdlg').addEventListener('click', e => { if (e.target === $('sdlg')) $('sdlg').close(); });
-$('sform').onsubmit = () => {
-  S.date = $('fDate').value || ''; S.budget = Math.max(0, Number($('fBudget').value) || 0);
-  save(); render();
-};
-$('exp').onclick = () => {
-  const blob = new Blob([JSON.stringify(S, null, 2)], { type: 'application/json' });
-  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'wedding-roadmap.json'; a.click();
-  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
-};
-$('imp').onchange = async e => {
-  const f = e.target.files[0]; if (!f) return;
-  try {
-    const d = JSON.parse(await f.text());
-    if (!d || typeof d !== 'object' || Array.isArray(d)) throw 0;
-    S = Object.assign({}, DEF, d); save(); openId = null; render(); $('sdlg').close(); toast('가져왔어요');
-  } catch { toast('올바른 백업 파일이 아니에요'); }
-  e.target.value = '';
-};
-$('reset').onclick = () => {
-  if (!confirm('로드맵의 모든 체크와 기록을 지울까요? (웨딩홀 비교 데이터는 유지돼요)')) return;
-  S = Object.assign({}, DEF); save(); openId = null; render(); $('sdlg').close();
-};
+/* 설정(결혼식 날짜·예산·백업)은 하단바의 설정 시트(tabbar.js)에서 바꾼다. 바뀌면 다시 읽어 그린다 */
+window.addEventListener('wedding-data-changed', () => { S = load(); render(); });
 
 render();
 })();
