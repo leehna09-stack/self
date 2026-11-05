@@ -792,7 +792,7 @@ $('searchForm').onsubmit = e => { e.preventDefault(); query = $('q').value.trim(
 $('q').addEventListener('input', () => { if (query && !$('q').value.trim()) { query = ''; render(); } });   // 검색어를 지우면 전체 목록
 
 $('sort').value = sort;
-const API = { esc, icon, fmtPrice, total, byPrice, distFor, addrOf, linkOf, dirUrl, distText, curOrigin, isUrl, rerender: () => render(), get halls() { return halls; }, get sort() { return sort; } };
+const API = { esc, icon, fmtPrice, total, byPrice, distFor, addrOf, linkOf, dirUrl, distText, curOrigin, isUrl, needsGeo, rerender: () => render(), get halls() { return halls; }, get sort() { return sort; } };
 window.HALL_API = API;
 if (UI.setup) UI.setup(API);
 renderOrigins();
