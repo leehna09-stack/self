@@ -29,7 +29,7 @@ document.body.insertAdjacentHTML('beforeend', `
     <div class="hbtns">
       <button class="hico" id="addBtn" aria-label="예식장 추가" title="예식장 추가"><svg class="i" aria-hidden="true"><use href="#i-plus"/></svg></button>
       <button class="hico star" id="cmpBtn" aria-label="관심 예식장 비교표" title="관심 예식장 비교표"><svg class="i" aria-hidden="true"><use href="#i-star"/></svg></button>
-      <button class="hico" id="originBtn" aria-label="기본 주소 관리" title="기본 주소 관리"><svg class="i" aria-hidden="true"><use href="#i-map"/></svg></button>
+      <button class="hico" id="originBtn" aria-label="기준 주소 설정" title="기준 주소 설정"><svg class="i" aria-hidden="true"><use href="#i-map"/></svg></button>
     </div>
   </header>
 
@@ -69,7 +69,6 @@ document.body.insertAdjacentHTML('beforeend', `
       </div>
     </div>
     <div class="hint" id="lookHint" aria-live="polite"></div>
-    <div class="hint" id="keyHint"><span id="keyState"></span> <button type="button" class="linkbtn" id="keyBtn"></button></div>
     <div class="cands" id="cands"></div>
     <details class="manual" id="manual">
       <summary>직접 입력하기</summary>
@@ -105,25 +104,7 @@ document.body.insertAdjacentHTML('beforeend', `
   </form>
 </dialog>
 
-<dialog id="odlg" aria-labelledby="oh">
-  <div class="edit">
-    <h2 id="oh">기본 주소 관리</h2>
-    <div class="sect">현재 주소지</div>
-    <div class="hint">“기본으로 설정”한 위치가 앱을 열 때 기준이 되고, 위치를 바꾸면 거리가까운순으로 자동 정렬돼요.</div>
-    <div id="olist"></div>
-    <form id="oform" style="display:grid;gap:8px;margin-top:6px">
-      <div class="sect" id="oTitle">추가 주소지 등록</div>
-      <input name="oname" required maxlength="20" placeholder="이름 (예: 회사, 부모님 댁)">
-      <input name="oaddr" required maxlength="300" placeholder="주소 또는 네이버지도 링크">
-      <div class="hint" id="oHint" aria-live="polite"></div>
-      <div class="foot">
-        <button type="button" class="btn" id="oclose">닫기</button>
-        <button type="button" class="btn" id="oCancelEdit" hidden>수정 취소</button>
-        <button type="submit" class="btn primary" id="oadd">추가</button>
-      </div>
-    </form>
-  </div>
-</dialog>
+
 
 <dialog id="cmp" aria-labelledby="ch">
   <div class="edit">
@@ -187,6 +168,8 @@ const total = (h, base = h.price) => base == null || isNaN(base) ? null : base +
 // 금액순 비교: 상담전(null)은 저가순·고가순 모두 맨 뒤로
 const byPrice = dir => (a, b) => { const x = total(a), y = total(b); if (x == null && y == null) return 0; if (x == null) return 1; if (y == null) return -1; return dir * (x - y); };
 // 현재 기준 위치에서의 거리(km). 옛 수동 입력값은 기본 위치(집)에서만 사용
+// 등록된 모든 기준 주소(집 + 그 외)에서의 거리 [{o, km, k}] — 계산 전이면 km=null
+function distsOf(h) { return O.list.map(o => { const d = h.dists?.[o.id]; return { o, km: d ? d.km : (h.lat == null && h.distance != null && o.id === O.defId ? h.distance : null), k: d?.k }; }); }
 function distFor(h) {
   const d = h.dists?.[cur];
   if (d) return d.km;
@@ -228,7 +211,7 @@ function visitInfo(h) {
 }
 const kakaoKey = () => { try { return localStorage.getItem('wedding-kakao-key') || ''; } catch { return ''; } };
 const kakaoStatus = () => { try { return localStorage.getItem('wedding-kakao-status') || ''; } catch { return ''; } };
-function markKakao(st) { if (kakaoStatus() === st) return; try { st ? localStorage.setItem('wedding-kakao-status', st) : localStorage.removeItem('wedding-kakao-status'); } catch {} drawKeyHint(); }
+function markKakao(st) { if (kakaoStatus() === st) return; try { st ? localStorage.setItem('wedding-kakao-status', st) : localStorage.removeItem('wedding-kakao-status'); } catch {} }
 async function geocode(text) {
   const link = coordsFromLink(text);
   if (link) return link;
@@ -404,15 +387,15 @@ async function distanceKm(from, to) {
 // 현재 기준 위치에 대해 거리가 없는 예식장을 차례로 계산 (옛 데이터는 주소로 좌표도 찾음)
 let job = 0;
 async function ensureDistances() {
-  const my = ++job, oid = cur, org = curOrigin();
-  const todo = halls.filter(h => needsGeo(h) || (h.lat != null && !h.dists?.[oid]));
+  const my = ++job, orgs = O.list.slice();
+  const todo = halls.filter(h => needsGeo(h) || (h.lat != null && orgs.some(o => !h.dists?.[o.id])));
   let n = 0;
   for (const h of todo) {
     if (my !== job) return;
     busy = `거리 계산 중 (${++n}/${todo.length})`; render();
     try {
       if (h.lat == null) { const g = await geocode(geoSrc(h)); h.lat = g.lat; h.lon = g.lon; }
-      (h.dists ??= {})[oid] = await distanceKm(org, h);
+      for (const o of orgs) if (!h.dists?.[o.id]) (h.dists ??= {})[o.id] = await distanceKm(o, h);
     } catch { if (h.lat == null) h.geoFail = true; }
     save();
   }
@@ -489,21 +472,22 @@ function render() {
   if (UI.afterRender) UI.afterRender(ctx);
 }
 
-// ───────── 기준 위치 ─────────
+// ───────── 기준 주소 (설정 시트 안에서 관리) ─────────
+const homeId = () => O.defId;
 function renderOrigins() {
-  $('olist').innerHTML = O.list.map(o => `
+  const box = $('olist'); if (!box) return;
+  box.innerHTML = O.list.map(o => `
     <div class="orow">
-      <div><b>${esc(o.name)}</b>${o.id === O.defId ? ' <span class="badge">기본</span>' : ''}${o.id === cur ? ' <span class="badge">사용 중</span>' : ''}
+      <div><b>${esc(o.name)}</b>${o.id === cur ? ' <span class="badge on">막대 기준</span>' : ''}
         <div class="meta">${esc(o.addr)}</div></div>
       <div class="oact">
-        <button class="btn" data-oid="${esc(o.id)}" data-oact="use">선택</button>
-        <button class="btn" data-oid="${esc(o.id)}" data-oact="edit">수정</button>
-        ${o.id === O.defId ? '' : `<button class="btn" data-oid="${esc(o.id)}" data-oact="def">기본으로 설정</button>`}
-        ${O.list.length > 1 ? `<button class="btn danger" data-oid="${esc(o.id)}" data-oact="del">삭제</button>` : ''}
+        ${o.id === cur ? '' : `<button type="button" class="btn" data-oid="${esc(o.id)}" data-oact="use">막대에 표시</button>`}
+        <button type="button" class="btn" data-oid="${esc(o.id)}" data-oact="edit">수정</button>
+        ${o.id === homeId() ? '' : `<button type="button" class="btn danger" data-oid="${esc(o.id)}" data-oact="del">삭제</button>`}
       </div>
     </div>`).join('');
 }
-// 위치를 바꾸면 가까운순으로 정렬해서 보여준다
+// 목록 막대에 보여 줄 기준 주소를 바꾸면 가까운순으로 정렬한다 (모든 주소의 거리는 펼치면 함께 보인다)
 function setOrigin(id) {
   cur = id; sort = 'near'; $('sort').value = 'near';
   renderOrigins(); render(); ensureDistances();
@@ -575,7 +559,6 @@ function openEditor(id) {
   draftExtras = (h?.extras ?? []).map(e => ({ ...e }));
   draftGeo = null; warnedAddr = null; lastLook = ''; draftCands = []; previewJob++; lookJob++;
   $('cands').innerHTML = ''; setHint($('lookHint'), '');
-  drawKeyHint();
   setHint($('distHint'), '');
   drawThumbs(); drawExtras(); updateTotal();
   $('dlg').showModal();
@@ -585,9 +568,9 @@ function openEditor(id) {
 async function showDistance(geo) {
   const hint = $('distHint'), key = formLoc().gt;
   setHint(hint, '거리 계산 중…');
-  const d = await distanceKm(curOrigin(), geo);
+  const rs = await Promise.all(O.list.map(async o => ({ o, d: await distanceKm(o, geo) })));
   if (formLoc().gt === key)
-    setHint(hint, `${curOrigin().name}에서 ${d.km}km (${d.k === '직선' ? '직선거리' : '도로 기준'})`, false, true);
+    setHint(hint, rs.map(r => `${esc(r.o.name)} ${r.d.km}km${r.d.k === '직선' ? '(직선)' : ''}`).join(' · '), false, true);
 }
 // 주소를 직접 고치고 칸을 벗어나면 다시 좌표를 찾는다
 let previewJob = 0;   // 창을 닫았다 다시 열어도 이전 검색 결과가 끼어들지 않게 한다
@@ -605,13 +588,13 @@ async function previewDistance() {
 }
 
 $('addBtn').onclick = () => openEditor(null);
+$('originBtn').onclick = () => window.openSettings?.();
 $('cancel').onclick = () => $('dlg').close();
 $('form').addr.onchange = previewDistance;
 $('form').link.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); lookup(true); } });
 $('linkGo').onclick = () => lookup(true);
 $('lookBtn').onclick = () => lookup(true);
 $('cands').onclick = e => { const b = e.target.closest('.cand'); if (b) applyPlace(draftCands[+b.dataset.i]); };
-$('keyBtn').onclick = () => (window.openSettings ? window.openSettings() : openOrigins());
 ['price', 'meal', 'guests'].forEach(n => $('form')[n].addEventListener('input', updateTotal));
 $('addEx').onclick = () => { draftExtras.push({ label: '', price: '' }); drawExtras(); };
 $('extras').oninput = e => { const { i, k } = e.target.dataset; if (i != null) draftExtras[+i][k] = e.target.value; };
@@ -673,7 +656,7 @@ $('form').onsubmit = async e => {
       geoFail: !geo,
       distance: null,
     };
-    if (geo && !data.dists[cur]) data.dists[cur] = await distanceKm(curOrigin(), geo);
+    if (geo) for (const o of O.list) if (!data.dists[o.id]) data.dists[o.id] = await distanceKm(o, geo);
     if (old) Object.assign(old, data);
     else halls.push({ id: String(Date.now()), created: Date.now(), liked: false, ...data });
     save(); render();
@@ -696,67 +679,61 @@ $('list').onclick = e => {
 $('lb').onclick = () => $('lb').close();
 
 // ───────── 기준 위치 관리창 ─────────
-// 카카오 키: 설정에서 한 번 연결돼 정상이면 입력창에서는 숨긴다. 키가 없거나 거부됐을 때만 안내한다.
-function drawKeyHint() {
-  const has = !!kakaoKey(), bad = has && kakaoStatus() === 'bad', box = $('keyHint');
-  box.hidden = has && !bad;
-  $('keyState').textContent = bad ? '카카오 키를 확인해 주세요 ·' : '이름만으로 정확히 찾으려면';
-  $('keyBtn').textContent = bad ? '설정에서 키 확인' : '설정에서 카카오 키 연결';
-}
-window.addEventListener('wedding-kakao-changed', () => { lastLook = ''; drawKeyHint(); });
-function openOrigins() {
-  resetOForm(); setHint($('oHint'), '');
-  renderOrigins(); $('odlg').showModal();
-}
-$('originBtn').onclick = openOrigins;
-$('oclose').onclick = () => $('odlg').close();
-$('olist').onclick = e => {
-  const b = e.target.closest('[data-oact]');
-  if (!b) return;
-  const id = b.dataset.oid, o = O.list.find(x => x.id === id), act = b.dataset.oact;
-  if (act === 'use') { setOrigin(id); $('odlg').close(); }
-  else if (act === 'edit') {
-    const f = $('oform');
-    editingO = id; f.oname.value = o.name; f.oaddr.value = o.addr;
-    $('oTitle').textContent = `위치 수정 — ${o.name}`; $('oadd').textContent = '저장'; $('oCancelEdit').hidden = false;
-    setHint($('oHint'), ''); f.oname.focus();
-  }
-  else if (act === 'def') { O.defId = id; saveO(); setOrigin(id); }
-  else if (act === 'del' && confirm(`“${o.name}” 위치를 삭제할까요?`)) {
-    O.list = O.list.filter(x => x.id !== id);
-    if (O.defId === id) O.defId = O.list[0].id;
-    saveO();
-    if (cur === id) setOrigin(O.defId); else renderOrigins();
-  }
-};
-let editingO = null; // 수정 중인 위치 id (없으면 신규 추가)
+window.addEventListener('wedding-kakao-changed', () => { lastLook = ''; });
+let editingO = null; // 수정 중인 기준 주소 id (없으면 신규 추가)
+const oHint = (t, err, ok) => { const el = $('oHint'); if (el) setHint(el, t, err, ok); };
 function resetOForm() {
-  editingO = null; $('oform').reset();
-  $('oTitle').textContent = '추가 주소지 등록'; $('oadd').textContent = '추가'; $('oCancelEdit').hidden = true;
+  editingO = null; document.querySelectorAll('#oform input').forEach(i => { i.value = ''; });
+  $('oTitle').textContent = '기준 주소 추가'; $('oadd').textContent = '추가'; $('oCancelEdit').hidden = true;
 }
-$('oCancelEdit').onclick = () => { resetOForm(); setHint($('oHint'), ''); };
-$('oform').onsubmit = async e => {
-  e.preventDefault();
-  const f = $('oform'), btn = $('oadd'), name = f.oname.value.trim(), addr = f.oaddr.value.trim();
-  const old = O.list.find(x => x.id === editingO);
-  btn.disabled = true; setHint($('oHint'), '위치를 찾는 중…');
-  try {
-    if (old) {
-      const moved = old.addr !== addr;
-      if (moved) { const g = await geocode(addr); old.lat = g.lat; old.lon = g.lon; halls.forEach(h => { if (h.dists) delete h.dists[old.id]; }); save(); }
-      old.name = name; old.addr = addr; saveO(); resetOForm();
-      setHint($('oHint'), `“${name}” 수정됨`, false, true);
-      if (cur === old.id) setOrigin(old.id); else renderOrigins();
-    } else {
-      const g = await geocode(addr);
-      const o = { id: 'o' + Date.now(), name, addr, lat: g.lat, lon: g.lon };
-      O.list.push(o); saveO(); f.reset();
-      setHint($('oHint'), `“${o.name}” 추가됨 — 지금부터 이 위치 기준이에요.`, false, true);
-      setOrigin(o.id);
+// 설정 시트의 "기준 주소" 칸을 관리 화면으로 바꿔 넣는다 (집 주소 수정 · 그 외 주소 추가/삭제)
+function initOriginUI() {
+  const sec = document.getElementById('wsOrig'); if (!sec || $('olist')) return;
+  sec.insertAdjacentHTML('beforeend', `
+    <div id="olist"></div>
+    <div class="sect" id="oTitle">기준 주소 추가</div>
+    <div class="oform" id="oform" role="group" aria-label="기준 주소">
+      <input name="oname" maxlength="20" placeholder="이름 (예: 회사, 부모님 댁)" aria-label="이름">
+      <input name="oaddr" maxlength="300" placeholder="주소 또는 네이버지도 링크" aria-label="주소">
+      <div class="hint" id="oHint" aria-live="polite"></div>
+      <div class="row"><button type="button" class="btn" id="oCancelEdit" hidden>수정 취소</button><button type="button" class="btn primary" id="oadd">추가</button></div>
+    </div>`);
+  sec.querySelector('#wsOrigGo')?.remove();
+  $('oform').oname = sec.querySelector('[name=oname]'); $('oform').oaddr = sec.querySelector('[name=oaddr]');
+  $('oCancelEdit').onclick = () => { resetOForm(); oHint(''); };
+  $('olist').onclick = e => {
+    const b = e.target.closest('[data-oact]'); if (!b) return;
+    const id = b.dataset.oid, o = O.list.find(x => x.id === id), act = b.dataset.oact;
+    if (act === 'use') setOrigin(id);
+    else if (act === 'edit') {
+      const f = $('oform'); editingO = id; f.oname.value = o.name; f.oaddr.value = o.addr;
+      $('oTitle').textContent = `수정 — ${o.name}`; $('oadd').textContent = '저장'; $('oCancelEdit').hidden = false; oHint(''); f.oaddr.focus();
+    } else if (act === 'del' && confirm(`“${o.name}” 주소를 삭제할까요?`)) {
+      O.list = O.list.filter(x => x.id !== id); halls.forEach(h => { if (h.dists) delete h.dists[id]; }); save(); saveO();
+      if (cur === id) setOrigin(O.defId); else { renderOrigins(); render(); }
     }
-  } catch (err) { setHint($('oHint'), err.message, true); }
-  finally { btn.disabled = false; }
-};
+  };
+  $('oadd').onclick = async () => {
+    const f = $('oform'), btn = $('oadd'), name = f.oname.value.trim(), addr = f.oaddr.value.trim();
+    if (!name || !addr) return oHint('이름과 주소를 모두 입력해 주세요.', true);
+    const old = O.list.find(x => x.id === editingO);
+    btn.disabled = true; oHint('위치를 찾는 중…');
+    try {
+      if (old) {
+        if (old.addr !== addr) { const g = await geocode(addr); old.lat = g.lat; old.lon = g.lon; halls.forEach(h => { if (h.dists) delete h.dists[old.id]; }); save(); }
+        old.name = name; old.addr = addr; saveO(); resetOForm(); oHint(`“${name}” 수정됨`, false, true);
+      } else {
+        const g = await geocode(addr);
+        O.list.push({ id: 'o' + Date.now(), name, addr, lat: g.lat, lon: g.lon }); saveO(); resetOForm();
+        oHint(`“${name}” 추가됨 — 등록된 예식장의 거리도 계산해요.`, false, true);
+      }
+      renderOrigins(); render(); ensureDistances();
+    } catch (err) { oHint(err.message, true); }
+    finally { btn.disabled = false; }
+  };
+  renderOrigins();
+}
+window.addEventListener('wedding-sheet-ready', initOriginUI); initOriginUI();
 
 // ───────── 비교표 ─────────
 $('cmpBtn').onclick = () => {
@@ -775,12 +752,12 @@ $('cmpBtn').onclick = () => {
         ${row('식대 1인', h => `<td>${h.meal ? h.meal + '만원' : '-'}</td>`)}
         ${row('보증인원', h => `<td>${h.guests ? h.guests + '명' : '-'}</td>`)}
         ${row('요금표', h => `<td>${h.extras?.length ? h.extras.map(x => `${esc(x.label)}: ${fmtPrice(total(h, x.price))}`).join('<br>') : '-'}</td>`)}
-        ${row('거리', h => { const d = distFor(h); return `<td class="${d != null && d === bd ? 'best' : ''}">${d != null ? d + 'km' : '-'}</td>`; })}
+        ${O.list.map(o => row(`거리 · ${esc(o.name)}`, h => { const d = h.dists?.[o.id]?.km ?? (o.id === cur ? distFor(h) : null); return `<td class="${d != null && o.id === cur && d === bd ? 'best' : ''}">${d != null ? d + 'km' : '-'}</td>`; })).join('')}
         ${row('주소', h => `<td>${esc(addrOf(h) || '-')}${linkOf(h) ? `<br><a href="${esc(linkOf(h))}" target="_blank" rel="noopener">지도 링크</a>` : ''}</td>`)}
         ${row('전화', h => `<td>${h.phone ? `<a href="tel:${esc(h.phone.replace(/[^\d+]/g, ''))}">${esc(h.phone)}</a>` : '-'}</td>`)}
         ${row('상담', h => { const v = visitInfo(h); return `<td>${v ? esc(v.label) : '-'}</td>`; })}
         ${row('메모', h => `<td>${esc(h.memo || '-')}</td>`)}
-      </table></div><div class="hint" style="margin-top:6px">거리는 “${esc(curOrigin().name)}” 기준 · 강조 표시는 최저 총액/가장 가까운 곳</div>`;
+      </table></div><div class="hint" style="margin-top:6px">강조 표시는 최저 총액 / “${esc(curOrigin().name)}”에서 가장 가까운 곳</div>`;
     })();
   $('cmp').showModal();
 };
@@ -791,11 +768,11 @@ $('searchForm').onsubmit = e => { e.preventDefault(); query = $('q').value.trim(
 $('q').addEventListener('input', () => { if (query && !$('q').value.trim()) { query = ''; render(); } });   // 검색어를 지우면 전체 목록
 
 $('sort').value = sort;
-const API = { esc, icon, fmtPrice, total, byPrice, distFor, addrOf, linkOf, dirUrl, distText, visitInfo, curOrigin, isUrl, needsGeo, rerender: () => render(), get halls() { return halls; }, get sort() { return sort; } };
+const API = { esc, icon, fmtPrice, total, byPrice, distFor, distsOf, setOrigin, addrOf, linkOf, dirUrl, distText, visitInfo, curOrigin, isUrl, needsGeo, rerender: () => render(), get halls() { return halls; }, get origins() { return O.list; }, get curId() { return cur; }, get sort() { return sort; } };
 window.HALL_API = API;
 if (UI.setup) UI.setup(API);
 renderOrigins();
 render();
 ensureDistances();
-// 로드맵 화면의 설정에서 '기본 주소 관리'를 누르면 이 화면으로 와서 팝업을 바로 연다
-if (new URLSearchParams(location.search).get('origins') === '1') { history.replaceState(null, '', location.pathname); openOrigins(); }
+// 로드맵 화면의 설정에서 넘어오면 설정 시트를 바로 연다
+{ const q = new URLSearchParams(location.search); if (q.get('settings') === '1' || q.get('origins') === '1') { history.replaceState(null, '', location.pathname); window.addEventListener('load', () => window.openSettings?.()); } }

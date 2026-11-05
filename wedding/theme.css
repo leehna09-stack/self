@@ -18,8 +18,10 @@ h1 { font-size: 20px; letter-spacing: -0.03em; }
 .chip { flex: none; min-height: 32px; padding: 0 13px; border-radius: var(--radius); border: 1px solid var(--line); background: #fff; color: var(--muted); font-size: 11px; font-weight: 700; transition: background-color .15s, color .15s; }
 .chip.on { background: var(--text); border-color: var(--text); color: #fff; }
 .legend { display: flex; gap: 10px; font-size: 10px; color: var(--muted); }
-.legend span::before { content: ""; display: inline-block; width: 8px; height: 8px; border-radius: 2px; margin-right: 4px; vertical-align: -0.5px; }
+.legend span::before, .legend .lgd::before { content: ""; display: inline-block; width: 8px; height: 8px; border-radius: 2px; margin-right: 4px; vertical-align: -0.5px; }
 .legend .lgp::before { background: var(--accent); }
+.legend .lgd { border: 0; background: none; padding: 0; font: inherit; color: inherit; }
+.legend .lgd:not(:disabled) { cursor: pointer; color: var(--dist); font-weight: 700; }
 .legend .lgd::before { background: var(--dist); }
 
 /* 가장 저렴/가장 가까운 곳 요약 */
@@ -79,3 +81,7 @@ h1 { font-size: 20px; letter-spacing: -0.03em; }
 .vchip .i { width: 11px; height: 11px; }
 .vchip.plan { background: var(--accent-soft); color: var(--accent); }
 .vchip.done { background: var(--bg); color: var(--muted); box-shadow: inset 0 0 0 1px var(--line); }
+
+/* 펼친 카드의 기준 주소별 거리 */
+.odist { display: flex; flex-wrap: wrap; gap: 4px 10px; }
+.odist .od b { color: var(--dist); font-weight: 700; }
