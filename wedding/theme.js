@@ -34,6 +34,7 @@ window.HALL_UI = (() => {
       ${(h.extras || []).map(e => `<div class="qsum alt">${esc(e.label)} · 총액 ${fmtPrice(total(h, e.price))}</div>`).join('')}
       ${(v => v ? `<div class="qsum">${icon('cal')} ${v.label}</div>` : '')(A.visitInfo(h))}
       ${addr ? `<div class="qsum">${icon('pin')} ${esc(addr)}</div>` : ''}
+      ${A.origins.length > 1 ? `<div class="qsum odist">${A.distsOf(h).map(r => `<span class="od"><b>${esc(r.o.name)}</b> ${r.km != null ? r.km + 'km' + (r.k === '직선' ? '(직선)' : '') : '계산 중'}</span>`).join('')}</div>` : ''}
       ${h.phone ? `<div class="qsum"><a href="tel:${esc(h.phone.replace(/[^\d+]/g, ''))}">${esc(h.phone)}</a></div>` : ''}
       ${link ? `<div class="qsum"><a href="${esc(link)}" target="_blank" rel="noopener">지도에서 보기</a></div>` : ''}
       ${h.memo ? `<div class="qmemo">${esc(h.memo)}</div>` : ''}
@@ -43,7 +44,7 @@ window.HALL_UI = (() => {
 
   function syncChips() {
     document.querySelectorAll('#chips .chip').forEach(c => { const on = c.dataset.sort === A.sort; c.classList.toggle('on', on); c.setAttribute('aria-pressed', on); });
-    const lg = document.querySelector('#legend .lgd'); if (lg) lg.textContent = `${A.curOrigin().name}에서 거리`;
+    const lg = document.querySelector('#legend .lgd'); if (lg) { const n = A.origins.length; lg.textContent = `${A.curOrigin().name}에서 거리${n > 1 ? ' ⇄' : ''}`; lg.disabled = n < 2; lg.title = n > 1 ? '눌러서 다른 기준 주소로 바꾸기' : ''; }
   }
 
   return {
@@ -54,8 +55,9 @@ window.HALL_UI = (() => {
       bar.innerHTML = CHIPS.map(([v, t]) => `<button type="button" class="chip" data-sort="${v}">${t}</button>`).join('');
       document.querySelector('.searchrow').after(bar);
       bar.onclick = e => { const c = e.target.closest('.chip'); if (!c) return; const sel = document.getElementById('sort'); sel.value = c.dataset.sort; sel.dispatchEvent(new Event('change')); };
-      const lg = document.createElement('div'); lg.id = 'legend'; lg.className = 'legend'; lg.innerHTML = '<span class="lgp">총액</span><span class="lgd"></span>';
+      const lg = document.createElement('div'); lg.id = 'legend'; lg.className = 'legend'; lg.innerHTML = '<span class="lgp">총액</span><button type="button" class="lgd"></button>';
       document.querySelector('.countrow').append(lg);
+      lg.querySelector('.lgd').onclick = () => { const L = A.origins, i = L.findIndex(o => o.id === A.curId); if (L.length > 1) A.setOrigin(L[(i + 1) % L.length].id); };
       // 행 펼치기/접기, 요약 칩으로 이동
       document.addEventListener('click', e => {
         const f = e.target.closest('[data-act="focus"]'); if (f) { focusId = f.dataset.id; A.rerender(); return; }

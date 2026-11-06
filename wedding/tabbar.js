@@ -30,12 +30,16 @@
       <label>총 예산 (만원)<input type="number" id="wsBudget" min="0" inputmode="numeric" placeholder="예: 5000"></label>
     </section>
     <section>
-      <h3>웨딩홀</h3>
-      <button type="button" class="btn go" id="wsOrigins"><span>기본 주소 관리<small id="wsOriginName"></small></span>${gl(IC.next)}</button>
-      <label>카카오 REST API 키 <small>이름만으로 주소·전화번호를 자동 입력해요.</small>
+      <h3>카카오 API</h3>
+      <label>REST API 키 <small>이름만으로 주소·전화번호를 자동 입력해요.</small>
         <span class="keyline"><input type="text" id="wsKey" autocomplete="off" placeholder="developers.kakao.com에서 발급한 키"><button type="button" class="btn" id="wsKeySave">저장</button></span>
       </label>
       <div class="hint" id="wsKeyHint" aria-live="polite"></div>
+    </section>
+    <section id="wsOrig">
+      <h3>기준 주소 (집 · 그 외)</h3>
+      <div class="hint">예식장을 등록하면 여기 있는 모든 주소에서의 거리가 함께 계산돼요.</div>
+      <button type="button" class="btn go" id="wsOrigGo"><span>웨딩홀 화면에서 관리<small>집 주소와 추가 주소를 고칠 수 있어요</small></span>${gl(IC.next)}</button>
     </section>
     <section>
       <h3>백업 (로드맵 · 웨딩홀 · 기본 주소)</h3>
@@ -57,9 +61,8 @@
   document.querySelector('.wt.on')?.addEventListener('click', e => { e.preventDefault(); window.scrollTo({ top: 0, behavior: 'smooth' }); });
 
   function open() {
-    const R = read(RKEY, {}), O = read(OKEY, null), d = O?.list?.find(x => x.id === O.defId) || O?.list?.[0];
+    const R = read(RKEY, {});
     $('wsDate').value = R.date || ''; $('wsBudget').value = R.budget || '';
-    $('wsOriginName').textContent = d ? `${d.name} · ${d.addr}` : '집 (기본)';
     const k = localStorage.getItem(KKEY) || '', st = localStorage.getItem('wedding-kakao-status') || '';
     $('wsKey').value = k;
     msg($('wsKeyHint'), !k ? '키가 없으면 무료 OpenStreetMap 검색을 써요.' : st === 'bad' ? '저장된 키가 거부됐어요. 키를 확인해 주세요.' : st === 'ok' ? '연결돼 있어요.' : '키가 저장돼 있어요.', !k ? '' : st === 'bad' ? 'err' : 'ok');
@@ -76,10 +79,10 @@
     window.dispatchEvent(new Event('wedding-data-changed')); sheet.close();
   };
 
-  // 웨딩홀: 기본 주소 관리 — 웨딩홀 화면이면 팝업을 바로 열고, 로드맵 화면이면 웨딩홀 화면으로 가서 연다
-  $('wsOrigins').onclick = () => {
-    if (typeof openOrigins === 'function') { sheet.close(); openOrigins(); } else location.href = 'index.html?origins=1';
-  };
+  // 기준 주소: 웨딩홀 화면이면 hall.js가 이 칸을 직접 관리 화면으로 바꿔 넣는다. 로드맵 화면에서는 웨딩홀 화면의 설정으로 보낸다.
+  $('wsOrigGo').onclick = () => { location.href = 'index.html?settings=1'; };
+  window.dispatchEvent(new Event('wedding-sheet-ready'));
+
   // 카카오 키: 저장하면 바로 한 번 확인한다. 정상이면 웨딩홀 입력창에서 키 안내가 사라진다.
   const SKEY = 'wedding-kakao-status';
   const setStatus = st => { try { st ? localStorage.setItem(SKEY, st) : localStorage.removeItem(SKEY); } catch {} window.dispatchEvent(new Event('wedding-kakao-changed')); };
