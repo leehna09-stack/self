@@ -165,8 +165,10 @@ header { flex-wrap:nowrap; }
 .manual > summary::after { content:""; width:8px; height:8px; border-right:2px solid currentColor; border-bottom:2px solid currentColor; transform:rotate(45deg) translateY(-2px); transition:transform .2s; }
 .manual[open] > summary::after { transform:rotate(-135deg) translateY(-2px); }
 .manualbody { display:grid; gap:10px; padding:0 14px 14px; }
-.namerow2 { display:grid; grid-template-columns:minmax(0, 1fr) auto; gap:8px; align-items:end; }
-.namerow2 .btn { min-height:44px; padding:0 16px; white-space:nowrap; color:var(--accent); font-weight:700; }
+.namerow2 { display:grid; grid-template-columns:minmax(0, 1fr) minmax(0, 1fr); gap:8px; align-items:end; }
+.cost { border:0; margin:0; padding:0; min-width:0; display:grid; gap:8px; }
+.cost:disabled { opacity:.5; }
+#visitHint:empty { display:none; }
 .fld { display:grid; gap:4px; font-size:10px; color:var(--muted); }
 .inwrap { position:relative; }
 .inwrap input { padding-right:48px; }

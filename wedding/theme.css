@@ -85,3 +85,6 @@ h1 { font-size: 20px; letter-spacing: -0.03em; }
 /* 펼친 카드의 기준 주소별 거리 */
 .odist { display: flex; flex-wrap: wrap; gap: 4px 10px; }
 .odist .od b { color: var(--dist); font-weight: 700; }
+
+/* 상담이 끝났을 텐데 금액이 비어 있으면 눌러서 입력하게 안내 */
+.vchip.ask { border: 0; font: inherit; font-size: 10px; font-weight: 700; background: var(--accent); color: #fff; cursor: pointer; }

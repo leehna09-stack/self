@@ -32,7 +32,7 @@ window.HALL_UI = (() => {
     return `<div class="qmore">
       <div class="qsum">대관료 ${fmtPrice(h.price)}${meal ? ` + 식대 ${h.meal}만×${h.guests}명 (${fmtPrice(meal)})` : ''}</div>
       ${(h.extras || []).map(e => `<div class="qsum alt">${esc(e.label)} · 총액 ${fmtPrice(total(h, e.price))}</div>`).join('')}
-      ${(v => v ? `<div class="qsum">${icon('cal')} ${v.label}</div>` : '')(A.visitInfo(h))}
+      ${(v => v ? `<div class="qsum">${icon('cal')} ${v.label}${v.ask ? ` <button type="button" class="vchip ask" data-act="edit" data-id="${h.id}">상담을 완료하셨나요? 금액 입력</button>` : ''}</div>` : '')(A.visitInfo(h))}
       ${addr ? `<div class="qsum">${icon('pin')} ${esc(addr)}</div>` : ''}
       ${A.origins.length > 1 ? `<div class="qsum odist">${A.distsOf(h).map(r => `<span class="od"><b>${esc(r.o.name)}</b> ${r.km != null ? r.km + 'km' + (r.k === '직선' ? '(직선)' : '') : '계산 중'}</span>`).join('')}</div>` : ''}
       ${h.phone ? `<div class="qsum"><a href="tel:${esc(h.phone.replace(/[^\d+]/g, ''))}">${esc(h.phone)}</a></div>` : ''}
@@ -85,7 +85,7 @@ window.HALL_UI = (() => {
           </div>` : '<span class="qcaret" aria-hidden="true"></span>'}
         </div>
         <div class="qbars">${cells(h, S)}</div>
-        <div class="qaddr">${(v => v ? `<span class="vchip ${v.plan ? 'plan' : 'done'}">${A.icon('cal')}${v.short}</span>` : '')(A.visitInfo(h))}${addr ? A.esc(addr) : '주소 없음'}</div>
+        <div class="qaddr">${(v => !v ? '' : v.ask ? `<button type="button" class="vchip ask" data-act="edit" data-id="${h.id}">${A.icon('cal')}${v.md} 상담을 완료하셨나요?</button>` : `<span class="vchip ${v.plan ? 'plan' : 'done'}">${A.icon('cal')}${v.short}</span>`)(A.visitInfo(h))}${addr ? A.esc(addr) : '주소 없음'}</div>
         ${isOpen ? details(h) : ''}
       </article>`;
     },

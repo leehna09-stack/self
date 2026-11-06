@@ -58,17 +58,16 @@ document.body.insertAdjacentHTML('beforeend', `
   <form class="edit" id="form">
     <h2 id="dlgTitle">예식장 추가</h2>
     <div class="namerow2">
-      <label>예식장 이름 *<input name="name" required maxlength="60"></label>
-      <button type="button" class="btn" id="lookBtn">자동입력</button>
-    </div>
-    <div class="fld">
-      <span class="lbl">지도 링크 (카카오맵·네이버지도)</span>
-      <div class="inwrap">
-        <input name="link" maxlength="500" inputmode="url" autocomplete="off" aria-label="지도 링크" enterkeyhint="go" placeholder="링크를 붙여넣고 오른쪽 ↵ 를 눌러 주세요">
-        <button type="button" class="enterbtn" id="linkGo" aria-label="링크 적용" title="링크 적용"><svg class="i" aria-hidden="true"><use href="#i-enter"/></svg></button>
+      <label>예식장 이름 *<input name="name" required maxlength="60" enterkeyhint="go"></label>
+      <div class="fld">
+        <span class="lbl">지도 링크</span>
+        <div class="inwrap">
+          <input name="link" maxlength="500" inputmode="url" autocomplete="off" aria-label="지도 링크 (카카오맵·네이버지도)" enterkeyhint="go" placeholder="링크 붙여넣기">
+          <button type="button" class="enterbtn" id="linkGo" aria-label="자동입력" title="이름·링크로 주소·전화번호 자동입력"><svg class="i" aria-hidden="true"><use href="#i-enter"/></svg></button>
+        </div>
       </div>
     </div>
-    <div class="hint" id="lookHint" aria-live="polite"></div>
+    <div class="hint" id="lookHint" aria-live="polite">이름이나 링크를 넣고 ↵ 를 누르면 주소·전화번호가 자동 입력돼요</div>
     <div class="cands" id="cands"></div>
     <details class="manual" id="manual">
       <summary>직접 입력하기</summary>
@@ -78,6 +77,9 @@ document.body.insertAdjacentHTML('beforeend', `
       </div>
     </details>
     <div class="hint" id="distHint" aria-live="polite">입력하면 기준 위치에서의 거리가 자동 계산돼요</div>
+    <label>상담 예정일 · 상담일<input name="visit" type="date"></label>
+    <div class="hint" id="visitHint" aria-live="polite"></div>
+    <fieldset class="cost" id="cost">
     <div class="row2">
       <label>대관료(만원)<input name="price" type="number" min="0" step="any" inputmode="decimal" placeholder="상담전"></label>
       <div class="fld">
@@ -91,7 +93,7 @@ document.body.insertAdjacentHTML('beforeend', `
       <label>보증인원(명)<input name="guests" type="number" min="0" inputmode="numeric"></label>
     </div>
     <div class="hint" id="totalHint" aria-live="polite"></div>
-    <label>상담 예정일 · 상담일<input name="visit" type="date"><small class="sub">오늘이거나 앞선 날짜면 “상담 예정”, 지난 날짜면 “상담 완료”로 표시돼요.</small></label>
+    </fieldset>
     <label>메모<textarea name="memo" rows="3" placeholder="주차, 홀 분위기, 연회장 등"></textarea></label>
     <button type="button" class="btn" id="photoBtn"><svg class="i" aria-hidden="true"><use href="#i-photo"/></svg> 사진 추가</button>
     <input id="files" class="sr-only" type="file" accept="image/*" multiple tabindex="-1" aria-hidden="true">
@@ -207,7 +209,7 @@ function visitInfo(h) {
   const d = new Date(+m[1], +m[2] - 1, +m[3]), t = new Date(); t.setHours(0, 0, 0, 0);
   const diff = Math.round((d - t) / 864e5), md = `${d.getMonth() + 1}/${d.getDate()}(${WD[d.getDay()]})`;
   const plan = diff >= 0, tag = plan ? '상담 예정' : '상담 완료';
-  return { plan, diff, md, tag, short: `${md} ${plan ? '예정' : '완료'}`, label: `${md} · ${tag}${diff === 0 ? ' (오늘)' : plan ? ` (D-${diff})` : ''}` };
+  return { plan, ask: !plan && h.price == null, diff, md, tag, short: `${md} ${plan ? '예정' : '완료'}`, label: `${md} · ${tag}${diff === 0 ? ' (오늘)' : plan ? ` (D-${diff})` : ''}` };
 }
 const kakaoKey = () => { try { return localStorage.getItem('wedding-kakao-key') || ''; } catch { return ''; } };
 const kakaoStatus = () => { try { return localStorage.getItem('wedding-kakao-status') || ''; } catch { return ''; } };
@@ -534,6 +536,16 @@ function updateTotal() {
   const t = total({ price, meal: parseFloat(f.meal.value) || 0, guests: parseInt(f.guests.value) || 0 });
   $('totalHint').innerHTML = `${icon('wallet')} 총 예상 ${fmtPrice(t)} (대관료 + 식대×보증인원)`;
 }
+// 상담 예정일(오늘 포함)이 있으면 아직 상담 전이라 금액을 못 적는다. 날짜가 지나면 상담 결과 금액을 적는다.
+const LOOK_TIP = '이름이나 링크를 넣고 ↵ 를 누르면 주소·전화번호가 자동 입력돼요';
+let stash = null;   // 잠글 때 치워 둔 값 — 날짜를 바꿔 잠금이 풀리면 되돌린다
+function applyVisitLock() {
+  const f = $('form'), v = visitInfo({ visit: f.visit.value }), lock = !!v?.plan, box = $('cost');
+  if (lock && !box.disabled) { stash = { price: f.price.value, meal: f.meal.value, guests: f.guests.value, extras: draftExtras }; f.price.value = f.meal.value = f.guests.value = ''; draftExtras = []; }
+  else if (!lock && stash) { f.price.value = stash.price; f.meal.value = stash.meal; f.guests.value = stash.guests; draftExtras = stash.extras; stash = null; }
+  box.disabled = lock; drawExtras(); updateTotal();
+  setHint($('visitHint'), lock ? '상담 전이라 금액은 상담일이 지난 뒤에 입력할 수 있어요.' : v ? '상담은 어땠나요? 상담 결과 금액을 입력해 주세요.' : '');
+}
 function setHint(el, msg, err, ok) {
   el.innerHTML = (err ? icon('alert') + ' ' : ok ? icon('check') + ' ' : '') + esc(msg);
   el.className = 'hint' + (err ? ' err' : ok ? ' ok' : '');
@@ -554,13 +566,13 @@ function openEditor(id) {
   f.meal.value = h?.meal ?? '';
   f.guests.value = h?.guests ?? '';
   f.memo.value = h?.memo ?? '';
-  f.visit.value = h?.visit ?? '';
+  f.visit.value = h?.visit ?? ''; stash = null; $('cost').disabled = false;
   draftPhotos = [...(h?.photos ?? [])];
   draftExtras = (h?.extras ?? []).map(e => ({ ...e }));
   draftGeo = null; warnedAddr = null; lastLook = ''; draftCands = []; previewJob++; lookJob++;
-  $('cands').innerHTML = ''; setHint($('lookHint'), '');
+  $('cands').innerHTML = ''; setHint($('lookHint'), ''); $('lookHint').textContent = LOOK_TIP;
   setHint($('distHint'), '');
-  drawThumbs(); drawExtras(); updateTotal();
+  drawThumbs(); drawExtras(); updateTotal(); applyVisitLock();
   $('dlg').showModal();
 }
 
@@ -593,9 +605,11 @@ $('cancel').onclick = () => $('dlg').close();
 $('form').addr.onchange = previewDistance;
 $('form').link.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); lookup(true); } });
 $('linkGo').onclick = () => lookup(true);
-$('lookBtn').onclick = () => lookup(true);
+$('form').name.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); lookup(true); } });
 $('cands').onclick = e => { const b = e.target.closest('.cand'); if (b) applyPlace(draftCands[+b.dataset.i]); };
 ['price', 'meal', 'guests'].forEach(n => $('form')[n].addEventListener('input', updateTotal));
+$('form').visit.addEventListener('input', applyVisitLock);
+$('form').visit.addEventListener('change', applyVisitLock);
 $('addEx').onclick = () => { draftExtras.push({ label: '', price: '' }); drawExtras(); };
 $('extras').oninput = e => { const { i, k } = e.target.dataset; if (i != null) draftExtras[+i][k] = e.target.value; };
 $('extras').onclick = e => { const i = e.target.dataset.del; if (i != null) { draftExtras.splice(+i, 1); drawExtras(); } };
