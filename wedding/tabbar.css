@@ -32,7 +32,7 @@ body { padding-bottom: calc(58px + env(safe-area-inset-bottom)); }
 .ws .gl { width: 16px; height: 16px; flex: none; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 .ws .keyline { display: grid; grid-template-columns: 1fr auto; gap: 8px; }
 .ws button { font: inherit; }
-.ws .btn { min-height: 40px; padding: 0 14px; border: 0; border-radius: var(--radius); background: #fff; box-shadow: inset 0 0 0 1px var(--line); color: var(--text); font-size: 11px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; gap: 6px; cursor: pointer; }
+.ws .btn { min-height: 36px; padding: 0 14px; border: 0; border-radius: var(--radius); background: #fff; box-shadow: inset 0 0 0 1px var(--line); color: var(--text); font-size: 11px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; gap: 6px; cursor: pointer; }
 .ws .btn.primary { background: var(--accent); color: #fff; box-shadow: none; }
 .ws .btn.danger { color: var(--accent); }
 .ws .row { display: flex; flex-wrap: wrap; gap: 8px; }
@@ -42,13 +42,13 @@ body { padding-bottom: calc(58px + env(safe-area-inset-bottom)); }
 .ws .hint:empty { display: none; }
 .ws .hint.ok { color: var(--dist); } .ws .hint.err { color: var(--accent); }
 .ws .foot { display: flex; gap: 8px; }
-.ws .foot .btn { flex: 1; min-height: 42px; }
+.ws .foot .btn { flex: 1; min-height: 38px; }
 /* 기준 주소 관리(웨딩홀 화면의 설정 안) */
 .ws .orow { display: grid; gap: 6px; padding: 8px 0; border-bottom: 1px solid var(--line); }
 .ws .orow:last-of-type { border-bottom: 0; }
 .ws .orow .meta { font-size: 11px; color: var(--muted); }
 .ws .oact { display: flex; flex-wrap: wrap; gap: 6px; }
-.ws .oact .btn { min-height: 32px; padding: 0 12px; font-size: 11px; }
+.ws .oact .btn { min-height: 30px; padding: 0 12px; font-size: 11px; }
 .ws .sect { font-size: 11px; font-weight: 700; color: var(--muted); margin-top: 4px; }
 .ws .oform { display: grid; gap: 8px; }
 .ws .oform input { width: 100%; height: 40px; padding: 0 10px; border: 0; border-radius: var(--radius); background: #fff; box-shadow: inset 0 0 0 1px var(--line); font: inherit; font-size: 16px; color: var(--text); }

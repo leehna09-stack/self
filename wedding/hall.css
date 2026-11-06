@@ -16,7 +16,7 @@ button { cursor: pointer; }
 a.btn { text-decoration: none; color: inherit; }
 .btn {
   border: 1px solid var(--line); background: var(--surface);
-  padding: 8px 14px; border-radius: var(--radius); min-height: 44px; font-size: 11px;
+  padding: 6px 14px; border-radius: var(--radius); min-height: 36px; font-size: 11px;
   display: inline-flex; align-items: center; justify-content: center; gap: 6px;
   transition: background-color .15s, border-color .15s, box-shadow .15s;
 }
@@ -148,7 +148,7 @@ dialog { border-radius:var(--radius); }
 #form .edit h2, #form h2, #odlg .edit h2 { margin-bottom:2px; }
 #form input:not(.sr-only), #odlg .edit input { height:40px; padding-top:0; padding-bottom:0; }
 #form textarea { padding-top:8px; padding-bottom:8px; line-height:1.45; }
-#form .btn, #odlg .edit .btn { min-height:40px; padding-top:0; padding-bottom:0; }
+#form .btn, #odlg .edit .btn { min-height:36px; padding-top:0; padding-bottom:0; }
 #form .btn.sm, #odlg .edit .btn.sm { min-height:36px; }
 #form label, #form .fld, #odlg .edit label { gap:3px; }
 #form .manual > summary { min-height:40px; padding-top:0; padding-bottom:0; }
