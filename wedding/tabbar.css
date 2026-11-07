@@ -22,13 +22,13 @@ body { padding-bottom: calc(58px + env(safe-area-inset-bottom)); }
 #wsheet[open] { display: block; animation: wsheet .3s cubic-bezier(.2, .9, .25, 1); }
 @keyframes wsheet { from { transform: translateY(100%); } to { transform: none; } }
 #wsheet::backdrop { background: rgba(0, 0, 0, .4); -webkit-backdrop-filter: blur(5px); backdrop-filter: blur(5px); }
-.ws { display: grid; gap: 14px; padding: 8px 16px calc(16px + env(safe-area-inset-bottom)); }
+.ws { display: grid; gap: 10px; padding: 8px 16px calc(16px + env(safe-area-inset-bottom)); }
 .ws .grab { width: 40px; height: 5px; border-radius: var(--radius); background: var(--muted); opacity: .35; margin: 4px auto 2px; }
 .ws h2 { margin: 0; font-size: 14px; font-weight: 700; text-align: center; letter-spacing: -0.02em; }
-.ws section { display: grid; gap: 8px; padding: 12px; border-radius: var(--radius); background: var(--bg); }
+.ws section { display: grid; gap: 6px; padding: 10px 12px; border-radius: var(--radius); background: var(--bg); }
 .ws h3 { margin: 0; font-size: 10px; font-weight: 700; color: var(--muted); letter-spacing: .02em; }
 .ws label { display: grid; gap: 3px; font-size: 10px; color: var(--muted); }
-.ws input[type=date], .ws input[type=number], .ws input[type=text] { width: 100%; height: 40px; padding: 0 10px; border: 0; border-radius: var(--radius); background: #fff; box-shadow: inset 0 0 0 1px var(--line); font: inherit; font-size: 16px; color: var(--text); }
+.ws input[type=date], .ws input[type=number], .ws input[type=text] { width: 100%; height: 36px; padding: 0 10px; border: 0; border-radius: var(--radius); background: #fff; box-shadow: inset 0 0 0 1px var(--line); font: inherit; font-size: 14px; color: var(--text); }
 .ws .gl { width: 16px; height: 16px; flex: none; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 .ws .keyline { display: grid; grid-template-columns: 1fr auto; gap: 8px; }
 .ws button { font: inherit; }
@@ -51,7 +51,7 @@ body { padding-bottom: calc(58px + env(safe-area-inset-bottom)); }
 .ws .oact .btn { min-height: 30px; padding: 0 12px; font-size: 11px; }
 .ws .sect { font-size: 11px; font-weight: 700; color: var(--muted); margin-top: 4px; }
 .ws .oform { display: grid; gap: 8px; }
-.ws .oform input { width: 100%; height: 40px; padding: 0 10px; border: 0; border-radius: var(--radius); background: #fff; box-shadow: inset 0 0 0 1px var(--line); font: inherit; font-size: 16px; color: var(--text); }
+.ws .oform input { width: 100%; height: 36px; padding: 0 10px; border: 0; border-radius: var(--radius); background: #fff; box-shadow: inset 0 0 0 1px var(--line); font: inherit; font-size: 14px; color: var(--text); }
 .ws .badge { display: inline-block; margin-left: 6px; padding: 0 6px; border-radius: var(--radius); background: var(--accent-soft); color: var(--accent); font-size: 10px; font-weight: 700; }
 .ws .badge.on { background: var(--dist-soft); color: var(--dist); }
 @media (prefers-reduced-motion: reduce) { #wsheet[open] { animation: none; } }

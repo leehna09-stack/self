@@ -1,5 +1,6 @@
 /* 웨딩홀 비교 — 화면 골격과 로직. 디자인(시안)은 hall.css 위에 덮어쓰고, 필요하면 window.HALL_UI 훅으로 카드 모양을 바꾼다.
    훅(선택): cardHtml(h, ctx) · lead(ctx) 목록 위 영역 HTML · afterRender(ctx) · setup(api) 첫 렌더 직전 한 번 */
+const RATE_OPTS = '<option value="0">—</option>' + [1, 2, 3, 4, 5].map(n => `<option value="${n}">${'★'.repeat(n)}</option>`).join('');
 document.body.insertAdjacentHTML('beforeend', `
 <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
   <symbol id="i-gem" viewBox="0 0 24 24"><path d="M6 3h12l4 6-10 13L2 9Z"/><path d="M11 3 8 9l4 13 4-13-3-6M2 9h20"/></symbol>
@@ -29,7 +30,6 @@ document.body.insertAdjacentHTML('beforeend', `
     <div class="hbtns">
       <button class="hico" id="addBtn" aria-label="예식장 추가" title="예식장 추가"><svg class="i" aria-hidden="true"><use href="#i-plus"/></svg></button>
       <button class="hico star" id="cmpBtn" aria-label="관심 예식장 비교표" title="관심 예식장 비교표"><svg class="i" aria-hidden="true"><use href="#i-star"/></svg></button>
-      <button class="hico" id="originBtn" aria-label="기준 주소 설정" title="기준 주소 설정"><svg class="i" aria-hidden="true"><use href="#i-map"/></svg></button>
     </div>
   </header>
 
@@ -58,17 +58,16 @@ document.body.insertAdjacentHTML('beforeend', `
   <form class="edit" id="form">
     <h2 id="dlgTitle">예식장 추가</h2>
     <div class="namerow2">
-      <label>예식장 이름 *<input name="name" required maxlength="60"></label>
-      <button type="button" class="btn" id="lookBtn">자동입력</button>
-    </div>
-    <div class="fld">
-      <span class="lbl">지도 링크 (카카오맵·네이버지도)</span>
-      <div class="inwrap">
-        <input name="link" maxlength="500" inputmode="url" autocomplete="off" aria-label="지도 링크" enterkeyhint="go" placeholder="링크를 붙여넣고 오른쪽 ↵ 를 눌러 주세요">
-        <button type="button" class="enterbtn" id="linkGo" aria-label="링크 적용" title="링크 적용"><svg class="i" aria-hidden="true"><use href="#i-enter"/></svg></button>
+      <label>예식장 이름 *<input name="name" required maxlength="60" enterkeyhint="go"></label>
+      <div class="fld">
+        <span class="lbl">지도 링크</span>
+        <div class="inwrap">
+          <input name="link" maxlength="500" inputmode="url" autocomplete="off" aria-label="지도 링크 (카카오맵·네이버지도)" enterkeyhint="go" placeholder="링크 붙여넣기">
+          <button type="button" class="enterbtn" id="linkGo" aria-label="자동입력" title="이름·링크로 주소·전화번호 자동입력"><svg class="i" aria-hidden="true"><use href="#i-enter"/></svg></button>
+        </div>
       </div>
     </div>
-    <div class="hint" id="lookHint" aria-live="polite"></div>
+    <div class="hint" id="lookHint" aria-live="polite">이름이나 링크를 넣고 ↵ 를 누르면 주소·전화번호가 자동 입력돼요</div>
     <div class="cands" id="cands"></div>
     <details class="manual" id="manual">
       <summary>직접 입력하기</summary>
@@ -78,6 +77,9 @@ document.body.insertAdjacentHTML('beforeend', `
       </div>
     </details>
     <div class="hint" id="distHint" aria-live="polite">입력하면 기준 위치에서의 거리가 자동 계산돼요</div>
+    <label>상담 예정일 · 상담일<input name="visit" type="date"></label>
+    <div class="hint" id="visitHint" aria-live="polite"></div>
+    <fieldset class="cost" id="cost">
     <div class="row2">
       <label>대관료(만원)<input name="price" type="number" min="0" step="any" inputmode="decimal" placeholder="상담전"></label>
       <div class="fld">
@@ -87,11 +89,30 @@ document.body.insertAdjacentHTML('beforeend', `
     </div>
     <div id="extras"></div>
     <div class="row2">
+      <div class="fld"><span class="lbl">추가 비용 (꽃장식·폐백·봉사료 등)</span><button type="button" class="btn" id="addFee">+ 추가 비용</button></div>
+      <label class="chk"><input type="checkbox" name="vat"> 부가세 10% 별도</label>
+    </div>
+    <div id="fees"></div>
+    <div class="row2">
       <label>식대 1인(만원)<input name="meal" type="number" min="0" step="any" inputmode="decimal"></label>
       <label>보증인원(명)<input name="guests" type="number" min="0" inputmode="numeric"></label>
     </div>
     <div class="hint" id="totalHint" aria-live="polite"></div>
-    <label>상담 예정일 · 상담일<input name="visit" type="date"><small class="sub">오늘이거나 앞선 날짜면 “상담 예정”, 지난 날짜면 “상담 완료”로 표시돼요.</small></label>
+    </fieldset>
+    <details class="manual" id="more">
+      <summary>추가 정보 (예식일시 · 진행 상태 · 평가)</summary>
+      <div class="manualbody">
+        <label>희망 예식일시<input name="event" type="datetime-local"></label>
+        <div class="row2">
+          <label>진행 상태<select name="status"><option value="">선택 안 함</option><option value="hold">가계약</option><option value="done">확정</option><option value="drop">탈락</option></select></label>
+          <label>탈락 사유<input name="reason" maxlength="60" placeholder="탈락일 때만"></label>
+        </div>
+        <div class="row2">
+          <label>분위기<select name="r_mood">${RATE_OPTS}</select></label><label>음식<select name="r_food">${RATE_OPTS}</select></label>
+          <label>접근성<select name="r_access">${RATE_OPTS}</select></label><label>주차<select name="r_park">${RATE_OPTS}</select></label>
+        </div>
+      </div>
+    </details>
     <label>메모<textarea name="memo" rows="3" placeholder="주차, 홀 분위기, 연회장 등"></textarea></label>
     <button type="button" class="btn" id="photoBtn"><svg class="i" aria-hidden="true"><use href="#i-photo"/></svg> 사진 추가</button>
     <input id="files" class="sr-only" type="file" accept="image/*" multiple tabindex="-1" aria-hidden="true">
@@ -137,6 +158,7 @@ let sort = 'all';
 let query = '';          // 검색 버튼을 눌러 확정한 검색어
 let editing = null;     // 수정 중인 id (없으면 신규)
 let draftPhotos = [];   // 편집창의 사진 임시 목록
+let draftFees = [];     // 추가 비용 임시 목록
 let draftExtras = [];   // 편집창의 월별·요일별 요금 임시 목록
 let draftGeo = null;    // 주소 입력 시 미리 찾은 좌표 {addr, geo}
 let warnedAddr = null;  // 좌표를 못 찾아 한 번 경고한 주소
@@ -164,7 +186,18 @@ const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt
 const isUrl = s => /^https?:/i.test(s || '');
 // 총액 = 대관료 + 식대 × 보증인원
 // 총액 = 대관료 + 식대 × 보증인원 (대관료를 안 적었으면 null = 상담전)
-const total = (h, base = h.price) => base == null || isNaN(base) ? null : base + (h.meal && h.guests ? h.meal * h.guests : 0);
+// 예상 하객 수(설정)가 있으면 모든 예식장을 그 인원으로 비교하되, 보증인원보다 적으면 보증인원만큼 낸다
+const RKEY = 'wedding-roadmap-v1';
+let scenario = 0, budget = 0;
+function syncScenario() { try { const r = JSON.parse(localStorage.getItem(RKEY)) || {}; scenario = +r.guests || 0; budget = +r.budget || 0; } catch { scenario = budget = 0; } }
+syncScenario();
+const guestsOf = h => (scenario ? Math.max(scenario, h.guests || 0) : h.guests);
+const feeSum = h => (h.fees || []).reduce((n, f) => n + (+f.price || 0), 0);
+const total = (h, base = h.price) => {
+  if (base == null || isNaN(base)) return null;
+  const g = guestsOf(h), t = base + (h.meal && g ? h.meal * g : 0) + feeSum(h);
+  return h.vat ? Math.round(t * 1.1) : t;
+};
 // 금액순 비교: 상담전(null)은 저가순·고가순 모두 맨 뒤로
 const byPrice = dir => (a, b) => { const x = total(a), y = total(b); if (x == null && y == null) return 0; if (x == null) return 1; if (y == null) return -1; return dir * (x - y); };
 // 현재 기준 위치에서의 거리(km). 옛 수동 입력값은 기본 위치(집)에서만 사용
@@ -202,12 +235,15 @@ const nominatim = q => nomGet('search?format=json&limit=1&countrycodes=kr&q=' + 
 const KAKAO_DENIED = '카카오 API 사용이 거부됐어요. REST API 키와, 카카오 개발자 콘솔의 “카카오맵” 사용 설정을 확인해 주세요.';
 // 상담일: 날짜만 저장('YYYY-MM-DD'). 오늘 포함 앞날이면 예정, 지난 날이면 완료
 const WD = ['일', '월', '화', '수', '목', '금', '토'];
+const fmtEvent = s => { const d = new Date(s); return isNaN(d) ? '' : `${d.getMonth() + 1}/${d.getDate()}(${WD[d.getDay()]}) ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`; };
+const RATES = [['mood', '분위기'], ['food', '음식'], ['access', '접근성'], ['park', '주차']];
+const avgRate = h => { const v = RATES.map(([k]) => +h.rate?.[k] || 0).filter(Boolean); return v.length ? v.reduce((a, b) => a + b, 0) / v.length : null; };
 function visitInfo(h) {
   const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(h.visit || ''); if (!m) return null;
   const d = new Date(+m[1], +m[2] - 1, +m[3]), t = new Date(); t.setHours(0, 0, 0, 0);
   const diff = Math.round((d - t) / 864e5), md = `${d.getMonth() + 1}/${d.getDate()}(${WD[d.getDay()]})`;
   const plan = diff >= 0, tag = plan ? '상담 예정' : '상담 완료';
-  return { plan, diff, md, tag, short: `${md} ${plan ? '예정' : '완료'}`, label: `${md} · ${tag}${diff === 0 ? ' (오늘)' : plan ? ` (D-${diff})` : ''}` };
+  return { plan, ask: !plan && h.price == null, diff, md, tag, short: `${md} ${plan ? '예정' : '완료'}`, label: `${md} · ${tag}${diff === 0 ? ' (오늘)' : plan ? ` (D-${diff})` : ''}` };
 }
 const kakaoKey = () => { try { return localStorage.getItem('wedding-kakao-key') || ''; } catch { return ''; } };
 const kakaoStatus = () => { try { return localStorage.getItem('wedding-kakao-status') || ''; } catch { return ''; } };
@@ -416,7 +452,7 @@ function visible() {
     far: (a, b) => far(b) - far(a) || byPrice(1)(a, b),
     all: (a, b) => b.created - a.created,          // 전체: 최근 등록한 순
   }[sort];
-  return r.sort(by);
+  return r.sort(by).sort((a, b) => (a.status === 'drop') - (b.status === 'drop'));   // 탈락은 정렬과 상관없이 맨 아래
 }
 
 function dirUrl(h) {
@@ -465,7 +501,7 @@ function render() {
   const priced = halls.map(h => total(h)).filter(n => n != null);          // 상담전은 최저가·최고가 비교에서 제외
   const min = Math.min(...priced), max = Math.max(...priced);
   const ctx = { rows: r, priced, min, max, api: API };
-  $('count').innerHTML = `총 <b>${halls.length}</b>건` + (query ? ` · 검색 ${r.length}건` : '') + (busy ? ` · ${esc(busy)}` : '');
+  $('count').innerHTML = `총 <b>${halls.length}</b>건` + (query ? ` · 검색 ${r.length}건` : '') + (scenario ? ` · 하객 ${scenario}명 기준` : '') + (busy ? ` · ${esc(busy)}` : '');
   $('lead').innerHTML = UI.lead ? UI.lead(ctx) : '';
   $('list').innerHTML = r.length ? r.map(h => (UI.cardHtml || cardHtml)(h, ctx)).join('')
     : `<div class="empty">${halls.length ? '검색 결과가 없어요.' : '아직 등록된 예식장이 없어요.<br><button class="btn primary" data-act="add">' + icon('plus') + ' 예식장 추가</button>'}</div>`;
@@ -524,6 +560,14 @@ function drawExtras() {
       <button type="button" class="x" data-del="${i}" aria-label="삭제">×</button>
     </div>`).join('');
 }
+function drawFees() {
+  $('fees').innerHTML = draftFees.map((e, i) => `
+    <div class="exrow">
+      <input data-i="${i}" data-k="label" value="${esc(e.label)}" placeholder="예: 꽃장식 / 폐백 / 봉사료" maxlength="40">
+      <input data-i="${i}" data-k="price" type="number" min="0" step="any" inputmode="decimal" value="${esc(e.price)}" placeholder="금액(만원)">
+      <button type="button" class="x" data-del="${i}" aria-label="삭제">×</button>
+    </div>`).join('');
+}
 function updateTotal() {
   const f = $('form'), price = parseFloat(f.price.value);
   if (isNaN(price)) {                                              // 대관료를 안 적었으면 상담전
@@ -531,8 +575,18 @@ function updateTotal() {
     $('totalHint').innerHTML = meal ? `${icon('wallet')} 대관료 상담전 · 식대 합계 ${fmtPrice(meal)}` : '';
     return;
   }
-  const t = total({ price, meal: parseFloat(f.meal.value) || 0, guests: parseInt(f.guests.value) || 0 });
-  $('totalHint').innerHTML = `${icon('wallet')} 총 예상 ${fmtPrice(t)} (대관료 + 식대×보증인원)`;
+  const t = total({ price, meal: parseFloat(f.meal.value) || 0, guests: parseInt(f.guests.value) || 0, fees: draftFees, vat: f.vat.checked });
+  $('totalHint').innerHTML = `${icon('wallet')} 총 예상 ${fmtPrice(t)} (대관료 + 식대×${scenario ? '하객 수' : '보증인원'}${draftFees.length ? ' + 추가 비용' : ''}${f.vat.checked ? ' + 부가세' : ''})`;
+}
+// 상담 예정일(오늘 포함)이 있으면 아직 상담 전이라 금액을 못 적는다. 날짜가 지나면 상담 결과 금액을 적는다.
+const LOOK_TIP = '이름이나 링크를 넣고 ↵ 를 누르면 주소·전화번호가 자동 입력돼요';
+let stash = null;   // 잠글 때 치워 둔 값 — 날짜를 바꿔 잠금이 풀리면 되돌린다
+function applyVisitLock() {
+  const f = $('form'), v = visitInfo({ visit: f.visit.value }), lock = !!v?.plan, box = $('cost');
+  if (lock && !box.disabled) { stash = { price: f.price.value, meal: f.meal.value, guests: f.guests.value, extras: draftExtras, fees: draftFees, vat: f.vat.checked }; f.price.value = f.meal.value = f.guests.value = ''; draftExtras = []; draftFees = []; f.vat.checked = false; }
+  else if (!lock && stash) { f.price.value = stash.price; f.meal.value = stash.meal; f.guests.value = stash.guests; draftExtras = stash.extras; draftFees = stash.fees; f.vat.checked = stash.vat; stash = null; }
+  box.disabled = lock; drawExtras(); drawFees(); updateTotal();
+  setHint($('visitHint'), lock ? '상담 전이라 금액은 상담일이 지난 뒤에 입력할 수 있어요.' : v ? '상담은 어땠나요? 상담 결과 금액을 입력해 주세요.' : '');
 }
 function setHint(el, msg, err, ok) {
   el.innerHTML = (err ? icon('alert') + ' ' : ok ? icon('check') + ' ' : '') + esc(msg);
@@ -554,13 +608,17 @@ function openEditor(id) {
   f.meal.value = h?.meal ?? '';
   f.guests.value = h?.guests ?? '';
   f.memo.value = h?.memo ?? '';
-  f.visit.value = h?.visit ?? '';
+  f.visit.value = h?.visit ?? ''; stash = null; $('cost').disabled = false;
   draftPhotos = [...(h?.photos ?? [])];
   draftExtras = (h?.extras ?? []).map(e => ({ ...e }));
+  draftFees = (h?.fees ?? []).map(e => ({ ...e }));
+  f.vat.checked = !!h?.vat; f.event.value = h?.event ?? ''; f.status.value = h?.status ?? ''; f.reason.value = h?.reason ?? '';
+  for (const [k] of RATES) f['r_' + k].value = h?.rate?.[k] ?? 0;
+  $('more').open = !!(h && (h.event || h.status || avgRate(h)));
   draftGeo = null; warnedAddr = null; lastLook = ''; draftCands = []; previewJob++; lookJob++;
-  $('cands').innerHTML = ''; setHint($('lookHint'), '');
+  $('cands').innerHTML = ''; setHint($('lookHint'), ''); $('lookHint').textContent = LOOK_TIP;
   setHint($('distHint'), '');
-  drawThumbs(); drawExtras(); updateTotal();
+  drawThumbs(); drawExtras(); drawFees(); updateTotal(); applyVisitLock();
   $('dlg').showModal();
 }
 
@@ -588,14 +646,19 @@ async function previewDistance() {
 }
 
 $('addBtn').onclick = () => openEditor(null);
-$('originBtn').onclick = () => window.openSettings?.();
 $('cancel').onclick = () => $('dlg').close();
 $('form').addr.onchange = previewDistance;
 $('form').link.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); lookup(true); } });
 $('linkGo').onclick = () => lookup(true);
-$('lookBtn').onclick = () => lookup(true);
+$('form').name.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); lookup(true); } });
 $('cands').onclick = e => { const b = e.target.closest('.cand'); if (b) applyPlace(draftCands[+b.dataset.i]); };
 ['price', 'meal', 'guests'].forEach(n => $('form')[n].addEventListener('input', updateTotal));
+$('form').visit.addEventListener('input', applyVisitLock);
+$('form').visit.addEventListener('change', applyVisitLock);
+$('addFee').onclick = () => { draftFees.push({ label: '', price: '' }); drawFees(); };
+$('fees').oninput = e => { const { i, k } = e.target.dataset; if (i != null) { draftFees[+i][k] = e.target.value; updateTotal(); } };
+$('fees').onclick = e => { const i = e.target.dataset.del; if (i != null) { draftFees.splice(+i, 1); drawFees(); updateTotal(); } };
+$('form').vat.addEventListener('change', updateTotal);
 $('addEx').onclick = () => { draftExtras.push({ label: '', price: '' }); drawExtras(); };
 $('extras').oninput = e => { const { i, k } = e.target.dataset; if (i != null) draftExtras[+i][k] = e.target.value; };
 $('extras').onclick = e => { const i = e.target.dataset.del; if (i != null) { draftExtras.splice(+i, 1); drawExtras(); } };
@@ -648,6 +711,10 @@ $('form').onsubmit = async e => {
       meal: f.meal.value === '' ? null : Number(f.meal.value),
       guests: f.guests.value === '' ? null : Math.round(Number(f.guests.value)),
       extras: draftExtras.filter(x => x.label.trim() && x.price !== '' && !isNaN(x.price)).map(x => ({ label: x.label.trim(), price: Number(x.price) })),
+      fees: draftFees.filter(x => x.label.trim() && x.price !== '' && !isNaN(x.price)).map(x => ({ label: x.label.trim(), price: Number(x.price) })),
+      vat: f.vat.checked,
+      event: f.event.value || '', status: f.status.value, reason: f.status.value === 'drop' ? f.reason.value.trim() : '',
+      rate: Object.fromEntries(RATES.map(([k]) => [k, +f['r_' + k].value || 0])),
       memo: f.memo.value.trim(),
       visit: f.visit.value || '',
       photos: draftPhotos,
@@ -679,6 +746,7 @@ $('list').onclick = e => {
 $('lb').onclick = () => $('lb').close();
 
 // ───────── 기준 위치 관리창 ─────────
+window.addEventListener('wedding-data-changed', () => { syncScenario(); render(); });
 window.addEventListener('wedding-kakao-changed', () => { lastLook = ''; });
 let editingO = null; // 수정 중인 기준 주소 id (없으면 신규 추가)
 const oHint = (t, err, ok) => { const el = $('oHint'); if (el) setHint(el, t, err, ok); };
@@ -756,6 +824,8 @@ $('cmpBtn').onclick = () => {
         ${row('주소', h => `<td>${esc(addrOf(h) || '-')}${linkOf(h) ? `<br><a href="${esc(linkOf(h))}" target="_blank" rel="noopener">지도 링크</a>` : ''}</td>`)}
         ${row('전화', h => `<td>${h.phone ? `<a href="tel:${esc(h.phone.replace(/[^\d+]/g, ''))}">${esc(h.phone)}</a>` : '-'}</td>`)}
         ${row('상담', h => { const v = visitInfo(h); return `<td>${v ? esc(v.label) : '-'}</td>`; })}
+        ${row('평점', h => { const a = avgRate(h); return `<td>${a ? '★ ' + a.toFixed(1) : '-'}</td>`; })}
+        ${row('예식일시', h => `<td>${h.event ? esc(fmtEvent(h.event)) : '-'}</td>`)}
         ${row('메모', h => `<td>${esc(h.memo || '-')}</td>`)}
       </table></div><div class="hint" style="margin-top:6px">강조 표시는 최저 총액 / “${esc(curOrigin().name)}”에서 가장 가까운 곳</div>`;
     })();
@@ -768,7 +838,7 @@ $('searchForm').onsubmit = e => { e.preventDefault(); query = $('q').value.trim(
 $('q').addEventListener('input', () => { if (query && !$('q').value.trim()) { query = ''; render(); } });   // 검색어를 지우면 전체 목록
 
 $('sort').value = sort;
-const API = { esc, icon, fmtPrice, total, byPrice, distFor, distsOf, setOrigin, addrOf, linkOf, dirUrl, distText, visitInfo, curOrigin, isUrl, needsGeo, rerender: () => render(), get halls() { return halls; }, get origins() { return O.list; }, get curId() { return cur; }, get sort() { return sort; } };
+const API = { esc, icon, fmtPrice, total, byPrice, distFor, distsOf, guestsOf, fmtEvent, RATES, avgRate, feeSum, setOrigin, addrOf, linkOf, dirUrl, distText, visitInfo, curOrigin, isUrl, needsGeo, rerender: () => render(), get halls() { return halls; }, get budget() { return budget; }, get scenario() { return scenario; }, get origins() { return O.list; }, get curId() { return cur; }, get sort() { return sort; } };
 window.HALL_API = API;
 if (UI.setup) UI.setup(API);
 renderOrigins();
