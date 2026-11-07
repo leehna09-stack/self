@@ -28,6 +28,7 @@
       <h3>결혼 일정</h3>
       <label>결혼식 날짜 <small>정하면 로드맵의 단계별 권장 기한이 계산돼요.</small><input type="date" id="wsDate"></label>
       <label>총 예산 (만원)<input type="number" id="wsBudget" min="0" inputmode="numeric" placeholder="예: 5000"></label>
+      <label>예상 하객 수 (명) <small>정하면 모든 예식장 총액을 이 인원 기준으로 비교해요(보증인원보다 적으면 보증인원만큼).</small><input type="number" id="wsGuests" min="0" inputmode="numeric" placeholder="예: 150"></label>
     </section>
     <section>
       <h3>카카오 API</h3>
@@ -62,7 +63,7 @@
 
   function open() {
     const R = read(RKEY, {});
-    $('wsDate').value = R.date || ''; $('wsBudget').value = R.budget || '';
+    $('wsDate').value = R.date || ''; $('wsBudget').value = R.budget || ''; $('wsGuests').value = R.guests || '';
     const k = localStorage.getItem(KKEY) || '', st = localStorage.getItem('wedding-kakao-status') || '';
     $('wsKey').value = k;
     msg($('wsKeyHint'), !k ? '키가 없으면 무료 OpenStreetMap 검색을 써요.' : st === 'bad' ? '저장된 키가 거부됐어요. 키를 확인해 주세요.' : st === 'ok' ? '연결돼 있어요.' : '키가 저장돼 있어요.', !k ? '' : st === 'bad' ? 'err' : 'ok');
@@ -74,7 +75,7 @@
 
   $('wsForm').onsubmit = e => {
     e.preventDefault();
-    const R = read(RKEY, {}); R.date = $('wsDate').value || ''; R.budget = Math.max(0, Number($('wsBudget').value) || 0);
+    const R = read(RKEY, {}); R.date = $('wsDate').value || ''; R.budget = Math.max(0, Number($('wsBudget').value) || 0); R.guests = Math.max(0, Math.round(Number($('wsGuests').value) || 0));
     if (!write(RKEY, R)) return msg($('wsMsg'), '저장 공간이 부족하거나 막혀 있어요.', 'err');
     window.dispatchEvent(new Event('wedding-data-changed')); sheet.close();
   };
