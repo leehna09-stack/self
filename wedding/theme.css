@@ -87,3 +87,10 @@ h1 { font-size: 20px; letter-spacing: -0.03em; }
 .vchip.st-drop { background: var(--bg); color: var(--muted); box-shadow: inset 0 0 0 1px var(--line); }
 .qrow.drop { opacity: .55; }
 .qsum.over { color: var(--accent); font-weight: 700; }
+
+/* 카드 안 상담 체크리스트 */
+.qask { margin-top: 2px; }
+.qask summary { cursor: pointer; font-size: 11px; font-weight: 700; color: var(--accent); padding: 2px 0; }
+.qask .qa { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 8px; align-items: start; padding: 4px 0; font-size: 11px; color: var(--text); }
+.qask .qa input { width: 16px; height: 16px; margin: 1px 0 0; accent-color: var(--accent); }
+.qask .qa em { display: block; font-style: normal; color: var(--dist); font-weight: 600; }

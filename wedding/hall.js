@@ -1,5 +1,7 @@
 /* 웨딩홀 비교 — 화면 골격과 로직. 디자인(시안)은 hall.css 위에 덮어쓰고, 필요하면 window.HALL_UI 훅으로 카드 모양을 바꾼다.
    훅(선택): cardHtml(h, ctx) · lead(ctx) 목록 위 영역 HTML · afterRender(ctx) · setup(api) 첫 렌더 직전 한 번 */
+// 상담 때 매번 묻는 질문 — 예식장마다 이 목록을 복사해 쓰고, 질문을 더하거나 뺄 수 있다
+const DEFAULT_ASK = ['희망 날짜·시간 예약 가능 여부', '식대 구성 (뷔페/코스, 1인 금액)', '최소 보증인원 · 인원 초과/미달 시 비용', '대관료에 포함된 항목 (꽃장식·음향·영상·사회자)', '부가세·봉사료 별도 여부', '계약금·잔금 일정과 위약금(취소 규정)', '주차 가능 대수 · 무료 시간', '신부대기실 · 폐백실 · 폐백 비용', '주류·음료 무제한 여부', '예식 간격 · 연회 시간', '하객 편의 (셔틀·엘리베이터·접근성)', '시식 가능 여부'];
 const RATE_OPTS = '<option value="0">—</option>' + [1, 2, 3, 4, 5].map(n => `<option value="${n}">${'★'.repeat(n)}</option>`).join('');
 document.body.insertAdjacentHTML('beforeend', `
 <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
@@ -113,6 +115,13 @@ document.body.insertAdjacentHTML('beforeend', `
         </div>
       </div>
     </details>
+    <details class="manual" id="askbox">
+      <summary id="askSum">상담 체크리스트</summary>
+      <div class="manualbody">
+        <div id="asklist"></div>
+        <div class="askadd"><input id="askNew" maxlength="60" placeholder="질문 추가 (예: 야외 촬영 가능한지)" aria-label="질문 추가"><button type="button" class="btn" id="askAdd">추가</button></div>
+      </div>
+    </details>
     <label>메모<textarea name="memo" rows="3" placeholder="주차, 홀 분위기, 연회장 등"></textarea></label>
     <button type="button" class="btn" id="photoBtn"><svg class="i" aria-hidden="true"><use href="#i-photo"/></svg> 사진 추가</button>
     <input id="files" class="sr-only" type="file" accept="image/*" multiple tabindex="-1" aria-hidden="true">
@@ -158,6 +167,7 @@ let sort = 'all';
 let query = '';          // 검색 버튼을 눌러 확정한 검색어
 let editing = null;     // 수정 중인 id (없으면 신규)
 let draftPhotos = [];   // 편집창의 사진 임시 목록
+let draftAsk = [];      // 상담 체크리스트 임시 목록 [{q, done, a}]
 let draftFees = [];     // 추가 비용 임시 목록
 let draftExtras = [];   // 편집창의 월별·요일별 요금 임시 목록
 let draftGeo = null;    // 주소 입력 시 미리 찾은 좌표 {addr, geo}
@@ -560,6 +570,20 @@ function drawExtras() {
       <button type="button" class="x" data-del="${i}" aria-label="삭제">×</button>
     </div>`).join('');
 }
+function drawAsk() {
+  $('asklist').innerHTML = draftAsk.map((x, i) => `
+    <div class="askrow${x.done ? ' done' : ''}">
+      <input type="checkbox" data-i="${i}" ${x.done ? 'checked' : ''} aria-label="물어봤어요">
+      <span class="q">${esc(x.q)}</span>
+      <button type="button" class="x" data-del="${i}" aria-label="질문 삭제">×</button>
+      <input class="a" data-i="${i}" value="${esc(x.a)}" maxlength="120" placeholder="답변 · 메모" aria-label="${esc(x.q)} 답변">
+    </div>`).join('');
+  sumAsk();
+}
+const sumAsk = () => { $('askSum').textContent = `상담 체크리스트 (${draftAsk.filter(x => x.done).length}/${draftAsk.length})`; };
+// 카드에서도 체크할 수 있게: 목록이 없으면 기본 질문으로 시작
+const askOf = h => (h.ask?.length ? h.ask : DEFAULT_ASK.map(q => ({ q, done: false, a: '' })));
+function toggleAsk(id, i, done) { const h = halls.find(x => x.id === id); if (!h) return; h.ask = askOf(h).map(x => ({ ...x })); h.ask[i].done = done; save(); }
 function drawFees() {
   $('fees').innerHTML = draftFees.map((e, i) => `
     <div class="exrow">
@@ -618,6 +642,7 @@ function openEditor(id) {
   draftGeo = null; warnedAddr = null; lastLook = ''; draftCands = []; previewJob++; lookJob++;
   $('cands').innerHTML = ''; setHint($('lookHint'), ''); $('lookHint').textContent = LOOK_TIP;
   setHint($('distHint'), '');
+  draftAsk = askOf(h || {}).map(x => ({ ...x })); $('askbox').open = !!(h && h.ask?.some(x => x.done || x.a)); drawAsk();
   drawThumbs(); drawExtras(); drawFees(); updateTotal(); applyVisitLock();
   $('dlg').showModal();
 }
@@ -655,6 +680,12 @@ $('cands').onclick = e => { const b = e.target.closest('.cand'); if (b) applyPla
 ['price', 'meal', 'guests'].forEach(n => $('form')[n].addEventListener('input', updateTotal));
 $('form').visit.addEventListener('input', applyVisitLock);
 $('form').visit.addEventListener('change', applyVisitLock);
+$('asklist').onchange = e => { const i = e.target.dataset.i; if (i != null && e.target.type === 'checkbox') { draftAsk[+i].done = e.target.checked; e.target.closest('.askrow').classList.toggle('done', e.target.checked); sumAsk(); } };
+$('asklist').oninput = e => { const i = e.target.dataset.i; if (i != null && e.target.classList.contains('a')) draftAsk[+i].a = e.target.value; };
+$('asklist').onclick = e => { const i = e.target.dataset.del; if (i != null) { draftAsk.splice(+i, 1); drawAsk(); } };
+const addAsk = () => { const v = $('askNew').value.trim(); if (!v) return; draftAsk.push({ q: v, done: false, a: '' }); $('askNew').value = ''; drawAsk(); };
+$('askAdd').onclick = addAsk;
+$('askNew').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); addAsk(); } });
 $('addFee').onclick = () => { draftFees.push({ label: '', price: '' }); drawFees(); };
 $('fees').oninput = e => { const { i, k } = e.target.dataset; if (i != null) { draftFees[+i][k] = e.target.value; updateTotal(); } };
 $('fees').onclick = e => { const i = e.target.dataset.del; if (i != null) { draftFees.splice(+i, 1); drawFees(); updateTotal(); } };
@@ -715,6 +746,7 @@ $('form').onsubmit = async e => {
       vat: f.vat.checked,
       event: f.event.value || '', status: f.status.value, reason: f.status.value === 'drop' ? f.reason.value.trim() : '',
       rate: Object.fromEntries(RATES.map(([k]) => [k, +f['r_' + k].value || 0])),
+      ask: draftAsk.filter(x => x.q.trim()).map(x => ({ q: x.q.trim(), done: !!x.done, a: (x.a || '').trim() })),
       memo: f.memo.value.trim(),
       visit: f.visit.value || '',
       photos: draftPhotos,
@@ -824,6 +856,7 @@ $('cmpBtn').onclick = () => {
         ${row('주소', h => `<td>${esc(addrOf(h) || '-')}${linkOf(h) ? `<br><a href="${esc(linkOf(h))}" target="_blank" rel="noopener">지도 링크</a>` : ''}</td>`)}
         ${row('전화', h => `<td>${h.phone ? `<a href="tel:${esc(h.phone.replace(/[^\d+]/g, ''))}">${esc(h.phone)}</a>` : '-'}</td>`)}
         ${row('상담', h => { const v = visitInfo(h); return `<td>${v ? esc(v.label) : '-'}</td>`; })}
+        ${row('상담 체크', h => { const a = askOf(h); return `<td>${a.filter(x => x.done).length}/${a.length}</td>`; })}
         ${row('평점', h => { const a = avgRate(h); return `<td>${a ? '★ ' + a.toFixed(1) : '-'}</td>`; })}
         ${row('예식일시', h => `<td>${h.event ? esc(fmtEvent(h.event)) : '-'}</td>`)}
         ${row('메모', h => `<td>${esc(h.memo || '-')}</td>`)}
@@ -838,7 +871,7 @@ $('searchForm').onsubmit = e => { e.preventDefault(); query = $('q').value.trim(
 $('q').addEventListener('input', () => { if (query && !$('q').value.trim()) { query = ''; render(); } });   // 검색어를 지우면 전체 목록
 
 $('sort').value = sort;
-const API = { esc, icon, fmtPrice, total, byPrice, distFor, distsOf, guestsOf, fmtEvent, RATES, avgRate, feeSum, setOrigin, addrOf, linkOf, dirUrl, distText, visitInfo, curOrigin, isUrl, needsGeo, rerender: () => render(), get halls() { return halls; }, get budget() { return budget; }, get scenario() { return scenario; }, get origins() { return O.list; }, get curId() { return cur; }, get sort() { return sort; } };
+const API = { esc, icon, fmtPrice, total, byPrice, distFor, distsOf, askOf, toggleAsk, guestsOf, fmtEvent, RATES, avgRate, feeSum, setOrigin, addrOf, linkOf, dirUrl, distText, visitInfo, curOrigin, isUrl, needsGeo, rerender: () => render(), get halls() { return halls; }, get budget() { return budget; }, get scenario() { return scenario; }, get origins() { return O.list; }, get curId() { return cur; }, get sort() { return sort; } };
 window.HALL_API = API;
 if (UI.setup) UI.setup(API);
 renderOrigins();
