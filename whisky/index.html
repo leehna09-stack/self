@@ -507,6 +507,12 @@ textarea.field { min-height: 140px; resize: vertical; line-height: 28px; padding
 /* 맛은 카드 전체 폭에 한 줄로 */
 .card { flex-wrap: wrap; row-gap: 8px; }
 .card > .tags.flat { flex: 0 0 100%; margin-top: 0; }
+
+/* 가격 입력: 구매 장소(왼쪽)와 사진(오른쪽) 두 칼럼 */
+.grid2.sp .photos { gap: 8px; }
+.grid2.sp .pbox, .grid2.sp .padd { width: 68px; height: 68px; }
+.grid2.sp .padd .ic { font-size: 22px; }
+.grid2.sp .padd span { font-size: 11px; }
 </style>
 </head>
 
@@ -1457,12 +1463,17 @@ function openPriceForm(opts = {}) {
       <div class="hint" id="phint"></div>
       <div class="judge" id="pjudge" hidden></div>
 
-      <label class="lb">${ic('i-shop')} 구매 장소</label>
-      <input class="field" id="pshop" placeholder="예: 코스트코 양재점, 면세점, 쿠팡" value="${esc(g.shop)}" maxlength="40" autocomplete="off">
-      <div class="quick">${shopChoices().map(sh => `<button type="button" class="chip ${g.shop === sh ? 'on' : ''}" data-pshop="${esc(sh)}">${esc(sh)}</button>`).join('')}</div>
-
-      <label class="lb">${ic('i-camera')} 사진 <span style="color:var(--muted);font:12px var(--hand)">(최대 ${MAX_PHOTOS}장)</span></label>
-      <div class="photos" id="pphotos"></div>
+      <div class="grid2 sp">
+        <div>
+          <label class="lb">${ic('i-shop')} 구매 장소</label>
+          <input class="field" id="pshop" placeholder="예: 코스트코" value="${esc(g.shop)}" maxlength="40" autocomplete="off">
+          <div class="quick">${shopChoices().map(sh => `<button type="button" class="chip ${g.shop === sh ? 'on' : ''}" data-pshop="${esc(sh)}">${esc(sh)}</button>`).join('')}</div>
+        </div>
+        <div>
+          <label class="lb">${ic('i-camera')} 사진 <span style="color:var(--muted);font:12px var(--hand)">(최대 ${MAX_PHOTOS}장)</span></label>
+          <div class="photos" id="pphotos"></div>
+        </div>
+      </div>
 
       <button class="btn-main" id="psave">${ic('i-won')} ${old ? '수정 저장' : '가격 기록'}</button>
     </div></div>`;
