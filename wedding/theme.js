@@ -41,6 +41,7 @@ window.HALL_UI = (() => {
       ${A.origins.length > 1 ? `<div class="qsum odist">${A.distsOf(h).map(r => `<span class="od"><b>${esc(r.o.name)}</b> ${r.km != null ? r.km + 'km' + (r.k === '직선' ? '(직선)' : '') : '계산 중'}</span>`).join('')}</div>` : ''}
       ${h.phone ? `<div class="qsum"><a href="tel:${esc(h.phone.replace(/[^\d+]/g, ''))}">${esc(h.phone)}</a></div>` : ''}
       ${link ? `<div class="qsum"><a href="${esc(link)}" target="_blank" rel="noopener">지도에서 보기</a></div>` : ''}
+      ${(ask => `<details class="qask" data-id="${h.id}"><summary>상담 체크 ${ask.filter(x => x.done).length}/${ask.length}</summary>${ask.map((x, i) => `<label class="qa"><input type="checkbox" data-ask="${i}"${x.done ? ' checked' : ''}><span>${esc(x.q)}${x.a ? `<em>${esc(x.a)}</em>` : ''}</span></label>`).join('')}</details>`)(A.askOf(h))}
       ${h.memo ? `<div class="qmemo">${esc(h.memo)}</div>` : ''}
       ${h.photos?.length ? `<button type="button" class="qphoto" data-id="${h.id}" data-act="view">${icon('photo')} 사진 ${h.photos.length}장 보기</button>` : ''}
     </div>`;
@@ -62,9 +63,14 @@ window.HALL_UI = (() => {
       const lg = document.createElement('div'); lg.id = 'legend'; lg.className = 'legend'; lg.innerHTML = '<span class="lgp">총액</span><button type="button" class="lgd"></button>';
       document.querySelector('.countrow').append(lg);
       lg.querySelector('.lgd').onclick = () => { const L = A.origins, i = L.findIndex(o => o.id === A.curId); if (L.length > 1) A.setOrigin(L[(i + 1) % L.length].id); };
+      document.addEventListener('change', e => {                         // 카드에서 바로 체크
+        const c = e.target.closest('[data-ask]'); if (!c) return; const d = c.closest('.qask');
+        A.toggleAsk(d.dataset.id, +c.dataset.ask, c.checked);
+        const all = d.querySelectorAll('[data-ask]'); d.querySelector('summary').textContent = `상담 체크 ${[...all].filter(x => x.checked).length}/${all.length}`;
+      });
       // 행 펼치기/접기, 요약 칩으로 이동
       document.addEventListener('click', e => {
-        const row = e.target.closest('.qrow'); if (!row || e.target.closest('a, [data-act]')) return;
+        const row = e.target.closest('.qrow'); if (!row || e.target.closest('a, [data-act], .qask')) return;
         const id = row.dataset.id; openId = openId === id ? null : id; reveal = openId; A.rerender();
       });
     },

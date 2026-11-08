@@ -232,3 +232,17 @@ header { flex-wrap:nowrap; }
 #form .chk { display:flex; align-items:center; gap:6px; min-height:36px; font-size:11px; color:var(--text); }
 #form .chk input { width:16px; height:16px; margin:0; accent-color:var(--accent); }
 #form select { appearance:none; -webkit-appearance:none; padding-right:30px; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23626978' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 10px center; background-size:14px; }
+
+/* 입력창이 좌우로 밀리지 않게: 숨김 파일 입력이 팝업 밖에 놓이는 것을 막는다 */
+dialog { overflow-x: hidden; }
+#form .sr-only { left: 0; right: auto; }
+
+/* 상담 체크리스트 */
+#asklist { display:grid; }
+.askrow { display:grid; grid-template-columns:auto minmax(0, 1fr) auto; gap:4px 8px; align-items:center; padding:6px 0; border-bottom:1px solid var(--line); }
+#form .askrow input[type=checkbox] { width:18px; height:18px; margin:0; accent-color:var(--accent); }
+.askrow .q { font-size:12px; color:var(--text); line-height:1.35; }
+.askrow.done .q { color:var(--muted); }
+.askrow .x { border:0; background:none; color:var(--muted); font-size:16px; min-height:28px; width:28px; }
+#form .askrow input.a { grid-column:2 / 4; height:32px; font-size:13px; }
+.askadd { display:grid; grid-template-columns:minmax(0, 1fr) auto; gap:6px; margin-top:6px; }
