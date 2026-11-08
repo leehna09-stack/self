@@ -15,7 +15,6 @@
 <title>위스키 노트</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
 
-<link href="https://fonts.googleapis.com/css2?family=Gaegu:wght@400;700&display=swap" rel="stylesheet">
 
 <!-- ============================================================
   [1] 꾸미기(CSS) - 맨 위 :root 의 색 이름표만 바꿔도 분위기가 바뀌어요
@@ -38,8 +37,10 @@
   --hi: #4aa24c;          /* 최고가·상승(초록) */
   --lo: #e1706a;          /* 최저가·하락(빨강) */
   --avg: #4a8be8;         /* 평균가(파랑) */
-  --title: "NanumBarunGothic", "Nanum Barun Gothic", "나눔바른고딕", "Gaegu", "Pretendard Variable", sans-serif;
-  --hand: "Gaegu", "Nanum Pen Script", "Pretendard Variable", cursive;
+  /* 글꼴은 휴대폰에 설치한 합정산스로 고정: 폰 설정에서 시스템 글꼴이 합정산스면 system-ui가 그 글꼴이에요. Pretendard는 마지막 대비용 */
+  --font: "Hapjeong Sans", "합정산스", system-ui, -apple-system, "Pretendard Variable", Pretendard, "Malgun Gothic", sans-serif;
+  --title: var(--font);
+  --hand: var(--font);
   --radius: 14px;
   --safe-b: env(safe-area-inset-bottom, 0px);
   --safe-t: env(safe-area-inset-top, 0px);
@@ -52,7 +53,7 @@ body {
   background-color: var(--bg);
   background-image: radial-gradient(var(--dot) 1.1px, transparent 1.3px);
   background-size: 22px 22px;
-  font: 14px/1.55 "Pretendard Variable", Pretendard, -apple-system, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+  font: 14px/1.55 var(--font);
   min-height: 100vh;
 }
 button { font: inherit; color: inherit; cursor: pointer; border: 0; background: none; }
@@ -1042,6 +1043,14 @@ function exportJson() {
   toast('백업 파일을 내려받았어요.');
 }
 
+/* 검색창: 글자를 칠 때마다 목록을 다시 그리되, 한글 조합 중에는 기다렸다가 조합이 끝나면 그려요 */
+function liveSearch(id, key) {
+  const el = $(id); if (!el) return;
+  const go = () => { state[key] = el.value; const pos = el.selectionStart; render(); const n = $(id); n.focus(); n.setSelectionRange(pos, pos); };
+  el.addEventListener('input', e => { if (e.isComposing) state[key] = el.value; else go(); });
+  el.addEventListener('compositionend', go);
+}
+
 function bindView() {
   $('#installBtn').onclick = installApp;
   $('#backupBtn').onclick = exportJson;
@@ -1052,7 +1061,7 @@ function bindView() {
   bindPrice();
   document.querySelectorAll('[data-ph]').forEach(img => img.onclick = e => { e.stopPropagation(); const [id, n] = img.dataset.ph.split(':'); openViewer(photoMap[id], +n); });
   const q = $('#q');
-  if (q) q.addEventListener('input', e => { state.q = e.target.value; const pos = e.target.selectionStart; render(); const n = $('#q'); n.focus(); n.setSelectionRange(pos, pos); });
+  liveSearch('#q', 'q');
   const so = $('#sort'); if (so) so.onchange = e => { state.sort = e.target.value; render(); };
   document.querySelectorAll('[data-flavor]').forEach(b => b.onclick = () => { state.flavor = b.dataset.flavor; render(); });
   document.querySelectorAll('[data-view]').forEach(c => {
@@ -1208,7 +1217,7 @@ function priceBody() {
 }
 function viewPrice() { return header('가격 판단 보드') + priceBody(); }
 function bindPrice() {
-  const q = $('#pq'); if (q) q.addEventListener('input', e => { state.pq = e.target.value; const pos = e.target.selectionStart; render(); const n = $('#pq'); n.focus(); n.setSelectionRange(pos, pos); });
+  liveSearch('#pq', 'pq');
   document.querySelectorAll('[data-pg]').forEach(c => {
     c.onclick = () => openPriceDetail(c.dataset.pg);
     c.onkeydown = e => { if (e.target === c && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); openPriceDetail(c.dataset.pg); } };
