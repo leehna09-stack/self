@@ -2,6 +2,8 @@
    색은 "3색 이내": 글자(ink 그래파이트) · 총액·강조(accent 코랄) · 거리·완료(dist 슬레이트). 나머지는 이 세 색에서 뽑은 연한 면(tint)과 선이다. */
 :root {
   color-scheme: light;
+  /* 글꼴은 휴대폰에 설치한 합정산스로 고정: 휴대폰 설정에서 시스템 글꼴을 합정산스로 두면 system-ui가 그 글꼴이 된다. 앱에 넣은 나눔바른고딕은 마지막 대비용 */
+  --font: "Hapjeong Sans", "합정산스", system-ui, -apple-system, "Wedding Sans", "Malgun Gothic", "Noto Sans KR", sans-serif;
   --radius: 15px;
   --surface: #fff; --card: #fff;
   --text: #20242c; --muted: #626978; --line: #e4e6ea; --bg: #f4f5f7; --soft: #f4f5f7;
