@@ -363,7 +363,6 @@ function formLoc() {
 let lookJob = 0, lastLook = '', draftCands = [];
 function applyPlace(p) {
   const f = $('form');
-  $('manual').open = true;                                        // 자동 입력된 주소·전화번호를 보여 준다
   if (!f.name.value.trim()) f.name.value = p.name;
   f.addr.value = p.addr;
   if (p.phone) f.phone.value = p.phone;
@@ -602,15 +601,15 @@ function updateTotal() {
   const t = total({ price, meal: parseFloat(f.meal.value) || 0, guests: parseInt(f.guests.value) || 0, fees: draftFees, vat: f.vat.checked });
   $('totalHint').innerHTML = `${icon('wallet')} 총 예상 ${fmtPrice(t)} (대관료 + 식대×${scenario ? '하객 수' : '보증인원'}${draftFees.length ? ' + 추가 비용' : ''}${f.vat.checked ? ' + 부가세' : ''})`;
 }
-// 상담 예정일(오늘 포함)이 있으면 아직 상담 전이라 금액을 못 적는다. 날짜가 지나면 상담 결과 금액을 적는다.
+// 상담 예정일이 내일 이후면 아직 상담 전이라 금액을 못 적는다. 상담일 당일부터 상담 결과 금액을 적는다.
 const LOOK_TIP = '이름이나 링크를 넣고 ↵ 를 누르면 주소·전화번호가 자동 입력돼요';
 let stash = null;   // 잠글 때 치워 둔 값 — 날짜를 바꿔 잠금이 풀리면 되돌린다
 function applyVisitLock() {
-  const f = $('form'), v = visitInfo({ visit: f.visit.value }), lock = !!v?.plan, box = $('cost');
+  const f = $('form'), v = visitInfo({ visit: f.visit.value }), lock = !!v && v.diff > 0, box = $('cost');
   if (lock && !box.disabled) { stash = { price: f.price.value, meal: f.meal.value, guests: f.guests.value, extras: draftExtras, fees: draftFees, vat: f.vat.checked }; f.price.value = f.meal.value = f.guests.value = ''; draftExtras = []; draftFees = []; f.vat.checked = false; }
   else if (!lock && stash) { f.price.value = stash.price; f.meal.value = stash.meal; f.guests.value = stash.guests; draftExtras = stash.extras; draftFees = stash.fees; f.vat.checked = stash.vat; stash = null; }
   box.disabled = lock; drawExtras(); drawFees(); updateTotal();
-  setHint($('visitHint'), lock ? '상담 전이라 금액은 상담일이 지난 뒤에 입력할 수 있어요.' : v ? '상담은 어땠나요? 상담 결과 금액을 입력해 주세요.' : '');
+  setHint($('visitHint'), lock ? '상담 전이라 금액은 상담일 당일부터 입력할 수 있어요.' : v ? '상담 결과 금액을 입력해 주세요.' : '');
 }
 function setHint(el, msg, err, ok) {
   el.innerHTML = (err ? icon('alert') + ' ' : ok ? icon('check') + ' ' : '') + esc(msg);
@@ -627,7 +626,7 @@ function openEditor(id) {
   f.addr.value = h ? addrOf(h) : '';
   f.link.value = h ? linkOf(h) : '';
   f.phone.value = h?.phone ?? '';
-  $('manual').open = !!(h && (addrOf(h) || h.phone));             // 값이 있을 때만 펼쳐 둔다
+  $('manual').open = false;                                       // 직접 입력하기는 항상 접힌 채로 시작한다
   f.price.value = h?.price ?? '';
   f.meal.value = h?.meal ?? '';
   f.guests.value = h?.guests ?? '';
