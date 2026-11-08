@@ -513,6 +513,8 @@ textarea.field { min-height: 140px; resize: vertical; line-height: 28px; padding
 .grid2.sp .pbox, .grid2.sp .padd { width: 68px; height: 68px; }
 .grid2.sp .padd .ic { font-size: 22px; }
 .grid2.sp .padd span { font-size: 11px; }
+/* 구매 장소 바로 입력 버튼: 모서리 15px */
+.grid2.sp .quick .chip { border-radius: 15px; }
 </style>
 </head>
 
@@ -638,9 +640,12 @@ const p100txt = (price, ml) => p100(price, ml) ? `100ml당 ${won(p100(price, ml)
 const per100 = l => l.ml ? ` · 100ml당 ${won(Math.round(l.price / l.ml * 100))}` : '';
 const SHOPS_DEFAULT = ['코스트코', '트레이더스', '이마트', '롯데마트', '와인앤모어', '면세점', '온라인'];
 function shopChoices() {
-  const cnt = {}; logs.forEach(l => { if (l.shop) cnt[l.shop] = (cnt[l.shop] || 0) + 1; });
+  const all = priceEntries().filter(e => e.shop);
+  const cnt = {}; all.forEach(e => { cnt[e.shop] = (cnt[e.shop] || 0) + 1; });
   const mine = Object.keys(cnt).sort((a, b) => cnt[b] - cnt[a]);
-  return [...new Set([...mine, ...SHOPS_DEFAULT])].slice(0, 9);
+  /* 가장 최근에 입력한 장소 2곳을 맨 앞에 */
+  const recent = [...new Set(all.sort((a, b) => byTime(b, a)).map(e => e.shop))].slice(0, 2);
+  return [...new Set([...recent, ...mine, ...SHOPS_DEFAULT])].slice(0, 9);
 }
 const typeOfName = name => { const hit = DB.find(d => norm(d[0]) === norm(name)); return hit ? hit[2] : '기타·직접입력'; };
 const typeStyle = name => TYPE_STYLE[typeOfName(name)] || TYPE_STYLE['기타·직접입력'];
