@@ -55,11 +55,11 @@ const weatherList = [
   { key: "typhoon", icon: "🌀", label: "태풍" }
 ];
 
-// 장소별 저장 위치: 사진·영상 칸 이름(영상 칸 이름 = 달력 표시용 영상 개수 필드), 날씨 필드
+// 장소별 저장 위치: 사진·영상 칸 이름(영상 칸 이름 = 달력 표시용 영상 개수 필드), 날씨 필드(송정은 날씨 없음)
 const PLACE_DATA = {
   "산본집": { photos: "photos", videos: "videos", weather: "weatherHome" },
   "제주도": { photos: "jejuPhotos", videos: "jejuVideos", weather: "weather" },
-  "송정지구": { photos: "songPhotos", videos: "songVideos", weather: "weatherSong" }
+  "송정지구": { photos: "songPhotos", videos: "songVideos", weather: "" }
 };
 
 // 한줄평에 태그할 수 있는 사람 / 지금 고른 태그
@@ -1092,7 +1092,7 @@ function drawCalendar() {
     const day = days[dateString];
 
     // 날씨 표시 (장소마다 따로 저장)
-    const weather = day ? findWeather(day[PLACE_DATA[viewPlace].weather]) : null;
+    const weather = day && PLACE_DATA[viewPlace].weather ? findWeather(day[PLACE_DATA[viewPlace].weather]) : null;
     if (weather) {
       const w = document.createElement("span");
       w.className = "day-weather";
@@ -1453,6 +1453,8 @@ function openDetail(dateString, keepFocus) {
     }).format(new Date(dateString + "T00:00:00"));
 
 
+  // 날씨는 산본집·제주도에서만
+  document.getElementById("weatherSection").hidden = !PLACE_DATA[viewPlace].weather;
   drawDetailWeather();
   if (!keepFocus) {
     // 새로 열 때는 첫 사진부터 보여줌

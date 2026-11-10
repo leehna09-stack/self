@@ -110,13 +110,11 @@ service cloud.firestore {
 
       allow create, update: if familyCode.size() >= 20
         && dayDate.size() == 10
-        && request.resource.data.keys().hasOnly(['weather', 'weatherBy', 'note', 'noteBy', 'fed', 'cleaned', 'videos', 'jejuVideos', 'songVideos', 'weatherHome', 'weatherSong'])
+        && request.resource.data.keys().hasOnly(['weather', 'weatherBy', 'note', 'noteBy', 'fed', 'cleaned', 'videos', 'jejuVideos', 'songVideos', 'weatherHome'])
         && (!('weather' in request.resource.data)
             || request.resource.data.weather in ['', 'sun', 'cloud', 'overcast', 'rain', 'typhoon'])
         && (!('weatherHome' in request.resource.data)
             || request.resource.data.weatherHome in ['', 'sun', 'cloud', 'overcast', 'rain', 'typhoon'])
-        && (!('weatherSong' in request.resource.data)
-            || request.resource.data.weatherSong in ['', 'sun', 'cloud', 'overcast', 'rain', 'typhoon'])
         && (!('songVideos' in request.resource.data)
             || (request.resource.data.songVideos is int && request.resource.data.songVideos >= 0 && request.resource.data.songVideos <= 2))
         && (!('note' in request.resource.data)
