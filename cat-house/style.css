@@ -612,20 +612,6 @@ fieldset.people-check {
 }
 
 /* ===== 날짜 상세 ===== */
-#todayPlaces div {
-  background-color: var(--soft);
-  border-radius: 14px;
-  padding: 6px 12px;
-  margin-bottom: 6px;
-  font-size: 14px;
-}
-
-#todayPlaces .detail-warn {
-  background-color: #ffe3e0;
-  color: #b42318;
-  font-weight: bold;
-}
-
 #manageSchedules {
   list-style: none;
   padding: 0;
@@ -1329,57 +1315,6 @@ textarea:focus-visible {
 }
 
 
-/* 위치 팝업: 날짜 이동 */
-.loc-today-btn {
-  margin-left: auto;
-  min-height: 30px;
-  padding: 0 12px;
-  border-radius: 16px;
-  font-size: 12px;
-}
-
-.loc-today-btn[hidden] {
-  display: none;
-}
-
-.loc-nav {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  margin-bottom: 10px;
-}
-
-.loc-nav .round-btn {
-  width: 32px;
-  height: 32px;
-  min-height: 32px;
-}
-
-/* 날짜 글자 위에 투명한 날짜 입력칸을 겹쳐서, 글자를 누르면 폰의 날짜 선택창이 열림 */
-.loc-date {
-  position: relative;
-  flex: 1 1 auto;
-  min-height: 34px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 12px;
-  background-color: var(--soft);
-  font-size: 15px;
-  white-space: nowrap;
-}
-
-.loc-date input {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  opacity: 0;
-  font-size: 16px;
-  cursor: pointer;
-}
-
 
 /* 공지 올리기 */
 #noticeSection {
@@ -1403,6 +1338,35 @@ textarea:focus-visible {
   line-height: 1.4;
   color: var(--ink);
   resize: none;
+}
+
+/* 공지사항 목록 */
+#noticeList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+#noticeList li:not(.note-empty) {
+  margin-bottom: 8px;
+  padding: 10px 12px;
+  border: 1px solid #f0d28a;
+  border-radius: 14px;
+  background-color: #fff6df;
+  font-size: 14px;
+  overflow-wrap: anywhere;
+}
+
+#noticeList small {
+  display: block;
+  margin-bottom: 2px;
+  font-size: 11px;
+  color: var(--sub);
+}
+
+#noticeList .note-empty {
+  color: var(--sub);
+  font-size: 12px;
 }
 
 /* 알림창의 공지 항목 */

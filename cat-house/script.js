@@ -647,6 +647,49 @@ function readAllNotif() {
   drawNotifList();
 }
 
+// 📢 공지사항: 지금까지의 관리자 공지를 최근 순으로 보여줌
+function openNoticeList() {
+  const list = document.getElementById("noticeList");
+  list.innerHTML = "";
+  const msg = function (text) {
+    const li = document.createElement("li");
+    li.className = "note-empty";
+    li.textContent = text;
+    list.appendChild(li);
+  };
+  document.getElementById("noticeListModal").classList.remove("hidden");
+  if (!cloudConnected) {
+    msg("아직 가족 코드로 연결되지 않았어요.");
+    return;
+  }
+  msg("불러오는 중이에요…");
+  window.cloud.getNotices().then(function (items) {
+    list.innerHTML = "";
+    if (items.length === 0) {
+      msg("아직 공지가 없어요");
+    }
+    items.forEach(function (n) {
+      const d = new Date(n.at);
+      const li = document.createElement("li");
+      const when = document.createElement("small");
+      when.textContent = d.getFullYear() + "." + (d.getMonth() + 1) + "." + d.getDate();
+      const text = document.createElement("div");
+      text.textContent = n.text;
+      li.appendChild(when);
+      li.appendChild(text);
+      list.appendChild(li);
+    });
+  }).catch(function (err) {
+    console.log("공지 불러오기 실패", err);
+    list.innerHTML = "";
+    msg("불러오지 못했어요. 인터넷 연결을 확인해 주세요.");
+  });
+}
+
+function closeNoticeList() {
+  document.getElementById("noticeListModal").classList.add("hidden");
+}
+
 // 새 소식창 닫기
 function closeNotif() {
   document.getElementById("notifModal").classList.add("hidden");
@@ -755,10 +798,6 @@ function onCloudData(list) {
   // 날짜 상세창이 열려 있으면 내용도 새로고침
   if (!document.getElementById("detailModal").classList.contains("hidden")) {
     openDetail(currentDetailDate, true);
-  }
-  // 오늘 위치 팝업이 열려 있으면 내용도 새로고침
-  if (!document.getElementById("todayModal").classList.contains("hidden")) {
-    renderLoc();
   }
 }
 
@@ -1365,85 +1404,6 @@ function addSchedule() {
 }
 
 // ===== 날짜 상세 =====
-
-// 그 날짜에 누가 어디에 있는지를 box에 그려줌 (오늘 위치 팝업에서 사용)
-function drawPlaces(box, dateString) {
-  const placeIcons = { "산본집": "🏠", "제주도": "🌴", "송정지구": "🏢" };
-  box.innerHTML = "";
-  const shownPlaces = ["산본집", "제주도", "송정지구"];
-  for (let p = 0; p < shownPlaces.length; p++) {
-    const names = [];
-    for (let i = 0; i < people.length; i++) {
-      if (getPlace(people[i], dateString) === shownPlaces[p]) {
-        names.push(people[i]);
-      }
-    }
-    const line = document.createElement("div");
-    line.textContent = placeIcons[shownPlaces[p]] + " " + shownPlaces[p] + ": " +
-      (names.length > 0 ? names.join(", ") : "없음");
-    box.appendChild(line);
-  }
-
-  // 빈집이면 경고
-  if (!hasPersonAtHome(dateString)) {
-    const warn = document.createElement("div");
-    warn.className = "detail-warn";
-    warn.textContent = "🐱 빈집 " + getEmptyDays(dateString) + "일차";
-    box.appendChild(warn);
-  }
-}
-
-// 📍 위치 팝업: 처음에는 오늘 기준, ◀▶·날짜 선택으로 다른 날의 위치도 볼 수 있음
-let locDate = "";
-
-function todayDateString() {
-  const now = new Date();
-  return makeDateString(now.getFullYear(), now.getMonth(), now.getDate());
-}
-
-function openToday() {
-  locDate = todayDateString();
-  renderLoc();
-  document.getElementById("todayModal").classList.remove("hidden");
-}
-
-// 보고 있는 날짜 기준으로 팝업 내용을 그림
-function renderLoc() {
-  const isToday = (locDate === todayDateString());
-  const d = new Date(locDate + "T00:00:00");
-  document.getElementById("locDateLabel").textContent =
-    new Intl.DateTimeFormat("ko-KR", { year: "numeric", month: "long", day: "numeric", weekday: "short" }).format(d) +
-    (isToday ? " · 오늘" : "");
-  document.getElementById("locDateInput").value = locDate;
-  document.getElementById("locTodayBtn").hidden = isToday;
-  drawPlaces(document.getElementById("todayPlaces"), locDate);
-}
-
-// 하루씩 앞뒤로 이동
-function shiftLocDay(step) {
-  const d = new Date(locDate + "T00:00:00");
-  d.setDate(d.getDate() + step);
-  locDate = makeDateString(d.getFullYear(), d.getMonth(), d.getDate());
-  renderLoc();
-}
-
-// 오늘로 돌아오기
-function goLocToday() {
-  locDate = todayDateString();
-  renderLoc();
-}
-
-// 날짜 선택창에서 고른 날짜로 이동
-document.getElementById("locDateInput").addEventListener("change", function (e) {
-  if (/^\d{4}-\d{2}-\d{2}$/.test(e.target.value)) {
-    locDate = e.target.value;
-    renderLoc();
-  }
-});
-
-function closeToday() {
-  document.getElementById("todayModal").classList.add("hidden");
-}
 
 // 날짜 상세창 열기 (keepFocus가 true면 포커스를 옮기지 않음)
 function openDetail(dateString, keepFocus) {
@@ -2816,7 +2776,7 @@ document.addEventListener("keydown", function (e) {
     closeManage();
     closeNotif();
     closeBug();
-    closeToday();
+    closeNoticeList();
     closeAdmin();
     closeCodeModal();
     closeUserModal();
