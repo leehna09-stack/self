@@ -1,4 +1,5 @@
 // 새 소식(사진·한줄평)이 올라오면 올린 사람을 뺀 가족 기기에 푸시 알림을 보냄
+// (한줄평에 태그가 있으면 일반 알림 대신 태그된 사람에게만 "누가 누구를 태그했는지" 알림)
 
 const { onDocumentCreated } = require("firebase-functions/v2/firestore");
 const { initializeApp } = require("firebase-admin/app");
@@ -27,10 +28,12 @@ exports.notifyFamily = onDocumentCreated(
     const tokenSnap = await getFirestore()
       .collection("families").doc(familyCode).collection("pushTokens").get();
 
-    // 올린 사람 본인 기기는 제외
+    // 올린 사람 본인 기기는 제외 (태그가 있으면 태그된 사람 기기에만 보냄)
+    const tags = Array.isArray(activity.tags) ? activity.tags : [];
     const targets = [];
     tokenSnap.forEach(function (doc) {
-      if (doc.data().by !== activity.by) {
+      const by = doc.data().by;
+      if (by !== activity.by && (tags.length === 0 || tags.indexOf(by) >= 0)) {
         targets.push(doc.id);
       }
     });
@@ -45,7 +48,8 @@ exports.notifyFamily = onDocumentCreated(
       body = "📢 공지: " + activity.text;
       link = SITE_URL;
     } else {
-      const what = activity.type === "photo" ? "사진을 올렸어요 📷"
+      const what = tags.length > 0 ? tags.join(", ") + " 님을 태그했어요 💬"
+        : activity.type === "photo" ? "사진을 올렸어요 📷"
         : activity.type === "video" ? "영상을 올렸어요 🎬" : "한줄평을 남겼어요 💬";
       body = activity.by + " 님이 " + activity.place + " " + activity.date + " " + what;
       link = SITE_URL + "?" + new URLSearchParams({

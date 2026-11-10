@@ -16,7 +16,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Jua&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=20261114j">
+  <link rel="stylesheet" href="style.css?v=20261114k">
 </head>
 <body>
   <div id="splash" class="splash" aria-hidden="true">
@@ -46,6 +46,7 @@
     <section class="card">
       <div class="toolbar">
         <div class="place-tabs" role="tablist" aria-label="장소 선택">
+          <button type="button" role="tab" class="place-tab" id="tabSong" aria-selected="false" onclick="switchPlace('송정지구')">🏢 송정</button>
           <button type="button" role="tab" class="place-tab" id="tabHome" aria-selected="true" onclick="switchPlace('산본집')">🏠 산본집</button>
           <button type="button" role="tab" class="place-tab" id="tabJeju" aria-selected="false" onclick="switchPlace('제주도')">🌴 제주도</button>
         </div>
@@ -86,6 +87,7 @@
 
         <label>어디로
           <select id="place" name="place" autocomplete="off">
+            <option value="송정지구">송정지구</option>
             <option>산본집</option>
             <option>제주도</option>
           </select>
@@ -127,6 +129,7 @@
       <div id="noteSection">
         <h3>오늘의 한줄평</h3>
         <ul id="detailNote"></ul>
+        <div id="noteTags" class="note-tags" aria-label="태그"></div>
         <div class="note-form">
           <input type="text" id="noteInput" maxlength="50" autocomplete="off" placeholder="최대 50자">
           <button type="button" id="noteSaveBtn" onclick="saveNote()">저장</button>
@@ -325,6 +328,12 @@
     }
 
     // script.js가 사용하는 저장소 기능 모음
+    // 사진·영상 저장 칸 이름 → 장소
+    const PLACE_OF = {
+      photos: "산본집", jejuPhotos: "제주도", songPhotos: "송정지구",
+      videos: "산본집", jejuVideos: "제주도", songVideos: "송정지구"
+    };
+
     window.cloud = {
       // 가족 코드로 연결하고, 일정이 바뀔 때마다 onData를 불러줌
       start: function (code, onData, onStatus) {
@@ -419,7 +428,7 @@
             type: "photo",
             by: by,
             date: date,
-            place: name === "jejuPhotos" ? "제주도" : "산본집",
+            place: PLACE_OF[name],
             at: now
           }).catch(function (error) {
             console.log("새 소식 기록 실패", error);
@@ -507,14 +516,16 @@
           place: item.place,
           text: item.text,
           by: item.by,
-          createdAt: item.createdAt
+          createdAt: item.createdAt,
+          ...(item.tags.length ? { tags: item.tags } : {})
         });
         batch.set(doc(collection(db, "families", currentCode, "activity")), {
           type: "note",
           by: item.by,
           date: date,
           place: item.place,
-          at: item.createdAt
+          at: item.createdAt,
+          ...(item.tags.length ? { tags: item.tags } : {})
         });
         deleteIds.forEach(function (id) {
           batch.delete(doc(db, "families", currentCode, "notes", id));
@@ -523,8 +534,8 @@
       },
 
       // 한줄평 내용 수정
-      updateNote: function (id, text) {
-        return updateDoc(doc(db, "families", currentCode, "notes", id), { text: text });
+      updateNote: function (id, text, tags) {
+        return updateDoc(doc(db, "families", currentCode, "notes", id), tags ? { text: text, tags: tags } : { text: text });
       },
 
       // 한줄평 삭제
@@ -602,14 +613,14 @@
           savedAt: now
         });
         const fields = {};
-        fields[name === "jejuVideos" ? "jejuVideos" : "videos"] = countAfter;
+        fields[name] = countAfter;
         batch.set(doc(db, "families", code, "days", date), fields, { merge: true });
         return batch.commit().then(function () {
           return setDoc(doc(collection(db, "families", code, "activity")), {
             type: "video",
             by: by,
             date: date,
-            place: name === "jejuVideos" ? "제주도" : "산본집",
+            place: PLACE_OF[name],
             at: now
           }).catch(function (error) {
             console.log("새 소식 기록 실패", error);
@@ -623,14 +634,14 @@
         const batch = writeBatch(db);
         batch.delete(doc(db, "families", code, name, id));
         const fields = {};
-        fields[name === "jejuVideos" ? "jejuVideos" : "videos"] = countAfter;
+        fields[name] = countAfter;
         batch.set(doc(db, "families", code, "days", date), fields, { merge: true });
         return batch.commit();
       },
 
       // 가족 코드 아래의 모든 데이터를 한 번에 읽어서 돌려줌 (백업용)
       exportAll: async function () {
-        const names = ["schedules", "photos", "jejuPhotos", "videos", "jejuVideos", "days", "notes", "activity"];
+        const names = ["schedules", "photos", "jejuPhotos", "songPhotos", "videos", "jejuVideos", "songVideos", "days", "notes", "activity"];
         const result = {};
         for (let i = 0; i < names.length; i++) {
           const snap = await getDocs(collection(db, "families", currentCode, names[i]));
@@ -691,6 +702,6 @@
     window.dispatchEvent(new Event("cloud-ready"));
   </script>
 
-  <script src="script.js?v=20261114h"></script>
+  <script src="script.js?v=20261114l"></script>
 </body>
 </html>

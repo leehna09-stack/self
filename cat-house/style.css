@@ -957,6 +957,41 @@ fieldset.people-check {
   gap: 8px;
 }
 
+/* 한줄평 태그 (인스타그램처럼 @이름) */
+.note-tags {
+  display: flex;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.note-tags:empty {
+  display: none;
+}
+
+.note-tags button {
+  min-height: 28px;
+  padding: 0 10px;
+  font-size: 12px;
+  border-radius: 14px;
+}
+
+.note-tags button[aria-pressed="true"] {
+  background-color: var(--ink);
+  border-color: var(--ink);
+  color: #ffffff;
+}
+
+.note-tags + .note-form {
+  margin-top: 6px;
+}
+
+#detailNote .note-tag {
+  font-weight: normal;
+  font-size: 13px;
+  color: #2f6fd1;
+  white-space: nowrap;
+}
+
 .note-form button {
   min-height: 36px;
   border-radius: 14px;
