@@ -55,9 +55,13 @@ const weatherList = [
   { key: "typhoon", icon: "🌀", label: "태풍" }
 ];
 
+// 송정 탭·산본 날씨·한줄평 태그는 Firestore 규칙(cat-house-push/firestore.rules)을 게시한 뒤에만 저장돼요.
+// 규칙을 게시했으면 true로 바꿔서 켜기 (false인 동안은 화면에 나오지 않음)
+const RULES_READY = false;
+
 // 장소별 저장 위치: 사진·영상 칸 이름(영상 칸 이름 = 달력 표시용 영상 개수 필드), 날씨 필드(송정은 날씨 없음)
 const PLACE_DATA = {
-  "산본집": { photos: "photos", videos: "videos", weather: "weatherHome" },
+  "산본집": { photos: "photos", videos: "videos", weather: RULES_READY ? "weatherHome" : "" },
   "제주도": { photos: "jejuPhotos", videos: "jejuVideos", weather: "weather" },
   "송정지구": { photos: "songPhotos", videos: "songVideos", weather: "" }
 };
@@ -2493,6 +2497,9 @@ function resetNoteForm() {
 function drawNoteTags() {
   const box = document.getElementById("noteTags");
   box.innerHTML = "";
+  if (!RULES_READY) {
+    return;
+  }
   const user = getUser();
   TAG_PEOPLE.forEach(function (name) {
     if (name === user) {
@@ -2660,7 +2667,10 @@ function saveNote() {
       return window.cloud.saveDay(currentDetailDate, { note: "" });
     });
   } else if (editingNoteId !== "") {
-    job = window.cloud.updateNote(editingNoteId, text, noteTags.slice());
+    // 태그가 있거나 원래 태그가 있던 글만 태그 항목을 같이 저장
+    const old = notes.find(function (n) { return n.id === editingNoteId; });
+    const hadTags = old && old.tags && old.tags.length > 0;
+    job = window.cloud.updateNote(editingNoteId, text, noteTags.length > 0 || hadTags ? noteTags.slice() : null);
   } else {
     // 새 글을 넣으면 MAX_NOTES개를 넘는 만큼 오래된 것부터 지움
     // (옛날 방식 글은 개수에 넣지 않음)
@@ -2830,6 +2840,12 @@ try {
   localStorage.removeItem("catHouseSchedules");
 } catch (e) {
   // 저장소를 못 쓰는 환경이면 그냥 넘어감
+}
+
+// 규칙을 게시하기 전에는 새 기능(송정 탭·송정 일정 입력)을 숨김
+if (!RULES_READY) {
+  document.getElementById("tabSong").hidden = true;
+  document.querySelector('#place option[value="송정지구"]').remove();
 }
 
 // 일정이 비어 있는 상태로 달력을 먼저 그림
