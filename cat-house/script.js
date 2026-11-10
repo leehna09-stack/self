@@ -57,7 +57,7 @@ const weatherList = [
 
 // 송정 탭·산본 날씨·한줄평 태그는 Firestore 규칙(cat-house-push/firestore.rules)을 게시한 뒤에만 저장돼요.
 // 규칙을 게시했으면 true로 바꿔서 켜기 (false인 동안은 화면에 나오지 않음)
-const RULES_READY = false;
+const RULES_READY = true;
 
 // 장소별 저장 위치: 사진·영상 칸 이름(영상 칸 이름 = 달력 표시용 영상 개수 필드), 날씨 필드(송정은 날씨 없음)
 const PLACE_DATA = {
