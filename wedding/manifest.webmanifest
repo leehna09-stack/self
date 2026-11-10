@@ -1,17 +1,23 @@
 {
-  "name": "결혼 로드맵",
-  "short_name": "결혼 로드맵",
-  "description": "결혼까지 단계별로 체크하며 준비하는 로드맵과 웨딩홀 비교",
+  "name": "웨딩 앱",
+  "short_name": "웨딩",
+  "description": "웨딩홀 가격·위치 비교와 결혼 준비 로드맵",
   "lang": "ko",
+  "dir": "ltr",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#f2f2f7",
-  "theme_color": "#f2f2f7",
+  "background_color": "#f4f5f7",
+  "theme_color": "#f4f5f7",
+  "categories": ["lifestyle", "productivity"],
   "icons": [
     { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
     { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
     { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "웨딩홀 비교", "short_name": "웨딩홀", "url": "./index.html", "icons": [{ "src": "icon-192.png", "sizes": "192x192", "type": "image/png" }] },
+    { "name": "결혼 로드맵", "short_name": "로드맵", "url": "./roadmap.html", "icons": [{ "src": "icon-192.png", "sizes": "192x192", "type": "image/png" }] }
   ]
 }

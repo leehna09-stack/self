@@ -1,0 +1,102 @@
+/* 웨딩홀 비교 화면(견적 보드) — 한 줄에 총액 막대(와인)와 거리 막대(청록)를 나란히 놓아, 위에서 아래로 훑으며 비교한다.
+   hall.js의 훅(window.HALL_UI)으로 카드·목록 위 영역을 바꾼다. */
+window.HALL_UI = (() => {
+  let A;                                    // hall.js가 setup에서 넘겨주는 도구 모음
+  let openId = null;                        // 펼친 행 (B처럼 한 번에 하나만)
+  let reveal = null;                        // 방금 펼친 행: 화면 밖으로 잘렸으면 보이게 스크롤
+  const CHIPS = [['가격', 'cheap', 'expensive'], ['거리', 'near', 'far']];   // 누를 때마다 낮은순 → 높은순 → 처음 순서(최근 등록)
+
+  // 막대 길이는 "전체 목록" 기준이라 검색해도 기준이 흔들리지 않는다
+  function scale() {
+    const L = A.halls.filter(h => h.status !== 'drop'), ts = L.map(h => A.total(h)).filter(n => n != null), ds = L.map(h => A.distFor(h)).filter(n => n != null);
+    return { maxP: Math.max(0, ...ts), minP: Math.min(...ts), nP: ts.length, maxD: Math.max(0, ...ds), minD: Math.min(...ds), nD: ds.length };
+  }
+  const pct = (v, max) => (max > 0 ? Math.max(10, Math.round(v / max * 100)) : 0);
+
+  function cells(h, S) {
+    const t = A.total(h), d = A.distFor(h);
+    const bestP = t != null && S.nP > 1 && t === S.minP, bestD = d != null && S.nD > 1 && d === S.minD;
+    const price = t == null
+      ? '<span class="cell pend"><em>상담전</em></span>'
+      : `<span class="cell cp${bestP ? ' best' : ''}"><i style="width:${pct(t, S.maxP)}%"></i><em>${A.fmtPrice(t)}</em>${bestP ? '<u>최저</u>' : ''}</span>`;
+    const dist = d == null
+      ? `<span class="cell pend"><em>${h.lat != null || A.needsGeo(h) ? '거리 계산 중…' : '거리 미확인'}</em></span>`
+      : `<span class="cell cd${bestD ? ' best' : ''}"><i style="width:${pct(d, S.maxD)}%"></i><em>${d}km</em>${bestD ? '<u>최단</u>' : ''}</span>`;
+    return price + dist;
+  }
+
+  function details(h) {
+    const { esc, icon, fmtPrice, total } = A, g = A.guestsOf(h), meal = h.meal && g ? h.meal * g : 0, t = total(h), avg = A.avgRate(h);
+    const addr = A.addrOf(h), link = A.linkOf(h);
+    return `<div class="qmore">
+      <div class="qsum">대관료 ${fmtPrice(h.price)}${meal ? ` + 식대 ${h.meal}만×${g}명 (${fmtPrice(meal)})` : ''}${A.scenario && g > (h.guests || 0) ? '' : A.scenario && h.guests ? ` · 보증인원 ${h.guests}명 적용` : ''}</div>
+      ${h.fees?.length ? `<div class="qsum">추가 비용 ${h.fees.map(f => `${esc(f.label)} ${fmtPrice(f.price)}`).join(' · ')}${h.vat ? ' · 부가세 10% 포함' : ''}</div>` : h.vat ? '<div class="qsum">부가세 10% 포함</div>' : ''}
+      ${t != null && A.budget ? `<div class="qsum${t > A.budget ? ' over' : ''}">${icon('wallet')} 예산 ${fmtPrice(A.budget)}의 ${Math.round(t / A.budget * 100)}%${t > A.budget ? ' · 예산 초과' : ''}</div>` : ''}
+      ${h.event ? `<div class="qsum">${icon('cal')} 희망 예식 ${esc(A.fmtEvent(h.event))}</div>` : ''}
+      ${avg ? `<div class="qsum">★ ${avg.toFixed(1)} · ${A.RATES.filter(([k]) => h.rate?.[k]).map(([k, n]) => `${n} ${h.rate[k]}`).join(' · ')}</div>` : ''}
+      ${h.status === 'drop' && h.reason ? `<div class="qsum">탈락 사유: ${esc(h.reason)}</div>` : ''}
+      ${(h.extras || []).map(e => `<div class="qsum alt">${esc(e.label)} · 총액 ${fmtPrice(total(h, e.price))}</div>`).join('')}
+      ${(v => v ? `<div class="qsum">${icon('cal')} ${v.label}${v.ask ? ` <button type="button" class="vchip ask" data-act="edit" data-id="${h.id}">상담을 완료하셨나요? 금액 입력</button>` : ''}</div>` : '')(A.visitInfo(h))}
+      ${addr ? `<div class="qsum">${icon('pin')} ${esc(addr)}</div>` : ''}
+      ${A.origins.length > 1 ? `<div class="qsum odist">${A.distsOf(h).map(r => `<span class="od"><b>${esc(r.o.name)}</b> ${r.km != null ? r.km + 'km' + (r.k === '직선' ? '(직선)' : '') : '계산 중'}</span>`).join('')}</div>` : ''}
+      ${h.phone ? `<div class="qsum"><a href="tel:${esc(h.phone.replace(/[^\d+]/g, ''))}">${esc(h.phone)}</a></div>` : ''}
+      ${link ? `<div class="qsum"><a href="${esc(link)}" target="_blank" rel="noopener">지도에서 보기</a></div>` : ''}
+      ${(ask => `<details class="qask" data-id="${h.id}"><summary>상담 체크 ${ask.filter(x => x.done).length}/${ask.length}</summary>${ask.map((x, i) => `<label class="qa"><input type="checkbox" data-ask="${i}"${x.done ? ' checked' : ''}><span>${esc(x.q)}${x.a ? `<em>${esc(x.a)}</em>` : ''}</span></label>`).join('')}</details>`)(A.askOf(h))}
+      ${h.memo ? `<div class="qmemo">${esc(h.memo)}</div>` : ''}
+      ${h.photos?.length ? `<button type="button" class="qphoto" data-id="${h.id}" data-act="view">${icon('photo')} 사진 ${h.photos.length}장 보기</button>` : ''}
+    </div>`;
+  }
+
+  function syncChips() {
+    document.querySelectorAll('#chips .chip').forEach(c => { const up = A.sort === c.dataset.asc, on = up || A.sort === c.dataset.desc; c.classList.toggle('on', on); c.setAttribute('aria-pressed', on); c.textContent = c.textContent.replace(/ [↑↓]$/, '') + (on ? (up ? ' ↑' : ' ↓') : ''); });
+    const lg = document.querySelector('#legend .lgd'); if (lg) { const n = A.origins.length; lg.textContent = `${A.curOrigin().name}에서 거리${n > 1 ? ' ⇄' : ''}`; lg.disabled = n < 2; lg.title = n > 1 ? '눌러서 다른 기준 주소로 바꾸기' : ''; }
+  }
+
+  return {
+    setup(api) {
+      A = api;
+      // 정렬 칩: 한 번 누르면 바뀐다 (원래 드롭다운은 숨기고 값만 공유)
+      const bar = document.createElement('div'); bar.id = 'chips'; bar.className = 'chips'; bar.setAttribute('role', 'group'); bar.setAttribute('aria-label', '정렬');
+      bar.innerHTML = CHIPS.map(([t, a, d]) => `<button type="button" class="chip" data-asc="${a}" data-desc="${d}">${t}</button>`).join('');
+      document.querySelector('.searchrow').after(bar);
+      bar.onclick = e => { const c = e.target.closest('.chip'); if (!c) return; const sel = document.getElementById('sort'); sel.value = A.sort === c.dataset.asc ? c.dataset.desc : A.sort === c.dataset.desc ? 'all' : c.dataset.asc; sel.dispatchEvent(new Event('change')); };
+      const lg = document.createElement('div'); lg.id = 'legend'; lg.className = 'legend'; lg.innerHTML = '<span class="lgp">총액</span><button type="button" class="lgd"></button>';
+      document.querySelector('.countrow').append(lg);
+      lg.querySelector('.lgd').onclick = () => { const L = A.origins, i = L.findIndex(o => o.id === A.curId); if (L.length > 1) A.setOrigin(L[(i + 1) % L.length].id); };
+      document.addEventListener('change', e => {                         // 카드에서 바로 체크
+        const c = e.target.closest('[data-ask]'); if (!c) return; const d = c.closest('.qask');
+        A.toggleAsk(d.dataset.id, +c.dataset.ask, c.checked);
+        const all = d.querySelectorAll('[data-ask]'); d.querySelector('summary').textContent = `상담 체크 ${[...all].filter(x => x.checked).length}/${all.length}`;
+      });
+      // 행 펼치기/접기, 요약 칩으로 이동
+      document.addEventListener('click', e => {
+        const row = e.target.closest('.qrow'); if (!row || e.target.closest('a, [data-act], .qask')) return;
+        const id = row.dataset.id; openId = openId === id ? null : id; reveal = openId; A.rerender();
+      });
+    },
+    cardHtml(h) {
+      const S = scale(), isOpen = openId === h.id, addr = A.addrOf(h);
+      return `<article class="qrow${isOpen ? ' open' : ''}${h.liked ? ' liked' : ''}${h.status === 'drop' ? ' drop' : ''}" data-id="${h.id}">
+        <div class="qtop">
+          <button type="button" class="qname" aria-expanded="${isOpen}">${A.esc(h.name)}</button>
+          <button class="starbtn${h.liked ? ' on' : ''}" data-id="${h.id}" data-act="like" aria-pressed="${!!h.liked}" aria-label="관심" title="관심">${A.icon('star', h.liked ? 'on' : '')}</button>
+          ${isOpen ? `<div class="tools">
+            <a class="tool navi" href="${A.esc(A.dirUrl(h))}" target="_blank" rel="noopener" aria-label="길찾기" title="길찾기">${A.icon('nav')}</a>
+            <button class="tool" data-id="${h.id}" data-act="edit" aria-label="수정" title="수정">${A.icon('edit')}</button>
+            <button class="tool danger" data-id="${h.id}" data-act="del" aria-label="삭제" title="삭제">${A.icon('trash')}</button>
+          </div>` : '<span class="qcaret" aria-hidden="true"></span>'}
+        </div>
+        <div class="qbars">${cells(h, S)}</div>
+        <div class="qaddr">${h.status ? `<span class="vchip st-${h.status}">${{ hold: '가계약', done: '확정', drop: '탈락' }[h.status]}</span>` : ''}${(v => !v ? '' : v.ask ? `<button type="button" class="vchip ask" data-act="edit" data-id="${h.id}">${A.icon('cal')}${v.md} 상담을 완료하셨나요?</button>` : `<span class="vchip ${v.plan ? 'plan' : 'done'}">${A.icon('cal')}${v.short}</span>`)(A.visitInfo(h))}${addr ? A.esc(addr) : '주소 없음'}</div>
+        ${isOpen ? details(h) : ''}
+      </article>`;
+    },
+    afterRender() {
+      syncChips();
+      if (reveal) {                                                    // 펼친 행이 화면 아래로 잘리면 보이게
+        const el = document.querySelector(`.qrow[data-id="${reveal}"]`); reveal = null;
+        if (el) el.scrollIntoView({ block: 'nearest', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+      }
+    }
+  };
+})();
