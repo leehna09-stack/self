@@ -6,7 +6,7 @@ let editingId = "";
 // 상세창에 열려 있는 날짜
 let currentDetailDate = "";
 
-// 지금 달력에서 보고 있는 장소 ("산본집" 또는 "제주도")
+// 지금 달력에서 보고 있는 장소 ("송정지구", "산본집", "제주도")
 let viewPlace = "산본집";
 
 // 지금 보고 있는 달 (처음에는 오늘이 속한 달)
@@ -54,6 +54,17 @@ const weatherList = [
   { key: "rain", icon: "🌧️", label: "비" },
   { key: "typhoon", icon: "🌀", label: "태풍" }
 ];
+
+// 장소별 저장 위치: 사진·영상 칸 이름(영상 칸 이름 = 달력 표시용 영상 개수 필드), 날씨 필드
+const PLACE_DATA = {
+  "산본집": { photos: "photos", videos: "videos", weather: "weatherHome" },
+  "제주도": { photos: "jejuPhotos", videos: "jejuVideos", weather: "weather" },
+  "송정지구": { photos: "songPhotos", videos: "songVideos", weather: "weatherSong" }
+};
+
+// 한줄평에 태그할 수 있는 사람 / 지금 고른 태그
+const TAG_PEOPLE = ["한나", "한비", "엄마"];
+let noteTags = [];
 
 // 상세창에 열린 날짜의 한줄평들 / 수정 중인 한줄평 번호표 / 하루 최대 개수
 let notes = [];
@@ -480,7 +491,7 @@ function openFromLink() {
   }
   const date = params.get("date");
   const place = params.get("place");
-  if (!date || !/^\d{4}-\d{2}-\d{2}$/.test(date) || (place !== "산본집" && place !== "제주도")) {
+  if (!date || !/^\d{4}-\d{2}-\d{2}$/.test(date) || !PLACE_DATA[place]) {
     return;
   }
   history.replaceState(null, "", location.pathname);
@@ -610,7 +621,9 @@ function drawNotifList() {
       btn.textContent = "📢 공지 · " + a.text;
       btn.className = "notice-item";
     } else {
-      btn.textContent = a.by + " 님이 " + a.place + " " + a.date +
+      btn.textContent = a.tags && a.tags.length
+        ? a.by + " 님이 " + a.tags.join(", ") + " 님을 태그했어요 💬 (" + a.place + " " + a.date + ")"
+        : a.by + " 님이 " + a.place + " " + a.date +
         (a.type === "photo" ? " 사진을 올렸어요 📷" : a.type === "video" ? " 영상을 올렸어요 🎬" : " 한줄평을 남겼어요 💬");
     }
     btn.onclick = function () {
@@ -664,7 +677,7 @@ function gotoActivity(a) {
 
 // 지금 보고 있는 장소의 사진 저장 위치 (산본집과 제주도 사진은 따로 저장)
 function photoCollection() {
-  return viewPlace === "제주도" ? "jejuPhotos" : "photos";
+  return PLACE_DATA[viewPlace].photos;
 }
 
 // 지금 보고 있는 달의 사진을 받아오기 시작
@@ -1000,6 +1013,7 @@ function drawCalendar() {
   monthBtn.setAttribute("aria-label", viewYear + "년 " + (viewMonth + 1) + "월, 누르면 이번 달로 이동");
 
   // 장소 탭 (선택된 탭에 밑줄)
+  document.getElementById("tabSong").setAttribute("aria-selected", viewPlace === "송정지구" ? "true" : "false");
   document.getElementById("tabHome").setAttribute("aria-selected", viewPlace === "산본집" ? "true" : "false");
   document.getElementById("tabJeju").setAttribute("aria-selected", viewPlace === "제주도" ? "true" : "false");
 
@@ -1077,15 +1091,13 @@ function drawCalendar() {
     marks.className = "day-marks";
     const day = days[dateString];
 
-    // 제주도 달력: 날씨 표시
-    if (viewPlace === "제주도") {
-      const weather = day ? findWeather(day.weather) : null;
-      if (weather) {
-        const w = document.createElement("span");
-        w.className = "day-weather";
-        w.textContent = weather.icon;
-        marks.appendChild(w);
-      }
+    // 날씨 표시 (장소마다 따로 저장)
+    const weather = day ? findWeather(day[PLACE_DATA[viewPlace].weather]) : null;
+    if (weather) {
+      const w = document.createElement("span");
+      w.className = "day-weather";
+      w.textContent = weather.icon;
+      marks.appendChild(w);
     }
 
     // 사진이 있는 날은 표시 (산본집·제주도 각각의 사진)
@@ -1097,7 +1109,7 @@ function drawCalendar() {
     }
 
     // 영상이 있는 날은 표시 (산본집·제주도 각각의 영상)
-    const videoCount = day ? (viewPlace === "제주도" ? day.jejuVideos : day.videos) : 0;
+    const videoCount = day ? day[PLACE_DATA[viewPlace].videos] : 0;
     if (videoCount > 0) {
       const vmark = document.createElement("span");
       vmark.className = "day-video";
@@ -1441,8 +1453,6 @@ function openDetail(dateString, keepFocus) {
     }).format(new Date(dateString + "T00:00:00"));
 
 
-  // 날씨는 제주도 달력에서만
-  document.getElementById("weatherSection").hidden = (viewPlace !== "제주도");
   drawDetailWeather();
   if (!keepFocus) {
     // 새로 열 때는 첫 사진부터 보여줌
@@ -2036,7 +2046,7 @@ function deletePhoto(id) {
 
 // 지금 보고 있는 장소의 영상 저장 위치
 function videoCollection() {
-  return viewPlace === "제주도" ? "jejuVideos" : "videos";
+  return PLACE_DATA[viewPlace].videos;
 }
 
 // 상세창을 열 때: 그 날짜의 영상 받아오기 시작
@@ -2381,7 +2391,7 @@ function drawDetailWeather() {
   box.innerHTML = "";
 
   const day = days[currentDetailDate];
-  const selected = day ? day.weather : "";
+  const selected = day ? day[PLACE_DATA[viewPlace].weather] : "";
 
   for (let i = 0; i < weatherList.length; i++) {
     const w = weatherList[i];
@@ -2407,7 +2417,9 @@ function chooseWeather(key) {
     alert("아직 가족 코드로 연결되지 않았어요. 잠시 후 다시 시도해 주세요.");
     return;
   }
-  window.cloud.saveDay(currentDetailDate, { weather: key, weatherBy: user }).catch(function (err) {
+  const fields = { weatherBy: user };
+  fields[PLACE_DATA[viewPlace].weather] = key;
+  window.cloud.saveDay(currentDetailDate, fields).catch(function (err) {
     console.log("날씨 저장 실패", err);
     alert("저장하지 못했어요. 인터넷 연결을 확인해 주세요.");
   });
@@ -2468,9 +2480,37 @@ function buildNotes() {
 // 입력칸을 새 한줄평 쓰기 상태로 되돌림
 function resetNoteForm() {
   editingNoteId = "";
+  noteTags = [];
+  drawNoteTags();
   document.getElementById("noteInput").value = "";
   document.getElementById("noteSaveBtn").textContent = "저장";
   document.getElementById("noteCancelBtn").hidden = true;
+}
+
+// 태그 버튼 그리기 (나는 뺌, 다시 누르면 해제)
+function drawNoteTags() {
+  const box = document.getElementById("noteTags");
+  box.innerHTML = "";
+  const user = getUser();
+  TAG_PEOPLE.forEach(function (name) {
+    if (name === user) {
+      return;
+    }
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.textContent = "@" + name;
+    btn.setAttribute("aria-pressed", noteTags.indexOf(name) >= 0 ? "true" : "false");
+    btn.onclick = function () {
+      const at = noteTags.indexOf(name);
+      if (at >= 0) {
+        noteTags.splice(at, 1);
+      } else {
+        noteTags.push(name);
+      }
+      drawNoteTags();
+    };
+    box.appendChild(btn);
+  });
 }
 
 // 한줄평을 남긴 시각을 24시간 기준 "시:분"으로 (옛날 글은 시각이 없어 빈칸)
@@ -2509,6 +2549,12 @@ function drawDetailNotes() {
     const text = document.createElement("span");
     text.className = "note-text";
     text.textContent = "“" + n.text + "” ";
+    if (n.tags && n.tags.length) {
+      const tagEl = document.createElement("b");
+      tagEl.className = "note-tag";
+      tagEl.textContent = n.tags.map(function (t) { return "@" + t; }).join(" ") + " ";
+      text.appendChild(tagEl);
+    }
     const by = document.createElement("small");
     by.textContent = "— " + n.by + formatNoteTime(n.createdAt, n.date || currentDetailDate);
     text.appendChild(by);
@@ -2556,6 +2602,8 @@ function startEditNote(id) {
       editingNoteId = id;
       const input = document.getElementById("noteInput");
       input.value = notes[i].text;
+      noteTags = (notes[i].tags || []).slice();
+      drawNoteTags();
       document.getElementById("noteSaveBtn").textContent = "수정 저장";
       document.getElementById("noteCancelBtn").hidden = false;
       input.focus();
@@ -2604,13 +2652,13 @@ function saveNote() {
     const oldBy = days[currentDetailDate] ? days[currentDetailDate].noteBy : user;
     job = window.cloud.addNote(
       currentDetailDate,
-      { text: text, by: oldBy || user, place: "산본집", createdAt: 1 },
+      { text: text, by: oldBy || user, place: "산본집", createdAt: 1, tags: [] },
       []
     ).then(function () {
       return window.cloud.saveDay(currentDetailDate, { note: "" });
     });
   } else if (editingNoteId !== "") {
-    job = window.cloud.updateNote(editingNoteId, text);
+    job = window.cloud.updateNote(editingNoteId, text, noteTags.slice());
   } else {
     // 새 글을 넣으면 MAX_NOTES개를 넘는 만큼 오래된 것부터 지움
     // (옛날 방식 글은 개수에 넣지 않음)
@@ -2624,7 +2672,7 @@ function saveNote() {
     }
     job = window.cloud.addNote(
       currentDetailDate,
-      { text: text, by: user, place: viewPlace, createdAt: Date.now() },
+      { text: text, by: user, place: viewPlace, createdAt: Date.now(), tags: noteTags.slice() },
       deleteIds
     );
   }
