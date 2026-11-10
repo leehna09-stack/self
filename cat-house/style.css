@@ -594,17 +594,6 @@ fieldset.people-check {
   accent-color: #ffffff;
 }
 
-.quick-buttons {
-  display: flex;
-  gap: 8px;
-}
-
-.quick-buttons button {
-  flex: 1;
-  font-size: 12px;
-  padding: 0 8px;
-}
-
 #saveBtn {
   font-size: 14px;
   min-height: 44px;

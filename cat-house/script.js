@@ -1338,19 +1338,6 @@ function closeForm() {
   document.getElementById("formModal").classList.add("hidden");
 }
 
-// 오늘부터 N일(오늘 포함)로 시작일·종료일 칸을 채움
-function setPeriod(days) {
-  const today = new Date();
-  const end = new Date();
-  end.setDate(today.getDate() + days - 1);
-
-  document.getElementById("startDate").value =
-    makeDateString(today.getFullYear(), today.getMonth(), today.getDate());
-  document.getElementById("endDate").value =
-    makeDateString(end.getFullYear(), end.getMonth(), end.getDate());
-  syncPicker();
-}
-
 // "일정 추가" (또는 "수정 저장") 버튼을 눌렀을 때 실행되는 함수
 function addSchedule() {
   const checked = document.querySelectorAll('input[name="person"]:checked');
