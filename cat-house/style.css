@@ -6,6 +6,10 @@
   --sub: #6b6560;
   --line: #e7e4e0;
   --soft: #f3f1ee;
+  --home: #e6a24a; --home-bg: #fbebd0; --home-ink: #7a4d0a;
+  --jeju: #4f9d8f; --jeju-bg: #d9eee9; --jeju-ink: #1f5f54;
+  --song: #6f8fc9; --song-bg: #dfe7f6; --song-ink: #34548c;
+  --warn-bg: #fde8e6; --warn-ink: #b42318; --ok-bg: #e4f3e7; --ok-ink: #2d6a3e;
   --shadow: 0 4px 16px rgba(58, 54, 51, 0.08);
   --font-body: "Gowun Dodum", "Malgun Gothic", sans-serif;
   --font-title: "Jua", "Gowun Dodum", "Malgun Gothic", sans-serif;
@@ -571,9 +575,10 @@ fieldset.people-check {
   align-items: center;
   justify-content: center;
   gap: 4px;
-  min-height: 36px;
+  position: relative;
+  min-height: 44px;
   padding: 0 6px;
-  font-size: 13px;
+  font-size: 14px;
   white-space: nowrap;
   color: var(--ink);
   border: 1px solid var(--line);
@@ -587,12 +592,54 @@ fieldset.people-check {
   color: #ffffff;
 }
 
-.people-check input {
-  width: 18px;
-  height: 18px;
-  margin: 0;
-  accent-color: #ffffff;
+.people-check input,
+.place-seg input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
 }
+
+.form-box label:has(input:focus-visible) {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+}
+
+/* 어디로: 세 칸 선택 (고르면 그 장소 색) */
+fieldset.place-seg {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+  border: none;
+  padding: 0;
+  margin: 0;
+}
+
+.place-seg legend {
+  width: 100%;
+  padding: 0;
+  margin-bottom: 8px;
+  font-size: 13px;
+  color: var(--sub);
+}
+
+.form-box .place-seg label {
+  position: relative;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 0 6px;
+  font-size: 14px;
+  white-space: nowrap;
+  color: var(--ink);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  cursor: pointer;
+}
+
+.form-box .place-seg label.p-home:has(input:checked) { background-color: var(--home-bg); border-color: var(--home); color: var(--home-ink); font-weight: bold; }
+.form-box .place-seg label.p-jeju:has(input:checked) { background-color: var(--jeju-bg); border-color: var(--jeju); color: var(--jeju-ink); font-weight: bold; }
+.form-box .place-seg label.p-song:has(input:checked) { background-color: var(--song-bg); border-color: var(--song); color: var(--song-ink); font-weight: bold; }
 
 #saveBtn {
   font-size: 14px;
@@ -601,32 +648,6 @@ fieldset.people-check {
 }
 
 /* ===== 날짜 상세 ===== */
-#manageSchedules {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-
-#manageSchedules li {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 8px;
-  padding: 10px 0;
-  border-bottom: 1px dashed var(--line);
-  font-size: 14px;
-}
-
-#manageSchedules li span {
-  flex: 1 1 100%;
-}
-
-#manageSchedules li button {
-  min-height: 32px;
-  padding: 0 14px;
-  font-size: 12px;
-}
-
 /* 사진 */
 .day-photo,
 .day-video {
@@ -1011,13 +1032,29 @@ textarea:focus-visible {
   padding: 10px;
 }
 
-.range-summary {
-  text-align: center;
-  font-size: 14px;
-  color: var(--ink);
+.range-steps {
+  display: grid;
+  grid-template-columns: 1fr 18px 1fr;
+  align-items: center;
+  gap: 6px;
   margin-bottom: 8px;
-  font-variant-numeric: tabular-nums;
+  text-align: center;
+  color: var(--sub);
 }
+
+.range-step {
+  display: grid;
+  gap: 1px;
+  padding: 6px 4px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+}
+
+.range-step small { font-size: 11px; color: var(--sub); }
+.range-step b { font-size: 14px; font-weight: normal; color: var(--sub); font-variant-numeric: tabular-nums; }
+.range-step.set b { color: var(--ink); font-weight: bold; }
+.range-step.on { border-color: var(--ink); box-shadow: inset 0 0 0 1px var(--ink); }
+.range-step.on small { color: var(--ink); }
 
 .range-nav {
   display: flex;
@@ -1047,7 +1084,7 @@ textarea:focus-visible {
 }
 
 .range-day {
-  min-height: 34px;
+  min-height: 40px;
   padding: 0;
   border: none;
   border-radius: 10px;
@@ -1066,6 +1103,19 @@ textarea:focus-visible {
   color: #ffffff;
   border-radius: 10px;
 }
+
+.range-day.today {
+  font-weight: bold;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.range-calendar.p-home .range-day.in-range { background-color: var(--home-bg); }
+.range-calendar.p-home .range-day.range-edge { background-color: var(--home-ink); color: #ffffff; }
+.range-calendar.p-jeju .range-day.in-range { background-color: var(--jeju-bg); }
+.range-calendar.p-jeju .range-day.range-edge { background-color: var(--jeju-ink); color: #ffffff; }
+.range-calendar.p-song .range-day.in-range { background-color: var(--song-bg); }
+.range-calendar.p-song .range-day.range-edge { background-color: var(--song-ink); color: #ffffff; }
 
 /* 일정 입력 / 일정 변경 버튼 */
 .add-card-buttons {
@@ -1495,3 +1545,278 @@ textarea:focus-visible {
 .chev-btn:active {
   opacity: 1;
 }
+
+/* ===== 일정 추가·가족 위치: 뒤로가기 제목줄 ===== */
+.back-title {
+  justify-content: flex-start;
+}
+
+.back-title .round-btn {
+  flex: none;
+}
+
+/* 아래에 고정되는 저장 줄 (요약 + 저장 버튼) */
+.save-bar {
+  position: sticky;
+  bottom: 8px;
+  z-index: 2;
+  display: grid;
+  gap: 8px;
+  padding: 10px 12px 12px;
+  background-color: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  box-shadow: 0 6px 20px rgba(58, 54, 51, 0.18);
+}
+
+.save-summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+  min-height: 26px;
+  font-size: 14px;
+}
+
+.save-summary b {
+  font-family: var(--font-title);
+  font-size: 15px;
+  font-weight: normal;
+}
+
+.save-summary .hint-text {
+  color: var(--sub);
+  font-size: 13px;
+}
+
+.sum-tag {
+  border-radius: 10px;
+  padding: 3px 9px;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+.sum-tag.warn { background-color: var(--warn-bg); color: var(--warn-ink); }
+.sum-tag.ok { background-color: var(--ok-bg); color: var(--ok-ink); }
+
+#saveBtn:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+/* ===== 가족 위치 ===== */
+.loc-toast {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 10px;
+  padding: 6px 6px 6px 14px;
+  border-radius: 14px;
+  background-color: var(--ink);
+  color: #ffffff;
+  font-size: 14px;
+}
+
+.loc-toast[hidden] {
+  display: none;
+}
+
+.loc-toast button {
+  min-height: 34px;
+  padding: 0 10px;
+  border: none;
+  background: transparent;
+  color: #ffffff;
+  text-decoration: underline;
+}
+
+.loc-nav {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr) 44px;
+  gap: 6px;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.loc-nav > button {
+  min-height: 40px;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  border: none;
+  border-radius: 12px;
+  background-color: var(--soft);
+}
+
+.loc-date {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 40px;
+  border-radius: 12px;
+  background-color: var(--soft);
+  font-size: 15px;
+}
+
+.loc-date button {
+  min-height: 26px;
+  padding: 0 8px;
+  font-size: 12px;
+  border-radius: 10px;
+}
+
+.loc-date button[hidden] {
+  display: none;
+}
+
+.loc-card {
+  margin-bottom: 10px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+}
+
+.loc-lab {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 12px;
+  color: var(--sub);
+}
+
+.loc-graph {
+  display: grid;
+  gap: 1px;
+  align-items: center;
+}
+
+.loc-graph .ax {
+  height: 14px;
+  font-size: 9px;
+  text-align: center;
+  color: var(--sub);
+  white-space: nowrap;
+}
+
+.loc-graph .ax.t {
+  color: var(--ink);
+  font-weight: bold;
+}
+
+.loc-graph .tn {
+  font-size: 11px;
+  color: var(--sub);
+}
+
+.loc-graph button.loc-cell {
+  height: 22px;
+  min-height: 0;
+  padding: 0;
+  border: none;
+  border-radius: 3px;
+}
+
+.loc-graph button.loc-cell.home, .loc-graph button.loc-cell.home:hover { background-color: var(--home); }
+.loc-graph button.loc-cell.jeju, .loc-graph button.loc-cell.jeju:hover { background-color: var(--jeju); }
+.loc-graph button.loc-cell.song, .loc-graph button.loc-cell.song:hover { background-color: var(--song); }
+.loc-graph button.loc-cell.bad, .loc-graph button.loc-cell.bad:hover { background-color: var(--warn-ink); opacity: 0.8; }
+.loc-graph button.loc-cell.none, .loc-graph button.loc-cell.none:hover { background-color: var(--soft); }
+.loc-graph button.loc-cell.sel { outline: 2px solid var(--ink); outline-offset: -1px; }
+
+.loc-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 8px;
+  font-size: 12px;
+  color: var(--sub);
+}
+
+.loc-legend i {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  margin-right: 4px;
+  border-radius: 3px;
+  vertical-align: -1px;
+}
+
+.loc-banner {
+  margin-bottom: 10px;
+  padding: 9px 12px;
+  border-radius: 14px;
+  font-size: 14px;
+}
+
+.loc-banner.warn { background-color: var(--warn-bg); color: var(--warn-ink); font-weight: bold; }
+.loc-banner.ok { background-color: var(--ok-bg); color: var(--ok-ink); }
+
+/* 상세 위치: 이름 | 이동 일정 | 수정·삭제 | 장소 (열을 고정해 줄을 맞춤) */
+.loc-row {
+  display: grid;
+  grid-template-columns: 46px minmax(0, 1fr) 50px 54px;
+  column-gap: 4px;
+  align-items: center;
+  min-height: 52px;
+  padding: 9px 0;
+  border-top: 1px solid var(--line);
+}
+
+.loc-row:first-child {
+  padding-top: 2px;
+  border-top: none;
+}
+
+.loc-chip {
+  justify-self: start;
+  padding: 4px 9px;
+  border-radius: 12px;
+  background-color: var(--soft);
+  font-size: 14px;
+}
+
+.loc-next {
+  font-size: 12px;
+  line-height: 1.3;
+  color: var(--sub);
+}
+
+.loc-acts {
+  display: flex;
+  justify-self: center;
+}
+
+.loc-acts button {
+  width: 25px;
+  height: 30px;
+  min-height: 0;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--ink);
+}
+
+.loc-acts button:hover,
+.loc-acts button:active {
+  background-color: var(--soft);
+}
+
+.loc-acts .del {
+  color: var(--warn-ink);
+}
+
+.loc-badge {
+  padding: 3px 0;
+  border-radius: 12px;
+  text-align: center;
+  font-size: 13px;
+  font-weight: bold;
+}
+
+.loc-badge.home { background-color: var(--home-bg); color: var(--home-ink); }
+.loc-badge.jeju { background-color: var(--jeju-bg); color: var(--jeju-ink); }
+.loc-badge.song { background-color: var(--song-bg); color: var(--song-ink); }
