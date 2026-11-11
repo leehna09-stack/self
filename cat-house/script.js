@@ -1,7 +1,7 @@
 // ===== 변수 (맨 위에서 먼저 만들기) =====
 
-// 수정 중인 일정의 번호표 (빈 글자면 새 일정 추가 중)
-let editingId = "";
+// 수정 중인 일정들의 번호표 (비어 있으면 새 일정 추가 중, 같은 기간·장소를 함께 가는 사람은 한꺼번에 수정)
+let editingIds = [];
 
 // 상세창에 열려 있는 날짜
 let currentDetailDate = "";
@@ -102,9 +102,10 @@ function makeDateString(year, month, day) {
 }
 
 // 어떤 날짜에 그 사람이 어디 있는지 알려주는 함수
-function getPlace(person, date) {
-  for (let i = 0; i < schedules.length; i++) {
-    const s = schedules[i];
+function getPlace(person, date, list) {
+  const src = list || schedules;
+  for (let i = 0; i < src.length; i++) {
+    const s = src[i];
     if (s.person === person && date >= s.startDate && date <= s.endDate) {
       return s.place;
     }
@@ -113,9 +114,9 @@ function getPlace(person, date) {
 }
 
 // 특정 날짜에 산본집에 사람이 있는지 (true/false)
-function hasPersonAtHome(dateString) {
+function hasPersonAtHome(dateString, list) {
   for (let i = 0; i < people.length; i++) {
-    if (getPlace(people[i], dateString) === "산본집") {
+    if (getPlace(people[i], dateString, list) === "산본집") {
       return true;
     }
   }
@@ -647,6 +648,49 @@ function readAllNotif() {
   drawNotifList();
 }
 
+// 📢 공지사항: 지금까지의 관리자 공지를 최근 순으로 보여줌
+function openNoticeList() {
+  const list = document.getElementById("noticeList");
+  list.innerHTML = "";
+  const msg = function (text) {
+    const li = document.createElement("li");
+    li.className = "note-empty";
+    li.textContent = text;
+    list.appendChild(li);
+  };
+  document.getElementById("noticeListModal").classList.remove("hidden");
+  if (!cloudConnected) {
+    msg("아직 가족 코드로 연결되지 않았어요.");
+    return;
+  }
+  msg("불러오는 중이에요…");
+  window.cloud.getNotices().then(function (items) {
+    list.innerHTML = "";
+    if (items.length === 0) {
+      msg("아직 공지가 없어요");
+    }
+    items.forEach(function (n) {
+      const d = new Date(n.at);
+      const li = document.createElement("li");
+      const when = document.createElement("small");
+      when.textContent = d.getFullYear() + "." + (d.getMonth() + 1) + "." + d.getDate();
+      const text = document.createElement("div");
+      text.textContent = n.text;
+      li.appendChild(when);
+      li.appendChild(text);
+      list.appendChild(li);
+    });
+  }).catch(function (err) {
+    console.log("공지 불러오기 실패", err);
+    list.innerHTML = "";
+    msg("불러오지 못했어요. 인터넷 연결을 확인해 주세요.");
+  });
+}
+
+function closeNoticeList() {
+  document.getElementById("noticeListModal").classList.add("hidden");
+}
+
 // 새 소식창 닫기
 function closeNotif() {
   document.getElementById("notifModal").classList.add("hidden");
@@ -747,18 +791,17 @@ function onCloudData(list) {
 
   drawCalendar();
 
-  // 일정 변경창이 열려 있으면 목록도 새로고침
-  if (!document.getElementById("manageModal").classList.contains("hidden")) {
-    drawManageList();
+  // 가족 위치창·일정 입력창이 열려 있으면 내용도 새로고침
+  if (!document.getElementById("locModal").classList.contains("hidden")) {
+    renderLoc();
+  }
+  if (!document.getElementById("formModal").classList.contains("hidden")) {
+    updateSaveBar();
   }
 
   // 날짜 상세창이 열려 있으면 내용도 새로고침
   if (!document.getElementById("detailModal").classList.contains("hidden")) {
     openDetail(currentDetailDate, true);
-  }
-  // 오늘 위치 팝업이 열려 있으면 내용도 새로고침
-  if (!document.getElementById("todayModal").classList.contains("hidden")) {
-    renderLoc();
   }
 }
 
@@ -1227,13 +1270,12 @@ function drawRangePicker() {
   document.getElementById("rangeMonthTitle").textContent =
     pickYear + "년 " + (pickMonth + 1) + "월";
 
-  let summary = "시작일을 골라 주세요";
-  if (start !== "") {
-    summary = start + " ~ " + (end === "" ? "종료일을 골라 주세요" : end);
-  }
-  document.getElementById("rangeSummary").textContent = summary;
+  // 가는 날·오는 날 칸 (다음에 누를 칸을 강조)
+  setStep("stepStart", start, start === "");
+  setStep("stepEnd", end, start !== "" && end === "");
 
   const box = document.getElementById("rangeCalendar");
+  box.className = "range-calendar p-" + PLACE_CLASS[formPlace()];
   box.innerHTML = "";
 
   const weekNames = ["일", "월", "화", "수", "목", "금", "토"];
@@ -1256,6 +1298,9 @@ function drawRangePicker() {
     cell.type = "button";
     cell.className = "range-day";
     cell.textContent = d;
+    if (ds === todayString()) {
+      cell.classList.add("today");
+    }
 
     const last = end === "" ? start : end;
     if (start !== "" && ds >= start && ds <= last) {
@@ -1273,64 +1318,142 @@ function drawRangePicker() {
     };
     box.appendChild(cell);
   }
+  updateSaveBar();
 }
 
 // 일정 입력창 열기 (새 일정)
-function openForm() {
-  editingId = "";
-  const boxes = document.querySelectorAll('input[name="person"]');
-  for (let i = 0; i < boxes.length; i++) {
-    boxes[i].checked = false;
-  }
+// 장소 이름표: 색 이름 / 짧은 이름 / "~로"
+const PLACE_CLASS = { "산본집": "home", "제주도": "jeju", "송정지구": "song" };
+const PLACE_SHORT = { "산본집": "산본집", "제주도": "제주도", "송정지구": "송정" };
+const PLACE_TO = { "산본집": "산본집으로", "제주도": "제주도로", "송정지구": "송정으로" };
+
+// 날짜 도우미
+function todayString() {
   const t = new Date();
-  document.getElementById("startDate").value =
-    makeDateString(t.getFullYear(), t.getMonth(), t.getDate());
-  document.getElementById("endDate").value = "";
+  return makeDateString(t.getFullYear(), t.getMonth(), t.getDate());
+}
+
+function shiftDate(ds, n) {
+  const d = new Date(ds + "T00:00:00");
+  d.setDate(d.getDate() + n);
+  return makeDateString(d.getFullYear(), d.getMonth(), d.getDate());
+}
+
+function daysBetween(a, b) {
+  return Math.round((new Date(b + "T00:00:00") - new Date(a + "T00:00:00")) / 86400000);
+}
+
+// "11/13(금)"
+function shortDay(ds) {
+  const d = new Date(ds + "T00:00:00");
+  return (d.getMonth() + 1) + "/" + d.getDate() + "(" + "일월화수목금토"[d.getDay()] + ")";
+}
+
+// 입력창에서 고른 사람들 / 장소
+function checkedPeople() {
+  const out = [];
+  document.querySelectorAll('input[name="person"]:checked').forEach(function (b) {
+    out.push(b.value);
+  });
+  return out;
+}
+
+function formPlace() {
+  return document.querySelector('input[name="place"]:checked').value;
+}
+
+// 일정 입력창 열기 (preset이 있으면 수정: { ids, people, place, start, end })
+// 새 일정이면 이 폰 사용자가 미리 선택되고, 장소는 가장 흔한 제주도
+function openForm(preset) {
+  preset = preset || {};
+  editingIds = preset.ids || [];
+  const wanted = preset.people || (getUser() !== "" ? [getUser()] : []);
+  document.querySelectorAll('input[name="person"]').forEach(function (b) {
+    b.checked = wanted.indexOf(b.value) >= 0;
+  });
+  document.querySelector('input[name="place"][value="' + (preset.place || "제주도") + '"]').checked = true;
+  document.getElementById("startDate").value = preset.start || "";
+  document.getElementById("endDate").value = preset.end || "";
+  document.getElementById("formTitle").textContent = editingIds.length > 0 ? "일정 수정" : "일정 추가";
+  document.getElementById("saveBtn").textContent = editingIds.length > 0 ? "수정 저장" : "일정 추가";
   syncPicker();
-  document.getElementById("saveBtn").textContent = "일정 추가";
   document.getElementById("formModal").classList.remove("hidden");
   document.querySelector("#formModal .modal-title button").focus();
 }
 
 // 일정 입력창 닫기
 function closeForm() {
-  editingId = "";
-  document.getElementById("saveBtn").textContent = "일정 추가";
+  editingIds = [];
   document.getElementById("formModal").classList.add("hidden");
 }
 
-// 오늘부터 N일(오늘 포함)로 시작일·종료일 칸을 채움
-function setPeriod(days) {
-  const today = new Date();
-  const end = new Date();
-  end.setDate(today.getDate() + days - 1);
+// 가는 날·오는 날 칸 한 개 그리기
+function setStep(id, value, on) {
+  const el = document.getElementById(id);
+  el.querySelector("b").textContent = value === "" ? "날짜 선택" : shortDay(value);
+  el.classList.toggle("set", value !== "");
+  el.classList.toggle("on", on);
+}
 
-  document.getElementById("startDate").value =
-    makeDateString(today.getFullYear(), today.getMonth(), today.getDate());
-  document.getElementById("endDate").value =
-    makeDateString(end.getFullYear(), end.getMonth(), end.getDate());
-  syncPicker();
+// 저장 전 미리보기용 일정 목록 (수정 중인 일정은 빼고, 지금 고른 일정을 더함)
+function previewSchedules(who, place, a, b) {
+  const list = schedules.filter(function (s) {
+    return editingIds.indexOf(s.id) < 0;
+  });
+  who.forEach(function (p) {
+    list.push({ person: p, place: place, startDate: a, endDate: b });
+  });
+  // 같은 사람 일정이 겹치면 시작일이 더 늦은 일정이 우선 (onCloudData와 같은 규칙)
+  list.sort(function (x, y) {
+    return y.startDate.localeCompare(x.startDate);
+  });
+  return list;
+}
+
+// 아래 고정 저장 줄: 한 줄 요약 + 산본집 빈집 일수 + 저장 버튼
+function updateSaveBar() {
+  const who = checkedPeople();
+  const place = formPlace();
+  const a = document.getElementById("startDate").value;
+  const b = document.getElementById("endDate").value;
+  const ready = who.length > 0 && a !== "" && b !== "";
+  document.getElementById("saveBtn").disabled = !ready;
+
+  const box = document.getElementById("saveSummary");
+  box.innerHTML = "";
+  const add = function (tag, cls, text) {
+    const el = document.createElement(tag);
+    el.className = cls;
+    el.textContent = text;
+    box.appendChild(el);
+  };
+  if (!ready) {
+    add("span", "hint-text",
+      who.length === 0 ? "누가 가는지 골라 주세요" : a === "" ? "가는 날을 눌러 주세요" : "오는 날을 눌러 주세요");
+    return;
+  }
+  const list = previewSchedules(who, place, a, b);
+  const days = daysBetween(a, b) + 1;
+  let empty = 0;
+  for (let i = 0; i < days; i++) {
+    if (!hasPersonAtHome(shiftDate(a, i), list)) {
+      empty = empty + 1;
+    }
+  }
+  add("b", "", who.join("·") + " · " + PLACE_SHORT[place] + " 다녀오기");
+  add("span", "", days + "일");
+  add("span", "sum-tag " + (empty > 0 ? "warn" : "ok"),
+    empty > 0 ? "산본집 빈집 " + empty + "일" : "산본집은 계속 누가 있어요");
 }
 
 // "일정 추가" (또는 "수정 저장") 버튼을 눌렀을 때 실행되는 함수
 function addSchedule() {
-  const checked = document.querySelectorAll('input[name="person"]:checked');
-  const place = document.getElementById("place").value;
+  const who = checkedPeople();
+  const place = formPlace();
   const startDate = document.getElementById("startDate").value;
   const endDate = document.getElementById("endDate").value;
 
-  if (checked.length === 0) {
-    alert("한 명 이상 선택해 주세요.");
-    return;
-  }
-
-  if (startDate === "" || endDate === "") {
-    alert("시작일과 종료일을 모두 입력해 주세요.");
-    return;
-  }
-
-  if (endDate < startDate) {
-    alert("종료일은 시작일보다 빠를 수 없어요.");
+  if (who.length === 0 || startDate === "" || endDate === "" || endDate < startDate) {
     return;
   }
 
@@ -1340,110 +1463,21 @@ function addSchedule() {
   }
 
   // 새로 넣을 일정 (선택한 사람마다 하나씩)
-  const items = [];
-  for (let i = 0; i < checked.length; i++) {
-    items.push({
-      person: checked[i].value,
-      place: place,
-      startDate: startDate,
-      endDate: endDate
-    });
-  }
+  const items = who.map(function (p) {
+    return { person: p, place: place, startDate: startDate, endDate: endDate };
+  });
 
   // 수정 중이면 기존 일정은 지우고 새로 저장
-  const removeIds = [];
-  if (editingId !== "") {
-    removeIds.push(editingId);
-  }
-
-  window.cloud.save(removeIds, items).catch(function (e) {
+  window.cloud.save(editingIds.slice(), items).catch(function (e) {
     console.log("저장 실패", e);
     alert("저장하지 못했어요. 인터넷 연결과 가족 코드를 확인해 주세요.");
   });
 
   closeForm();
+  openLoc(startDate, "저장했어요");
 }
 
 // ===== 날짜 상세 =====
-
-// 그 날짜에 누가 어디에 있는지를 box에 그려줌 (오늘 위치 팝업에서 사용)
-function drawPlaces(box, dateString) {
-  const placeIcons = { "산본집": "🏠", "제주도": "🌴", "송정지구": "🏢" };
-  box.innerHTML = "";
-  const shownPlaces = ["산본집", "제주도", "송정지구"];
-  for (let p = 0; p < shownPlaces.length; p++) {
-    const names = [];
-    for (let i = 0; i < people.length; i++) {
-      if (getPlace(people[i], dateString) === shownPlaces[p]) {
-        names.push(people[i]);
-      }
-    }
-    const line = document.createElement("div");
-    line.textContent = placeIcons[shownPlaces[p]] + " " + shownPlaces[p] + ": " +
-      (names.length > 0 ? names.join(", ") : "없음");
-    box.appendChild(line);
-  }
-
-  // 빈집이면 경고
-  if (!hasPersonAtHome(dateString)) {
-    const warn = document.createElement("div");
-    warn.className = "detail-warn";
-    warn.textContent = "🐱 빈집 " + getEmptyDays(dateString) + "일차";
-    box.appendChild(warn);
-  }
-}
-
-// 📍 위치 팝업: 처음에는 오늘 기준, ◀▶·날짜 선택으로 다른 날의 위치도 볼 수 있음
-let locDate = "";
-
-function todayDateString() {
-  const now = new Date();
-  return makeDateString(now.getFullYear(), now.getMonth(), now.getDate());
-}
-
-function openToday() {
-  locDate = todayDateString();
-  renderLoc();
-  document.getElementById("todayModal").classList.remove("hidden");
-}
-
-// 보고 있는 날짜 기준으로 팝업 내용을 그림
-function renderLoc() {
-  const isToday = (locDate === todayDateString());
-  const d = new Date(locDate + "T00:00:00");
-  document.getElementById("locDateLabel").textContent =
-    new Intl.DateTimeFormat("ko-KR", { year: "numeric", month: "long", day: "numeric", weekday: "short" }).format(d) +
-    (isToday ? " · 오늘" : "");
-  document.getElementById("locDateInput").value = locDate;
-  document.getElementById("locTodayBtn").hidden = isToday;
-  drawPlaces(document.getElementById("todayPlaces"), locDate);
-}
-
-// 하루씩 앞뒤로 이동
-function shiftLocDay(step) {
-  const d = new Date(locDate + "T00:00:00");
-  d.setDate(d.getDate() + step);
-  locDate = makeDateString(d.getFullYear(), d.getMonth(), d.getDate());
-  renderLoc();
-}
-
-// 오늘로 돌아오기
-function goLocToday() {
-  locDate = todayDateString();
-  renderLoc();
-}
-
-// 날짜 선택창에서 고른 날짜로 이동
-document.getElementById("locDateInput").addEventListener("change", function (e) {
-  if (/^\d{4}-\d{2}-\d{2}$/.test(e.target.value)) {
-    locDate = e.target.value;
-    renderLoc();
-  }
-});
-
-function closeToday() {
-  document.getElementById("todayModal").classList.add("hidden");
-}
 
 // 날짜 상세창 열기 (keepFocus가 true면 포커스를 옮기지 않음)
 function openDetail(dateString, keepFocus) {
@@ -2709,96 +2743,242 @@ function closeDetail() {
   videosLoaded = false;
 }
 
-// ===== 일정 변경 (수정/삭제) =====
+// ===== 가족 위치 (한 달 그래프 + 날짜별 상세 + 일정 수정/삭제) =====
 
-// 일정 변경창 열기
-function openManage() {
-  drawManageList();
-  document.getElementById("manageModal").classList.remove("hidden");
-  document.querySelector("#manageModal .modal-title button").focus();
-}
+let locDate = "";
+let locToastTimer = null;
+const ICON_PEN = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13.5 6.5l4 4"/></svg>';
+const ICON_TRASH = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16"/><path d="M9 7V4h6v3"/><path d="M6 7l1 13h10l1-13"/><path d="M10 11v6M14 11v6"/></svg>';
 
-// 일정 변경창 닫기
-function closeManage() {
-  document.getElementById("manageModal").classList.add("hidden");
-}
-
-// 등록된 일정 목록 그리기 (최근 시작일이 위로)
-function drawManageList() {
-  const list = document.getElementById("manageSchedules");
-  list.innerHTML = "";
-
-  if (schedules.length === 0) {
-    const li = document.createElement("li");
-    li.textContent = "등록된 일정이 없어요 (기본 위치)";
-    list.appendChild(li);
-    return;
+// 가족 위치 창 열기 (date가 있으면 그 날짜, toastText가 있으면 안내 표시)
+function openLoc(date, toastText) {
+  locDate = date || todayString();
+  document.getElementById("locToast").hidden = true;
+  renderLoc();
+  if (toastText) {
+    showLocToast(toastText, null);
   }
+  document.getElementById("locModal").classList.remove("hidden");
+  document.querySelector("#locModal .modal-title button").focus();
+}
 
-  // onCloudData가 이미 시작일이 늦은 순으로 정렬해 둠
+function closeLoc() {
+  document.getElementById("locModal").classList.add("hidden");
+}
+
+function shiftLoc(step) {
+  locDate = shiftDate(locDate, step);
+  renderLoc();
+}
+
+function goLocToday() {
+  locDate = todayString();
+  renderLoc();
+}
+
+// 아래쪽에 잠깐 보이는 안내 (undo가 있으면 "되돌리기" 버튼)
+function showLocToast(text, undo) {
+  const box = document.getElementById("locToast");
+  box.innerHTML = "";
+  const span = document.createElement("span");
+  span.textContent = text;
+  box.appendChild(span);
+  if (undo) {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.textContent = "되돌리기";
+    btn.onclick = function () {
+      box.hidden = true;
+      undo().catch(function (e) {
+        console.log("되돌리기 실패", e);
+        alert("되돌리지 못했어요. 인터넷 연결을 확인해 주세요.");
+      });
+    };
+    box.appendChild(btn);
+  }
+  box.hidden = false;
+  clearTimeout(locToastTimer);
+  locToastTimer = setTimeout(function () {
+    box.hidden = true;
+  }, 6000);
+}
+
+// 그 사람이 그 날짜에 적용받는 일정 / 없으면 앞으로 가장 가까운 일정
+function nearSchedule(person, date) {
   for (let i = 0; i < schedules.length; i++) {
     const s = schedules[i];
-    const id = s.id;
-    const li = document.createElement("li");
-
-    const text = document.createElement("span");
-    text.textContent = s.person + " → " + s.place +
-      " (" + s.startDate + " ~ " + s.endDate + ")";
-    li.appendChild(text);
-
-    const editBtn = document.createElement("button");
-    editBtn.textContent = "수정";
-    editBtn.onclick = function () {
-      editSchedule(id);
-    };
-    li.appendChild(editBtn);
-
-    const delBtn = document.createElement("button");
-    delBtn.textContent = "삭제";
-    delBtn.onclick = function () {
-      deleteSchedule(id);
-    };
-    li.appendChild(delBtn);
-
-    list.appendChild(li);
+    if (s.person === person && date >= s.startDate && date <= s.endDate) {
+      return s;
+    }
   }
+  let best = null;
+  for (let i = 0; i < schedules.length; i++) {
+    const s = schedules[i];
+    if (s.person === person && s.startDate > date && (best === null || s.startDate < best.startDate)) {
+      best = s;
+    }
+  }
+  return best;
 }
 
-// 일정 수정: 입력창에 기존 내용을 채워서 열기
-function editSchedule(id) {
-  const s = findSchedule(id);
-  if (s === null) {
-    return;
+// 앞으로 60일 안에 장소가 바뀌는 첫 날 (없으면 null)
+function nextChange(person, date) {
+  const now = getPlace(person, date);
+  for (let i = 1; i <= 60; i++) {
+    const ds = shiftDate(date, i);
+    const p = getPlace(person, ds);
+    if (p !== now) {
+      return { date: ds, place: p };
+    }
   }
-  editingId = id;
-  closeManage();
-
-  const boxes = document.querySelectorAll('input[name="person"]');
-  for (let i = 0; i < boxes.length; i++) {
-    boxes[i].checked = (boxes[i].value === s.person);
-  }
-  // 옛 송정지구 일정처럼 선택칸에 없는 장소는 산본집으로 채워서 저장이 막히지 않게
-  const placeSelect = document.getElementById("place");
-  placeSelect.value = s.place;
-  if (placeSelect.value !== s.place) {
-    placeSelect.value = "산본집";
-  }
-  document.getElementById("startDate").value = s.startDate;
-  document.getElementById("endDate").value = s.endDate;
-  syncPicker();
-  document.getElementById("saveBtn").textContent = "수정 저장";
-  document.getElementById("formModal").classList.remove("hidden");
-  document.querySelector("#formModal .modal-title button").focus();
+  return null;
 }
 
-// 일정 삭제
-function deleteSchedule(id) {
-  if (!confirm("이 일정을 삭제할까요?")) {
+// 같은 기간·장소를 함께 가는 일정들
+function groupOf(sched) {
+  return schedules.filter(function (s) {
+    return s.place === sched.place && s.startDate === sched.startDate && s.endDate === sched.endDate;
+  });
+}
+
+// ✏️ 수정: 일정 추가 창에 내용을 채워서 열기
+function editGroup(sched) {
+  const g = groupOf(sched);
+  closeLoc();
+  openForm({
+    ids: g.map(function (s) { return s.id; }),
+    people: g.map(function (s) { return s.person; }),
+    place: sched.place,
+    start: sched.startDate,
+    end: sched.endDate
+  });
+}
+
+// 🗑 삭제: 확인 창 없이 지우고, 되돌리기 안내를 보여줌
+function deleteGroup(sched) {
+  if (!window.cloud || getSavedCode() === "") {
+    alert("아직 가족 코드로 연결되지 않았어요. 잠시 후 다시 시도해 주세요.");
     return;
   }
-  window.cloud.remove(id).catch(function (e) {
+  const g = groupOf(sched);
+  const items = g.map(function (s) {
+    return { person: s.person, place: s.place, startDate: s.startDate, endDate: s.endDate };
+  });
+  window.cloud.save(g.map(function (s) { return s.id; }), []).then(function () {
+    showLocToast("일정을 삭제했어요", function () {
+      return window.cloud.save([], items);
+    });
+  }).catch(function (e) {
     console.log("삭제 실패", e);
     alert("삭제하지 못했어요. 인터넷 연결을 확인해 주세요.");
+  });
+}
+
+function el(tag, cls, text) {
+  const e = document.createElement(tag);
+  if (cls) {
+    e.className = cls;
+  }
+  if (text !== undefined) {
+    e.textContent = text;
+  }
+  return e;
+}
+
+// 가족 위치 창 그리기: 날짜 → 그래프 → 빈집 알림 → 상세 위치
+function renderLoc() {
+  const d = locDate;
+  const isToday = (d === todayString());
+  document.getElementById("locDateLabel").textContent = shortDay(d) + (isToday ? " · 오늘" : "");
+  document.getElementById("locTodayBtn").hidden = isToday;
+
+  // 그래프: 고른 날짜가 속한 달의 사람별 위치 + 산본집이 빈 날
+  const y = Number(d.slice(0, 4));
+  const m = Number(d.slice(5, 7)) - 1;
+  const n = new Date(y, m + 1, 0).getDate();
+  document.getElementById("locMonthLabel").textContent =
+    (m + 1) + "월 가족 위치 · 칸을 누르면 그날 상세 위치가 아래에 나와요";
+  const g = document.getElementById("locGraph");
+  g.style.gridTemplateColumns = "30px repeat(" + n + ", minmax(0, 1fr))";
+  g.innerHTML = "";
+  const today = todayString();
+  g.appendChild(el("span", ""));
+  for (let i = 1; i <= n; i++) {
+    const ds = makeDateString(y, m, i);
+    g.appendChild(el("span", "ax" + (ds === today ? " t" : ""), [1, 5, 10, 15, 20, 25, 30].indexOf(i) >= 0 ? String(i) : ""));
+  }
+  const cell = function (cls, ds, label) {
+    const b = el("button", "loc-cell " + cls + (ds === d ? " sel" : ""));
+    b.type = "button";
+    b.setAttribute("aria-label", label);
+    b.onclick = function () {
+      locDate = ds;
+      renderLoc();
+    };
+    return b;
+  };
+  people.forEach(function (p) {
+    g.appendChild(el("span", "tn", p));
+    for (let i = 1; i <= n; i++) {
+      const ds = makeDateString(y, m, i);
+      const place = getPlace(p, ds);
+      g.appendChild(cell(PLACE_CLASS[place], ds, p + " " + shortDay(ds) + " " + PLACE_SHORT[place]));
+    }
+  });
+  g.appendChild(el("span", "tn", "빈집"));
+  for (let i = 1; i <= n; i++) {
+    const ds = makeDateString(y, m, i);
+    const empty = !hasPersonAtHome(ds);
+    g.appendChild(cell(empty ? "bad" : "none", ds, shortDay(ds) + (empty ? " 빈집" : "")));
+  }
+
+  // 빈집 알림
+  const banner = document.getElementById("locBanner");
+  const home = people.filter(function (p) {
+    return getPlace(p, d) === "산본집";
+  });
+  if (home.length > 0) {
+    banner.className = "loc-banner ok";
+    banner.textContent = "🏠 산본집에 " + home.join("·") + " 있어요";
+  } else {
+    banner.className = "loc-banner warn";
+    banner.textContent = "🏠 산본집 빈집 " + getEmptyDays(d) + "일차";
+  }
+
+  // 상세 위치: 이름 | 다음 이동 | 수정·삭제 | 현재 장소
+  const list = document.getElementById("locList");
+  list.innerHTML = "";
+  people.forEach(function (p) {
+    const row = el("div", "loc-row");
+    row.appendChild(el("span", "loc-chip", p));
+    const nx = nextChange(p, d);
+    row.appendChild(el("span", "loc-next", nx ? shortDay(nx.date) + "에 " + PLACE_TO[nx.place] : "당분간 그대로"));
+    const near = nearSchedule(p, d);
+    if (near) {
+      const acts = el("div", "loc-acts");
+      const edit = el("button", "");
+      edit.type = "button";
+      edit.innerHTML = ICON_PEN;
+      edit.setAttribute("aria-label", p + " 일정 수정");
+      edit.onclick = function () {
+        editGroup(near);
+      };
+      const del = el("button", "del");
+      del.type = "button";
+      del.innerHTML = ICON_TRASH;
+      del.setAttribute("aria-label", p + " 일정 삭제");
+      del.onclick = function () {
+        deleteGroup(near);
+      };
+      acts.appendChild(edit);
+      acts.appendChild(del);
+      row.appendChild(acts);
+    } else {
+      row.appendChild(el("span", ""));
+    }
+    const place = getPlace(p, d);
+    row.appendChild(el("span", "loc-badge " + PLACE_CLASS[place], PLACE_SHORT[place]));
+    list.appendChild(row);
   });
 }
 
@@ -2813,16 +2993,17 @@ document.addEventListener("keydown", function (e) {
     }
     closeForm();
     closeDetail();
-    closeManage();
+    closeLoc();
     closeNotif();
     closeBug();
-    closeToday();
+    closeNoticeList();
     closeAdmin();
     closeCodeModal();
     closeUserModal();
   }
 });
 
+document.getElementById("formModal").addEventListener("change", drawRangePicker);
 document.getElementById("photoInput").addEventListener("change", onPhotoChosen);
 document.getElementById("cameraInput").addEventListener("change", onPhotoChosen);
 document.getElementById("videoInput").addEventListener("change", onVideoChosen);

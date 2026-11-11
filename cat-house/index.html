@@ -16,7 +16,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Jua&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=20261114k">
+  <link rel="stylesheet" href="style.css?v=20261114n">
 </head>
 <body>
   <div id="splash" class="splash" aria-hidden="true">
@@ -36,9 +36,9 @@
 
     <section class="card add-card">
       <div class="add-card-buttons">
-        <button class="add-btn" onclick="openForm()">📅 일정 입력</button>
-        <button class="sub-btn" onclick="openManage()">✏️ 일정 변경</button>
-        <button class="sub-btn" onclick="openToday()">📍 위치</button>
+        <button class="sub-btn" onclick="openForm()">📅 일정</button>
+        <button class="sub-btn" onclick="openLoc()">📍 가족 위치</button>
+        <button type="button" class="bell-btn" id="noticeBtn" onclick="openNoticeList()" aria-label="공지사항"><span class="bell-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10v4a1 1 0 0 0 1 1h3l8 4V5L7 9H4a1 1 0 0 0-1 1z"/><path d="M19 9a4 4 0 0 1 0 6"/></svg></span></button>
         <button type="button" class="bell-btn" id="bellBtn" onclick="openNotif()" aria-label="새 소식"><span class="bell-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg></span><span id="bellBadge" class="badge" hidden></span></button>
       </div>
     </section>
@@ -71,9 +71,9 @@
 
   <div id="formModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="formTitle">
     <div class="modal-box">
-      <div class="modal-title">
-        <h2 id="formTitle">일정 입력</h2>
-        <button class="round-btn" onclick="closeForm()" aria-label="닫기"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+      <div class="modal-title back-title">
+        <button type="button" class="round-btn" onclick="closeForm()" aria-label="뒤로"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button>
+        <h2 id="formTitle">일정 추가</h2>
       </div>
 
       <div class="form-box">
@@ -85,21 +85,19 @@
           <label><input type="checkbox" name="person" value="한비"> 한비</label>
         </fieldset>
 
-        <label>어디로
-          <select id="place" name="place" autocomplete="off">
-            <option value="송정지구">송정지구</option>
-            <option>산본집</option>
-            <option>제주도</option>
-          </select>
-        </label>
-
-        <div class="quick-buttons">
-          <button type="button" onclick="setPeriod(7)">오늘부터 1주일</button>
-          <button type="button" onclick="setPeriod(30)">오늘부터 한 달</button>
-        </div>
+        <fieldset class="place-seg">
+          <legend>어디로</legend>
+          <label class="p-song"><input type="radio" name="place" value="송정지구"> 송정</label>
+          <label class="p-home"><input type="radio" name="place" value="산본집"> 산본집</label>
+          <label class="p-jeju"><input type="radio" name="place" value="제주도" checked> 제주도</label>
+        </fieldset>
 
         <div class="range-picker">
-          <div class="range-summary" id="rangeSummary" aria-live="polite"></div>
+          <div class="range-steps">
+            <div id="stepStart" class="range-step"><small>가는 날</small><b></b></div>
+            <span aria-hidden="true">→</span>
+            <div id="stepEnd" class="range-step"><small>오는 날</small><b></b></div>
+          </div>
           <div class="range-nav">
             <button type="button" class="round-btn chev-btn" onclick="rangeMove(-1)" aria-label="이전 달"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button>
             <span id="rangeMonthTitle"></span>
@@ -110,7 +108,10 @@
         <input type="hidden" id="startDate" name="startDate">
         <input type="hidden" id="endDate" name="endDate">
 
-        <button id="saveBtn" onclick="addSchedule()">일정 추가</button>
+        <div class="save-bar">
+          <div id="saveSummary" class="save-summary" aria-live="polite"></div>
+          <button id="saveBtn" onclick="addSchedule()">일정 추가</button>
+        </div>
       </div>
     </div>
   </div>
@@ -143,13 +144,25 @@
     </div>
   </div>
 
-  <div id="manageModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="manageTitle">
+  <div id="locModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="locTitle">
     <div class="modal-box">
-      <div class="modal-title">
-        <h2 id="manageTitle">일정 변경</h2>
-        <button class="round-btn" onclick="closeManage()" aria-label="닫기"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+      <div class="modal-title back-title">
+        <button type="button" class="round-btn" onclick="closeLoc()" aria-label="뒤로"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button>
+        <h2 id="locTitle">가족 위치</h2>
       </div>
-      <ul id="manageSchedules"></ul>
+      <div id="locToast" class="loc-toast" role="status" hidden></div>
+      <div class="loc-nav">
+        <button type="button" onclick="shiftLoc(-1)" aria-label="전날"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button>
+        <div class="loc-date"><span id="locDateLabel"></span><button type="button" id="locTodayBtn" onclick="goLocToday()" hidden>오늘</button></div>
+        <button type="button" onclick="shiftLoc(1)" aria-label="다음날"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></button>
+      </div>
+      <div class="loc-card">
+        <span class="loc-lab" id="locMonthLabel"></span>
+        <div id="locGraph" class="loc-graph"></div>
+        <div class="loc-legend"><span><i style="background:var(--song)"></i>송정</span><span><i style="background:var(--home)"></i>산본집</span><span><i style="background:var(--jeju)"></i>제주도</span><span><i style="background:var(--warn-ink);opacity:.8"></i>빈집</span></div>
+      </div>
+      <div id="locBanner" class="loc-banner"></div>
+      <div id="locList" class="loc-card"></div>
     </div>
   </div>
 
@@ -181,6 +194,16 @@
     </div>
   </div>
 
+  <div id="noticeListModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="noticeListTitle">
+    <div class="modal-box">
+      <div class="modal-title">
+        <h2 id="noticeListTitle">📢 공지사항</h2>
+        <button class="round-btn" onclick="closeNoticeList()" aria-label="닫기"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+      </div>
+      <ul id="noticeList"></ul>
+    </div>
+  </div>
+
   <div id="trimModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="trimTitle">
     <div class="modal-box">
       <div class="modal-title">
@@ -195,25 +218,6 @@
       <div class="form-box">
         <button type="button" id="trimOkBtn" onclick="confirmTrim()">이 10초 올리기</button>
       </div>
-    </div>
-  </div>
-
-  <div id="todayModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="todayTitle">
-    <div class="modal-box">
-      <div class="modal-title">
-        <h2 id="todayTitle">📍 위치</h2>
-        <button type="button" id="locTodayBtn" class="loc-today-btn" onclick="goLocToday()" hidden>오늘</button>
-        <button class="round-btn" onclick="closeToday()" aria-label="닫기"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
-      </div>
-      <div class="loc-nav">
-        <button type="button" class="round-btn chev-btn" onclick="shiftLocDay(-1)" aria-label="전날"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button>
-        <div class="loc-date">
-          <span id="locDateLabel"></span>
-          <input type="date" id="locDateInput" aria-label="날짜 선택">
-        </div>
-        <button type="button" class="round-btn chev-btn" onclick="shiftLocDay(1)" aria-label="다음날"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></button>
-      </div>
-      <div id="todayPlaces"></div>
     </div>
   </div>
 
@@ -558,6 +562,16 @@
         });
       },
 
+      // 지금까지의 공지 전체 (최근 것이 먼저)
+      getNotices: async function () {
+        const snap = await getDocs(query(
+          collection(db, "families", currentCode, "activity"),
+          where("type", "==", "notice")
+        ));
+        const list = snap.docs.map(function (d) { return d.data(); });
+        return list.sort(function (a, b) { return b.at - a.at; });
+      },
+
       // 버그 제보 저장 (서버 기능이 이 글을 보고 한나관리자에게 카카오톡을 보냄)
       sendBug: function (text, by) {
         return setDoc(doc(collection(db, "families", currentCode, "bugReports")), {
@@ -702,6 +716,6 @@
     window.dispatchEvent(new Event("cloud-ready"));
   </script>
 
-  <script src="script.js?v=20261114l"></script>
+  <script src="script.js?v=20261114o"></script>
 </body>
 </html>
