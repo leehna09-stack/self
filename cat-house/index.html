@@ -16,7 +16,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Jua&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=20261114r">
+  <link rel="stylesheet" href="style.css?v=20261114s">
 </head>
 <body>
   <div id="splash" class="splash" aria-hidden="true">
@@ -262,7 +262,7 @@
         <button type="button" onclick="adminChangeCode()">🔑 가족 코드 바꾸기</button>
         <div id="noticeSection" hidden>
           <h3>📢 공지 올리기</h3>
-          <textarea id="noticeInput" maxlength="100" rows="3" placeholder="가족 모두의 알림(🔔)으로 전달돼요 (최대 100자)" oninput="updateNoticeCount()"></textarea>
+          <textarea id="noticeInput" maxlength="100" rows="3" oninput="updateNoticeCount()"></textarea>
           <button type="button" id="noticeSendBtn" onclick="sendNotice()">📢 공지 보내기</button>
           <div class="hint" id="noticeStatus" aria-live="polite">0 / 100</div>
         </div>
@@ -271,11 +271,10 @@
             <span id="birthdaySwitchLabel">🎂 생일축하 팝업/배너 보이기</span>
             <button type="button" id="birthdaySwitch" class="switch" role="switch" aria-checked="true" aria-labelledby="birthdaySwitchLabel" onclick="toggleBirthday()"><span class="knob"></span></button>
           </div>
-          <div class="hint" id="birthdayStatus" aria-live="polite">켜면 생일 팝업이 다시 뜨고, 끄면 팝업과 배너가 모두 숨겨져요.</div>
         </div>
         <div id="backupSection" hidden>
           <button type="button" id="backupBtn" onclick="downloadBackup()">💾 백업 내려받기</button>
-          <div class="hint" id="backupStatus" aria-live="polite">일정·사진·한줄평·날씨·소식 기록을 파일 하나로 내려받아요. 사진이 많으면 시간이 걸릴 수 있어요.</div>
+          <div class="hint" id="backupStatus" aria-live="polite"></div>
         </div>
       </div>
     </div>
@@ -757,6 +756,6 @@
     window.dispatchEvent(new Event("cloud-ready"));
   </script>
 
-  <script src="script.js?v=20261114s"></script>
+  <script src="script.js?v=20261114t"></script>
 </body>
 </html>

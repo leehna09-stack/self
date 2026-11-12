@@ -1971,3 +1971,12 @@ textarea:focus-visible {
 .switch[aria-checked="true"] .knob {
   transform: translateX(20px);
 }
+
+/* 백업 진행 안내는 내려받는 동안에만 보임 */
+#backupStatus:empty {
+  display: none;
+}
+
+.birthday-pop-btn:hover {
+  background-color: #57514d;
+}
