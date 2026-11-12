@@ -1876,3 +1876,52 @@ textarea:focus-visible {
   color: var(--sub);
   word-break: keep-all;
 }
+
+/* 생일 축하 팝업 (생일인 본인에게) */
+.birthday-pop {
+  text-align: center;
+  padding: 28px 22px 22px;
+  background-color: #fff6df;
+  border: 1px solid #f0d28a;
+}
+
+.birthday-pop-icons {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 14px;
+  margin-bottom: 12px;
+  font-size: 30px;
+  line-height: 1;
+}
+
+.birthday-pop-icons .cake {
+  font-size: 56px;
+  transform-origin: 50% 85%;
+  animation: wiggle 3s ease-in-out infinite;
+}
+
+.birthday-pop h2 {
+  margin: 0 0 10px;
+  font-size: 22px;
+  line-height: 1.35;
+  word-break: keep-all;
+}
+
+.birthday-pop p {
+  margin: 0 0 20px;
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--ink);
+  word-break: keep-all;
+}
+
+.birthday-pop-btn {
+  width: 100%;
+  min-height: 46px;
+  border-radius: 16px;
+  background-color: var(--ink);
+  border-color: var(--ink);
+  color: #ffffff;
+  font-size: 15px;
+}

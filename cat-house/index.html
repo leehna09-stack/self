@@ -16,7 +16,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Jua&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=20261114p">
+  <link rel="stylesheet" href="style.css?v=20261114q">
 </head>
 <body>
   <div id="splash" class="splash" aria-hidden="true">
@@ -186,6 +186,15 @@
         </label>
         <button id="codeSaveBtn" onclick="saveCode()">입장하기</button>
       </div>
+    </div>
+  </div>
+
+  <div id="birthdayModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="birthdayModalTitle">
+    <div class="modal-box birthday-pop">
+      <div class="birthday-pop-icons" aria-hidden="true"><span>🎈</span><span class="cake">🎂</span><span>🎉</span></div>
+      <h2 id="birthdayModalTitle"></h2>
+      <p id="birthdayModalMsg"></p>
+      <button type="button" class="birthday-pop-btn" onclick="closeBirthday()">고마워 💛</button>
     </div>
   </div>
 
@@ -722,6 +731,6 @@
     window.dispatchEvent(new Event("cloud-ready"));
   </script>
 
-  <script src="script.js?v=20261114q"></script>
+  <script src="script.js?v=20261114r"></script>
 </body>
 </html>

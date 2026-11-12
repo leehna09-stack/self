@@ -810,11 +810,11 @@ function onCloudData(list) {
 
 // ===== 생일 축하 배너 =====
 // 생일 날짜에 접속하면 화면 맨 위에 축하 글이 뜸 (year를 빼면 매년, 넣으면 그 해만)
-// self = 생일인 사람 본인에게 보이는 글, others = 나머지 가족에게 보이는 글
+// self = 생일인 사람 본인에게 팝업으로 보이는 글, others = 나머지 가족에게 상단 배너로 보이는 글
 const BIRTHDAYS = [
   {
     name: "한비", year: 2026, month: 11, day: 13,
-    self: { title: "한비야, 생일 축하해!", text: "오늘 하루 행복하게 보내. 우리 가족이 많이 사랑해 💛" },
+    self: { title: "소중한 내 동생 한비야 💛 생일 축하해!", text: "소중한 너의 20대를 뜻깊은 하루하루로 채워가길 바래." },
     others: { title: "오늘은 한비의 생일이에요!", text: "한비에게 축하 인사를 전해 주세요 🎉" }
   }
 ];
@@ -837,9 +837,11 @@ function birthdayKey(b) {
   return todayString() + b.name;
 }
 
-// 배너 그리기: 오늘 생일이고, 이 폰에서 아직 닫지 않았으면 보여줌
+// 오늘 생일이고 이 폰에서 아직 닫지 않았으면 보여줌
+// 생일인 본인에게는 축하 팝업, 나머지 가족에게는 상단 배너
 function drawBirthday() {
-  const box = document.getElementById("birthdayBanner");
+  const banner = document.getElementById("birthdayBanner");
+  const modal = document.getElementById("birthdayModal");
   const b = birthdayToday();
   let closed = "";
   try {
@@ -847,17 +849,24 @@ function drawBirthday() {
   } catch (e) {
     // 저장소를 못 쓰면 닫아도 다음에 다시 보임
   }
+  banner.hidden = true;
+  modal.classList.add("hidden");
   if (b === null || closed === birthdayKey(b)) {
-    box.hidden = true;
     return;
   }
-  const msg = getUser() === b.name ? b.self : b.others;
-  document.getElementById("birthdayTitle").textContent = msg.title;
-  document.getElementById("birthdayMsg").textContent = msg.text;
-  box.hidden = false;
+  if (getUser() === b.name) {
+    document.getElementById("birthdayModalTitle").textContent = b.self.title;
+    document.getElementById("birthdayModalMsg").textContent = b.self.text;
+    modal.classList.remove("hidden");
+    document.querySelector("#birthdayModal .birthday-pop-btn").focus();
+  } else {
+    document.getElementById("birthdayTitle").textContent = b.others.title;
+    document.getElementById("birthdayMsg").textContent = b.others.text;
+    banner.hidden = false;
+  }
 }
 
-// ✕: 오늘은 다시 안 보이게 (이 폰에서만)
+// 닫기: 오늘은 다시 안 보이게 (이 폰에서만)
 function closeBirthday() {
   const b = birthdayToday();
   if (b !== null) {
@@ -868,6 +877,7 @@ function closeBirthday() {
     }
   }
   document.getElementById("birthdayBanner").hidden = true;
+  document.getElementById("birthdayModal").classList.add("hidden");
 }
 
 // ===== 시작 화면 / 버그 제보 =====
