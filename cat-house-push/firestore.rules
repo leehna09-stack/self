@@ -192,6 +192,18 @@ service cloud.firestore {
         );
     }
 
+    // 설정 (지금은 생일축하 팝업/배너 켜짐·꺼짐 하나만: settings/birthday)
+    match /families/{familyCode}/settings/{settingId} {
+      allow read: if familyCode.size() >= 20;
+
+      allow create, update: if familyCode.size() >= 20
+        && settingId == 'birthday'
+        && request.resource.data.keys().hasAll(['on', 'resetAt'])
+        && request.resource.data.keys().hasOnly(['on', 'resetAt'])
+        && request.resource.data.on is bool
+        && request.resource.data.resetAt is number;
+    }
+
     // 버그 제보 (쓰기만 가능, 읽기·수정·삭제는 서버만)
     match /families/{familyCode}/bugReports/{reportId} {
       allow create: if familyCode.size() >= 20
