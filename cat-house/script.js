@@ -188,6 +188,8 @@ function openAdmin() {
   // 백업은 한나로 접속했을 때만 보임 (사용자·가족 코드 바꾸기는 모두에게 보임)
   document.getElementById("backupSection").hidden = (getUser() !== ADMIN_USER);
   document.getElementById("noticeSection").hidden = (getUser() !== ADMIN_USER);
+  document.getElementById("birthdaySection").hidden = (getUser() !== ADMIN_USER);
+  updateBirthdayToggle();
   updateNoticeCount();
   document.getElementById("adminModal").classList.add("hidden");
   document.getElementById("adminModal").classList.remove("hidden");
@@ -394,6 +396,7 @@ function connectCloud(code) {
   watchMonthPhotos();
   activity = [];
   window.cloud.watchActivity(Math.max(getSeen(), Date.now() - NOTIF_KEEP_MS), onActivityData);
+  window.cloud.watchBirthday(onBirthdaySetting);
   refreshPush();
   openFromLink();
 }
@@ -818,7 +821,37 @@ const BIRTHDAYS = [
     others: { title: "오늘은 한비의 생일이에요!", text: "한비에게 축하 인사를 전해 주세요 🎉" }
   }
 ];
-const BIRTHDAY_CLOSED_KEY = "catHouseBirthdayClosed";
+const BIRTHDAY_CLOSED_KEY = "catHouseBirthdayClosed";    // 상단 배너를 ✕로 닫은 날
+const BIRTHDAY_SEEN_KEY = "catHouseBirthdayPopupSeen";   // 팝업에서 "고마워"를 누른 날
+const BIRTHDAY_SETTING_KEY = "catHouseBirthdaySetting";  // 한나가 정한 켜짐/꺼짐을 이 폰에 기억해 둠
+
+// 켜짐/꺼짐 설정 (한나가 관리에서 바꿈, 가족 모두에게 같이 적용). 설정이 없으면 켜짐
+// resetAt: 켜거나 끌 때마다 바뀌는 값. 바뀌면 이 폰의 "닫음·고마워" 기록이 무효가 되어 팝업이 다시 뜸
+let birthdaySetting = { on: true, resetAt: 0 };
+try {
+  const saved = JSON.parse(localStorage.getItem(BIRTHDAY_SETTING_KEY));
+  if (saved && typeof saved.on === "boolean") {
+    birthdaySetting = { on: saved.on, resetAt: Number(saved.resetAt) || 0 };
+  }
+} catch (e) {
+  // 저장소를 못 쓰면 기본값(켜짐)
+}
+
+function readFlag(key) {
+  try {
+    return localStorage.getItem(key) || "";
+  } catch (e) {
+    return "";
+  }
+}
+
+function writeFlag(key, value) {
+  try {
+    localStorage.setItem(key, value);
+  } catch (e) {
+    // 저장하지 못하면 이번 접속 동안만 닫힘
+  }
+}
 
 // 오늘이 생일인 사람 (없으면 null)
 function birthdayToday() {
@@ -834,50 +867,83 @@ function birthdayToday() {
 }
 
 function birthdayKey(b) {
-  return todayString() + b.name;
+  return todayString() + b.name + ":" + birthdaySetting.resetAt;
 }
 
-// 오늘 생일이고 이 폰에서 아직 닫지 않았으면 보여줌
-// 생일인 본인에게는 축하 팝업, 나머지 가족에게는 상단 배너
+// 서버에서 설정이 오면 실행 (data가 null이면 설정 없음 = 켜짐)
+function onBirthdaySetting(data) {
+  birthdaySetting = { on: !data || data.on !== false, resetAt: data ? Number(data.resetAt) || 0 : 0 };
+  writeFlag(BIRTHDAY_SETTING_KEY, JSON.stringify(birthdaySetting));
+  drawBirthday();
+  updateBirthdayToggle();
+}
+
+// 오늘 생일이고 켜져 있을 때 보여줌
+// 생일인 본인: 처음엔 팝업, "고마워"를 누른 뒤에는 상단 배너 / 나머지 가족: 상단 배너
 function drawBirthday() {
   const banner = document.getElementById("birthdayBanner");
   const modal = document.getElementById("birthdayModal");
-  const b = birthdayToday();
-  let closed = "";
-  try {
-    closed = localStorage.getItem(BIRTHDAY_CLOSED_KEY) || "";
-  } catch (e) {
-    // 저장소를 못 쓰면 닫아도 다음에 다시 보임
-  }
   banner.hidden = true;
   modal.classList.add("hidden");
-  if (b === null || closed === birthdayKey(b)) {
+  const b = birthdayToday();
+  if (b === null || !birthdaySetting.on) {
     return;
   }
-  if (getUser() === b.name) {
+  const key = birthdayKey(b);
+  const mine = (getUser() === b.name);
+  if (mine && readFlag(BIRTHDAY_SEEN_KEY) !== key) {
     document.getElementById("birthdayModalTitle").textContent = b.self.title;
     document.getElementById("birthdayModalMsg").textContent = b.self.text;
     modal.classList.remove("hidden");
     document.querySelector("#birthdayModal .birthday-pop-btn").focus();
-  } else {
-    document.getElementById("birthdayTitle").textContent = b.others.title;
-    document.getElementById("birthdayMsg").textContent = b.others.text;
-    banner.hidden = false;
+    return;
   }
+  if (readFlag(BIRTHDAY_CLOSED_KEY) === key) {
+    return;
+  }
+  const msg = mine ? b.self : b.others;
+  document.getElementById("birthdayTitle").textContent = msg.title;
+  document.getElementById("birthdayMsg").textContent = msg.text;
+  banner.hidden = false;
 }
 
-// 닫기: 오늘은 다시 안 보이게 (이 폰에서만)
+// 팝업의 "고마워": 팝업은 이 폰에서 다시 안 뜨고, 상단 배너로 이어짐
+function thanksBirthday() {
+  const b = birthdayToday();
+  if (b !== null) {
+    writeFlag(BIRTHDAY_SEEN_KEY, birthdayKey(b));
+  }
+  drawBirthday();
+}
+
+// 배너의 ✕: 오늘은 다시 안 보이게 (이 폰에서만)
 function closeBirthday() {
   const b = birthdayToday();
   if (b !== null) {
-    try {
-      localStorage.setItem(BIRTHDAY_CLOSED_KEY, birthdayKey(b));
-    } catch (e) {
-      // 저장하지 못하면 이번 접속 동안만 닫힘
-    }
+    writeFlag(BIRTHDAY_CLOSED_KEY, birthdayKey(b));
   }
   document.getElementById("birthdayBanner").hidden = true;
-  document.getElementById("birthdayModal").classList.add("hidden");
+}
+
+// 관리 메뉴의 스위치 모양을 지금 설정에 맞춤
+function updateBirthdayToggle() {
+  document.getElementById("birthdaySwitch").setAttribute("aria-checked", birthdaySetting.on ? "true" : "false");
+}
+
+// 관리 메뉴 스위치: 켜면 팝업이 다시 뜨고, 끄면 팝업·배너가 모두 숨겨짐 (한나만 보임)
+function toggleBirthday() {
+  if (!window.cloud || getSavedCode() === "") {
+    alert("아직 가족 코드로 연결되지 않았어요. 잠시 후 다시 시도해 주세요.");
+    return;
+  }
+  const before = birthdaySetting;
+  const next = !before.on;
+  onBirthdaySetting({ on: next, resetAt: Date.now() });
+  window.cloud.saveBirthday(next).catch(function (e) {
+    console.log("생일 설정 저장 실패", e);
+    onBirthdaySetting(before);
+    alert("저장하지 못했어요. 인터넷 연결을 확인해 주세요.");
+  });
 }
 
 // ===== 시작 화면 / 버그 제보 =====
@@ -1106,6 +1172,7 @@ document.addEventListener("visibilitychange", function () {
   hiddenAt = 0;
   watchMonthPhotos();
   window.cloud.watchActivity(Math.max(getSeen(), Date.now() - NOTIF_KEEP_MS), onActivityData);
+  window.cloud.watchBirthday(onBirthdaySetting);
   if (!document.getElementById("detailModal").classList.contains("hidden")) {
     window.cloud.watchNotes(currentDetailDate, onNotesData);
   }

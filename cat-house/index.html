@@ -16,7 +16,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Jua&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=20261114q">
+  <link rel="stylesheet" href="style.css?v=20261114r">
 </head>
 <body>
   <div id="splash" class="splash" aria-hidden="true">
@@ -194,7 +194,7 @@
       <div class="birthday-pop-icons" aria-hidden="true"><span>🎈</span><span class="cake">🎂</span><span>🎉</span></div>
       <h2 id="birthdayModalTitle"></h2>
       <p id="birthdayModalMsg"></p>
-      <button type="button" class="birthday-pop-btn" onclick="closeBirthday()">고마워 💛</button>
+      <button type="button" class="birthday-pop-btn" onclick="thanksBirthday()">고마워 💛</button>
     </div>
   </div>
 
@@ -265,6 +265,13 @@
           <textarea id="noticeInput" maxlength="100" rows="3" placeholder="가족 모두의 알림(🔔)으로 전달돼요 (최대 100자)" oninput="updateNoticeCount()"></textarea>
           <button type="button" id="noticeSendBtn" onclick="sendNotice()">📢 공지 보내기</button>
           <div class="hint" id="noticeStatus" aria-live="polite">0 / 100</div>
+        </div>
+        <div id="birthdaySection" hidden>
+          <div class="switch-row">
+            <span id="birthdaySwitchLabel">🎂 생일축하 팝업/배너 보이기</span>
+            <button type="button" id="birthdaySwitch" class="switch" role="switch" aria-checked="true" aria-labelledby="birthdaySwitchLabel" onclick="toggleBirthday()"><span class="knob"></span></button>
+          </div>
+          <div class="hint" id="birthdayStatus" aria-live="polite">켜면 생일 팝업이 다시 뜨고, 끄면 팝업과 배너가 모두 숨겨져요.</div>
         </div>
         <div id="backupSection" hidden>
           <button type="button" id="backupBtn" onclick="downloadBackup()">💾 백업 내려받기</button>
@@ -339,6 +346,7 @@
     let unsubscribeDays = null;
     let unsubscribeNotes = null;
     let unsubscribeActivity = null;
+    let unsubscribeBirthday = null;
     let unsubscribeVideos = null;
     let currentCode = "";
 
@@ -475,6 +483,24 @@
         }, function (error) {
           reportReadError("새 소식", error);
         });
+      },
+
+      // 생일축하 팝업/배너 설정 (한나가 관리에서 켜고 끔): 바뀔 때마다 onData({ on, resetAt }), 설정이 없으면 null
+      // (읽기가 막혀 있어도 화면에 오류를 띄우지 않고 기본값(켜짐)으로 동작)
+      watchBirthday: function (onData) {
+        if (unsubscribeBirthday) {
+          unsubscribeBirthday();
+        }
+        unsubscribeBirthday = onSnapshot(doc(db, "families", currentCode, "settings", "birthday"), function (snap) {
+          onData(snap.exists() ? snap.data() : null);
+        }, function (error) {
+          console.log("생일 설정 읽기 실패", error);
+        });
+      },
+
+      // 켜짐/꺼짐 저장 (저장할 때마다 resetAt이 바뀌어서, 켜면 팝업이 다시 뜸)
+      saveBirthday: function (on) {
+        return setDoc(doc(db, "families", currentCode, "settings", "birthday"), { on: on, resetAt: Date.now() });
       },
 
       // 보고 있는 달의 날씨·한줄평을 받아오고, 바뀔 때마다 onData를 불러줌
@@ -731,6 +757,6 @@
     window.dispatchEvent(new Event("cloud-ready"));
   </script>
 
-  <script src="script.js?v=20261114r"></script>
+  <script src="script.js?v=20261114s"></script>
 </body>
 </html>
