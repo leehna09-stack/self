@@ -16,7 +16,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Jua&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=20261114o">
+  <link rel="stylesheet" href="style.css?v=20261114p">
 </head>
 <body>
   <div id="splash" class="splash" aria-hidden="true">
@@ -25,6 +25,12 @@
   </div>
 
   <main class="app">
+    <div id="birthdayBanner" class="birthday-banner" role="status" hidden>
+      <span class="birthday-icon" aria-hidden="true">🎂</span>
+      <div class="birthday-text"><b id="birthdayTitle"></b><span id="birthdayMsg"></span></div>
+      <button type="button" class="round-btn" onclick="closeBirthday()" aria-label="닫기"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    </div>
+
     <header class="hero">
       <h1><img class="hero-cat hero-mascot" src="mascot.png?v=mascot2" alt="" width="26" height="36"> 우리 가족 소식통 &amp; 일정관리</h1>
       <button type="button" id="syncChip" class="sync-chip" onclick="toggleSyncTip()" aria-label="연결 상태 보기"><span id="syncIcon" class="sync-icon" data-level="wait" aria-hidden="true">🔄</span></button>
@@ -716,6 +722,6 @@
     window.dispatchEvent(new Event("cloud-ready"));
   </script>
 
-  <script src="script.js?v=20261114p"></script>
+  <script src="script.js?v=20261114q"></script>
 </body>
 </html>
