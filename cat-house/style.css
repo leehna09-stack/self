@@ -953,32 +953,43 @@ fieldset.place-seg {
   gap: 8px;
 }
 
-/* 한줄평 태그 (인스타그램처럼 @이름) */
-.note-tags {
-  display: flex;
-  gap: 6px;
-  margin-top: 10px;
+/* 한줄평 태그: @를 치면 가족 목록이 입력칸 위에 뜸 (인스타그램처럼) */
+.note-form {
+  position: relative;
 }
 
-.note-tags:empty {
+.tag-suggest {
+  position: absolute;
+  left: 0;
+  bottom: calc(100% + 6px);
+  z-index: 5;
+  display: grid;
+  min-width: 150px;
+  padding: 4px;
+  background-color: #ffffff;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  box-shadow: 0 6px 20px rgba(58, 54, 51, 0.18);
+}
+
+.tag-suggest[hidden] {
   display: none;
 }
 
-.note-tags button {
-  min-height: 28px;
-  padding: 0 10px;
-  font-size: 12px;
-  border-radius: 14px;
+.tag-suggest button {
+  min-height: 40px;
+  padding: 0 14px;
+  border: none;
+  border-radius: 12px;
+  background: transparent;
+  text-align: left;
+  font-size: 15px;
+  color: #2f6fd1;
 }
 
-.note-tags button[aria-pressed="true"] {
-  background-color: var(--ink);
-  border-color: var(--ink);
-  color: #ffffff;
-}
-
-.note-tags + .note-form {
-  margin-top: 6px;
+.tag-suggest button:hover,
+.tag-suggest button:active {
+  background-color: var(--soft);
 }
 
 #detailNote .note-tag {
