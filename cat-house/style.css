@@ -1831,3 +1831,97 @@ textarea:focus-visible {
 .loc-badge.home { background-color: var(--home-bg); color: var(--home-ink); }
 .loc-badge.jeju { background-color: var(--jeju-bg); color: var(--jeju-ink); }
 .loc-badge.song { background-color: var(--song-bg); color: var(--song-ink); }
+
+/* ===== 생일 축하 배너 (접속하면 맨 위에) ===== */
+.birthday-banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+  padding: 12px 12px 12px 16px;
+  border: 1px solid #f0d28a;
+  border-radius: 24px;
+  background-color: #fff6df;
+  box-shadow: var(--shadow);
+}
+
+.birthday-banner[hidden] {
+  display: none;
+}
+
+.birthday-icon {
+  flex: none;
+  font-size: 30px;
+  line-height: 1;
+  transform-origin: 50% 85%;
+  animation: wiggle 3s ease-in-out infinite;
+}
+
+.birthday-text {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  gap: 2px;
+}
+
+.birthday-text b {
+  font-family: var(--font-title);
+  font-size: 17px;
+  font-weight: normal;
+  word-break: keep-all;
+}
+
+.birthday-text span {
+  font-size: 13px;
+  color: var(--sub);
+  word-break: keep-all;
+}
+
+/* 생일 축하 팝업 (생일인 본인에게) */
+.birthday-pop {
+  text-align: center;
+  padding: 28px 22px 22px;
+  background-color: #fff6df;
+  border: 1px solid #f0d28a;
+}
+
+.birthday-pop-icons {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 14px;
+  margin-bottom: 12px;
+  font-size: 30px;
+  line-height: 1;
+}
+
+.birthday-pop-icons .cake {
+  font-size: 56px;
+  transform-origin: 50% 85%;
+  animation: wiggle 3s ease-in-out infinite;
+}
+
+.birthday-pop h2 {
+  margin: 0 0 10px;
+  font-size: 22px;
+  line-height: 1.35;
+  word-break: keep-all;
+}
+
+.birthday-pop p {
+  margin: 0 0 20px;
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--ink);
+  word-break: keep-all;
+}
+
+.birthday-pop-btn {
+  width: 100%;
+  min-height: 46px;
+  border-radius: 16px;
+  background-color: var(--ink);
+  border-color: var(--ink);
+  color: #ffffff;
+  font-size: 15px;
+}

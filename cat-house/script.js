@@ -336,6 +336,7 @@ function chooseUser(name) {
   updateUserInfo();
   updateBell();
   refreshPush();
+  drawBirthday();
 }
 
 // 사용자를 아직 안 골랐으면 선택창을 띄움
@@ -805,6 +806,78 @@ function onCloudData(list) {
   if (!document.getElementById("detailModal").classList.contains("hidden")) {
     openDetail(currentDetailDate, true);
   }
+}
+
+// ===== 생일 축하 배너 =====
+// 생일 날짜에 접속하면 화면 맨 위에 축하 글이 뜸 (year를 빼면 매년, 넣으면 그 해만)
+// self = 생일인 사람 본인에게 팝업으로 보이는 글, others = 나머지 가족에게 상단 배너로 보이는 글
+const BIRTHDAYS = [
+  {
+    name: "한비", year: 2026, month: 11, day: 13,
+    self: { title: "소중한 내 동생 한비야 💛 생일 축하해!", text: "소중한 너의 20대를 뜻깊은 하루하루로 채워가길 바래." },
+    others: { title: "오늘은 한비의 생일이에요!", text: "한비에게 축하 인사를 전해 주세요 🎉" }
+  }
+];
+const BIRTHDAY_CLOSED_KEY = "catHouseBirthdayClosed";
+
+// 오늘이 생일인 사람 (없으면 null)
+function birthdayToday() {
+  const t = todayString();
+  for (let i = 0; i < BIRTHDAYS.length; i++) {
+    const b = BIRTHDAYS[i];
+    if (Number(t.slice(5, 7)) === b.month && Number(t.slice(8, 10)) === b.day &&
+        (b.year === undefined || Number(t.slice(0, 4)) === b.year)) {
+      return b;
+    }
+  }
+  return null;
+}
+
+function birthdayKey(b) {
+  return todayString() + b.name;
+}
+
+// 오늘 생일이고 이 폰에서 아직 닫지 않았으면 보여줌
+// 생일인 본인에게는 축하 팝업, 나머지 가족에게는 상단 배너
+function drawBirthday() {
+  const banner = document.getElementById("birthdayBanner");
+  const modal = document.getElementById("birthdayModal");
+  const b = birthdayToday();
+  let closed = "";
+  try {
+    closed = localStorage.getItem(BIRTHDAY_CLOSED_KEY) || "";
+  } catch (e) {
+    // 저장소를 못 쓰면 닫아도 다음에 다시 보임
+  }
+  banner.hidden = true;
+  modal.classList.add("hidden");
+  if (b === null || closed === birthdayKey(b)) {
+    return;
+  }
+  if (getUser() === b.name) {
+    document.getElementById("birthdayModalTitle").textContent = b.self.title;
+    document.getElementById("birthdayModalMsg").textContent = b.self.text;
+    modal.classList.remove("hidden");
+    document.querySelector("#birthdayModal .birthday-pop-btn").focus();
+  } else {
+    document.getElementById("birthdayTitle").textContent = b.others.title;
+    document.getElementById("birthdayMsg").textContent = b.others.text;
+    banner.hidden = false;
+  }
+}
+
+// 닫기: 오늘은 다시 안 보이게 (이 폰에서만)
+function closeBirthday() {
+  const b = birthdayToday();
+  if (b !== null) {
+    try {
+      localStorage.setItem(BIRTHDAY_CLOSED_KEY, birthdayKey(b));
+    } catch (e) {
+      // 저장하지 못하면 이번 접속 동안만 닫힘
+    }
+  }
+  document.getElementById("birthdayBanner").hidden = true;
+  document.getElementById("birthdayModal").classList.add("hidden");
 }
 
 // ===== 시작 화면 / 버그 제보 =====
@@ -3105,6 +3178,12 @@ if (!RULES_READY) {
 
 // 일정이 비어 있는 상태로 달력을 먼저 그림
 drawCalendar();
+drawBirthday();
+document.addEventListener("visibilitychange", function () {
+  if (document.visibilityState === "visible") {
+    drawBirthday();
+  }
+});
 
 // 인터넷 저장소 연결이 준비되면 시작
 if (window.cloud) {
