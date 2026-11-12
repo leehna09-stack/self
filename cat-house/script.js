@@ -68,7 +68,9 @@ const PLACE_DATA = {
 
 // 한줄평에 태그할 수 있는 사람 / 지금 고른 태그
 const TAG_PEOPLE = ["한나", "한비", "엄마"];
-let noteTags = [];
+// 글 안의 @이름 찾기 (나눌 때 / 모두 찾을 때)
+const TAG_SPLIT = new RegExp("(@(?:" + TAG_PEOPLE.join("|") + "))");
+const TAG_FIND = new RegExp("@(" + TAG_PEOPLE.join("|") + ")", "g");
 
 // 상세창에 열린 날짜의 한줄평들 / 수정 중인 한줄평 번호표 / 하루 최대 개수
 let notes = [];
@@ -2520,40 +2522,82 @@ function buildNotes() {
 // 입력칸을 새 한줄평 쓰기 상태로 되돌림
 function resetNoteForm() {
   editingNoteId = "";
-  noteTags = [];
-  drawNoteTags();
   document.getElementById("noteInput").value = "";
+  hideTagSuggest();
   document.getElementById("noteSaveBtn").textContent = "저장";
   document.getElementById("noteCancelBtn").hidden = true;
 }
 
-// 태그 버튼 그리기 (나는 뺌, 다시 누르면 해제)
-function drawNoteTags() {
-  const box = document.getElementById("noteTags");
+// 글 안의 @이름에서 태그할 사람을 뽑음 (나는 뺌, 같은 사람은 한 번만)
+function noteTagsFromText(text) {
+  const out = [];
+  let m;
+  TAG_FIND.lastIndex = 0;
+  while ((m = TAG_FIND.exec(text)) !== null) {
+    if (m[1] !== getUser() && out.indexOf(m[1]) < 0) {
+      out.push(m[1]);
+    }
+  }
+  return out;
+}
+
+// 커서 바로 앞에서 "@글자"를 입력하는 중이면 그 위치와 글자를 돌려줌 (아니면 null)
+function tagQuery(input) {
+  const before = input.value.slice(0, input.selectionStart);
+  const m = before.match(/(^|\s)@([^\s@]*)$/);
+  return m ? { query: m[2], start: before.length - m[2].length - 1 } : null;
+}
+
+function hideTagSuggest() {
+  const box = document.getElementById("tagSuggest");
+  box.hidden = true;
   box.innerHTML = "";
-  if (!RULES_READY) {
+}
+
+// @를 치면 태그할 수 있는 가족 목록을 입력칸 위에 보여줌 (글자를 더 치면 걸러짐)
+function updateTagSuggest() {
+  const input = document.getElementById("noteInput");
+  const q = RULES_READY ? tagQuery(input) : null;
+  if (q === null) {
+    hideTagSuggest();
     return;
   }
-  const user = getUser();
-  TAG_PEOPLE.forEach(function (name) {
-    if (name === user) {
-      return;
-    }
+  const used = noteTagsFromText(input.value);
+  const names = TAG_PEOPLE.filter(function (n) {
+    return n !== getUser() && n.indexOf(q.query) === 0 && used.indexOf(n) < 0;
+  });
+  const box = document.getElementById("tagSuggest");
+  box.innerHTML = "";
+  if (names.length === 0) {
+    box.hidden = true;
+    return;
+  }
+  names.forEach(function (n) {
     const btn = document.createElement("button");
     btn.type = "button";
-    btn.textContent = "@" + name;
-    btn.setAttribute("aria-pressed", noteTags.indexOf(name) >= 0 ? "true" : "false");
+    btn.setAttribute("role", "option");
+    btn.textContent = "@" + n;
     btn.onclick = function () {
-      const at = noteTags.indexOf(name);
-      if (at >= 0) {
-        noteTags.splice(at, 1);
-      } else {
-        noteTags.push(name);
-      }
-      drawNoteTags();
+      insertTag(n, q.start);
     };
     box.appendChild(btn);
   });
+  box.hidden = false;
+}
+
+// 고른 이름을 "@이름 "으로 바꿔 넣음
+function insertTag(name, start) {
+  const input = document.getElementById("noteInput");
+  const next = input.value.slice(0, start) + "@" + name + " " + input.value.slice(input.selectionStart);
+  if (next.length > 50) {
+    hideTagSuggest();
+    return;
+  }
+  input.value = next;
+  const pos = start + name.length + 2;
+  input.focus();
+  input.setSelectionRange(pos, pos);
+  updateTagSuggest();
 }
 
 // 한줄평을 남긴 시각을 24시간 기준 "시:분"으로 (옛날 글은 시각이 없어 빈칸)
@@ -2591,13 +2635,29 @@ function drawDetailNotes() {
 
     const text = document.createElement("span");
     text.className = "note-text";
-    text.textContent = "“" + n.text + "” ";
-    if (n.tags && n.tags.length) {
-      const tagEl = document.createElement("b");
-      tagEl.className = "note-tag";
-      tagEl.textContent = n.tags.map(function (t) { return "@" + t; }).join(" ") + " ";
-      text.appendChild(tagEl);
-    }
+    text.appendChild(document.createTextNode("“"));
+    n.text.split(TAG_SPLIT).forEach(function (part) {
+      if (part === "") {
+        return;
+      }
+      if (TAG_SPLIT.test(part)) {
+        const tagEl = document.createElement("b");
+        tagEl.className = "note-tag";
+        tagEl.textContent = part;
+        text.appendChild(tagEl);
+      } else {
+        text.appendChild(document.createTextNode(part));
+      }
+    });
+    text.appendChild(document.createTextNode("” "));
+    (n.tags || []).forEach(function (t) {
+      if (n.text.indexOf("@" + t) < 0) {
+        const tagEl = document.createElement("b");
+        tagEl.className = "note-tag";
+        tagEl.textContent = "@" + t + " ";
+        text.appendChild(tagEl);
+      }
+    });
     const by = document.createElement("small");
     by.textContent = "— " + n.by + formatNoteTime(n.createdAt, n.date || currentDetailDate);
     text.appendChild(by);
@@ -2645,8 +2705,6 @@ function startEditNote(id) {
       editingNoteId = id;
       const input = document.getElementById("noteInput");
       input.value = notes[i].text;
-      noteTags = (notes[i].tags || []).slice();
-      drawNoteTags();
       document.getElementById("noteSaveBtn").textContent = "수정 저장";
       document.getElementById("noteCancelBtn").hidden = false;
       input.focus();
@@ -2688,6 +2746,7 @@ function saveNote() {
   if (text === "") {
     return;
   }
+  const tags = noteTagsFromText(text);
 
   let job;
   if (editingNoteId === "legacy") {
@@ -2704,7 +2763,7 @@ function saveNote() {
     // 태그가 있거나 원래 태그가 있던 글만 태그 항목을 같이 저장
     const old = notes.find(function (n) { return n.id === editingNoteId; });
     const hadTags = old && old.tags && old.tags.length > 0;
-    job = window.cloud.updateNote(editingNoteId, text, noteTags.length > 0 || hadTags ? noteTags.slice() : null);
+    job = window.cloud.updateNote(editingNoteId, text, tags.length > 0 || hadTags ? tags : null);
   } else {
     // 새 글을 넣으면 MAX_NOTES개를 넘는 만큼 오래된 것부터 지움
     // (옛날 방식 글은 개수에 넣지 않음)
@@ -2718,7 +2777,7 @@ function saveNote() {
     }
     job = window.cloud.addNote(
       currentDetailDate,
-      { text: text, by: user, place: viewPlace, createdAt: Date.now(), tags: noteTags.slice() },
+      { text: text, by: user, place: viewPlace, createdAt: Date.now(), tags: tags },
       deleteIds
     );
   }
@@ -3004,6 +3063,21 @@ document.addEventListener("keydown", function (e) {
 });
 
 document.getElementById("formModal").addEventListener("change", drawRangePicker);
+["input", "click", "keyup"].forEach(function (ev) {
+  document.getElementById("noteInput").addEventListener(ev, updateTagSuggest);
+});
+document.getElementById("noteInput").addEventListener("keydown", function (e) {
+  // 추천 목록이 떠 있을 때 Enter는 첫 번째 사람을 고름
+  const first = document.querySelector("#tagSuggest button");
+  if (e.key === "Enter" && first && !document.getElementById("tagSuggest").hidden) {
+    e.preventDefault();
+    first.click();
+  }
+});
+document.getElementById("noteInput").addEventListener("blur", function () {
+  // 목록의 사람을 누르는 동안 먼저 닫히지 않게 조금 늦게 닫음
+  setTimeout(hideTagSuggest, 200);
+});
 document.getElementById("photoInput").addEventListener("change", onPhotoChosen);
 document.getElementById("cameraInput").addEventListener("change", onPhotoChosen);
 document.getElementById("videoInput").addEventListener("change", onVideoChosen);

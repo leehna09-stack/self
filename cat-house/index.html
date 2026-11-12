@@ -16,7 +16,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Jua&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=20261114n">
+  <link rel="stylesheet" href="style.css?v=20261114o">
 </head>
 <body>
   <div id="splash" class="splash" aria-hidden="true">
@@ -130,9 +130,9 @@
       <div id="noteSection">
         <h3>오늘의 한줄평</h3>
         <ul id="detailNote"></ul>
-        <div id="noteTags" class="note-tags" aria-label="태그"></div>
         <div class="note-form">
-          <input type="text" id="noteInput" maxlength="50" autocomplete="off" placeholder="최대 50자">
+          <div id="tagSuggest" class="tag-suggest" role="listbox" aria-label="태그할 사람" hidden></div>
+          <input type="text" id="noteInput" maxlength="50" autocomplete="off" placeholder="최대 50자 · @로 태그">
           <button type="button" id="noteSaveBtn" onclick="saveNote()">저장</button>
           <button type="button" id="noteCancelBtn" onclick="resetNoteForm()" hidden>취소</button>
         </div>
@@ -716,6 +716,6 @@
     window.dispatchEvent(new Event("cloud-ready"));
   </script>
 
-  <script src="script.js?v=20261114o"></script>
+  <script src="script.js?v=20261114p"></script>
 </body>
 </html>
