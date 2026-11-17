@@ -1682,9 +1682,10 @@ function drawDetailPhoto() {
   }
 
   if (total > 0) {
-    // 좌우로 밀어서 넘기는 띠 (사진 → 영상 순서, 영상은 보이면 자동 재생)
+    // 좌우로 밀어서 넘기는 띠 (사진·영상 구분 없이 가장 최근에 올린 것이 맨 앞, 영상은 보이면 자동 재생)
     const strip = document.createElement("div");
     strip.className = "photo-strip";
+    const slides = [];
 
     const counter = document.createElement("div");
     counter.className = "photo-count";
@@ -1727,7 +1728,7 @@ function drawDetailPhoto() {
         frame.appendChild(delBtn);
       }
 
-      strip.appendChild(slide);
+      slides.push({ at: p.savedAt || 0, el: slide });
     }
 
     for (let i = 0; i < vids.length; i++) {
@@ -1776,8 +1777,16 @@ function drawDetailPhoto() {
         frame.appendChild(delBtn);
       }
 
-      strip.appendChild(slide);
+      slides.push({ at: v.savedAt || 0, el: slide });
     }
+
+    // 올린 시각이 같으면 사진 → 영상 순서를 유지 (정렬은 순서를 바꾸지 않는 안정 정렬)
+    slides.sort(function (a, b) {
+      return b.at - a.at;
+    });
+    slides.forEach(function (sl) {
+      strip.appendChild(sl.el);
+    });
 
     // 지금 보고 있는 번호 표시
     strip.addEventListener("scroll", function () {
@@ -1805,8 +1814,8 @@ function drawDetailPhoto() {
       });
     }
 
-    // 새로 늘었으면 가장 최근 것(맨 오른쪽)으로 이동
-    strip.scrollLeft = total > lastPhotoCount ? strip.scrollWidth : oldScroll;
+    // 새로 늘었으면 가장 최근 것(맨 왼쪽)으로 이동
+    strip.scrollLeft = total > lastPhotoCount ? 0 : oldScroll;
     strip.dispatchEvent(new Event("scroll"));
   }
   lastPhotoCount = total;
