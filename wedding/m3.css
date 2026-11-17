@@ -1,0 +1,98 @@
+/* Material Design 3 스킨 — 두 화면(웨딩홀 비교·로드맵)이 마지막에 불러와 모양·그림자·상태 표현을 M3 방식으로 통일한다.
+   토큰(색·모서리·엘리베이션)은 brand.css. 모양: 둥근 카드 · 알약형 버튼 · 둥근 사각 FAB · 단계별 은은한 그림자 */
+body { background: var(--m-surface); color: var(--m-on-surface); letter-spacing: 0; }
+h1 { font-weight: 500; letter-spacing: 0; font-size: 22px; }
+h1 .i { color: var(--m-primary); }
+
+/* 버튼: 알약형. 기본=외곽선(outlined), primary=채움(filled) */
+.btn { border: 1px solid var(--m-outline); background: transparent; color: var(--m-primary); border-radius: var(--pill); box-shadow: none; font-weight: 500; letter-spacing: .01em; padding: 0 18px; }
+.btn.primary { background: var(--m-primary); color: var(--m-on-primary); border-color: transparent; }
+.btn.danger { color: var(--m-primary); }
+.btn:disabled { opacity: .38; }
+@media (hover: hover) {
+  .btn:hover:not(:disabled) { background: rgba(103, 80, 164, .08); border-color: var(--m-outline); filter: none; }
+  .btn.primary:hover:not(:disabled) { background: var(--m-p30); box-shadow: var(--e1); }
+}
+.btn:active:not(:disabled) { transform: none; background: rgba(103, 80, 164, .12); }
+.btn.primary:active:not(:disabled) { background: var(--m-p30); }
+.qphoto, .oact .btn { border: 0; background: var(--m-sc); color: var(--m-on-sc); border-radius: var(--pill); box-shadow: none; }
+
+/* 검색창(알약) · 필터 칩 */
+.searchrow input { background: var(--m-s3); border: 0; box-shadow: none; border-radius: var(--pill); padding: 0 20px; min-height: 40px; }
+.searchrow .btn { min-height: 40px; }
+input::placeholder, textarea::placeholder { color: var(--m-on-sv); opacity: .75; }
+.chip { border-radius: 8px; border: 1px solid var(--m-outline); background: transparent; color: var(--m-on-sv); font-weight: 500; }
+.chip.on { background: var(--m-sc); border-color: transparent; color: var(--m-on-sc); }
+
+/* 카드: 둥근 모서리 + 엘리베이션 1, 펼치면 2 */
+.qrow { background: var(--m-s1); border-radius: var(--r-card); box-shadow: var(--e1); padding: 12px 14px; }
+.qrow.liked { box-shadow: inset 4px 0 0 var(--m-primary), var(--e1); }
+.qrow.open { background: var(--m-s2); box-shadow: var(--e2); }
+.qrow.open.liked { box-shadow: inset 4px 0 0 var(--m-primary), var(--e2); }
+.qmore { border-top: 1px solid var(--line); }
+.qmemo { background: var(--m-s3); border-radius: 12px; }
+.qname { font-weight: 500; }
+
+/* 총액·거리 막대: 같은 보라 계열의 두 톤 (총액=보라, 거리=회보라) */
+.cell { border-radius: var(--pill); font-weight: 500; }
+.cell i { border-radius: var(--pill); }
+.cell.cp { background: var(--m-pc); color: var(--m-on-pc); } .cell.cp i { background: var(--m-p80); }
+.cell.cd { background: var(--dist-soft); color: var(--m-on-sc); } .cell.cd i { background: var(--dist-fill); }
+.cell.cp.best { background: var(--m-primary); color: var(--m-on-primary); }
+.cell.cd.best { background: var(--m-secondary); color: var(--m-on-primary); }
+.cell.pend { background: repeating-linear-gradient(135deg, var(--m-s3) 0 6px, var(--m-s1) 6px 12px); }
+
+/* 칩·배지 */
+.vchip, .badge { border-radius: 8px; }
+.vchip.plan, .badge { background: var(--m-sc); color: var(--m-on-sc); }
+.vchip.ask { background: var(--m-primary); color: var(--m-on-primary); }
+.vchip.st-hold { background: var(--m-pc); color: var(--m-on-pc); }
+.vchip.st-done { background: var(--m-primary); color: var(--m-on-primary); }
+.vchip.done, .vchip.st-drop { background: transparent; color: var(--m-on-sv); box-shadow: inset 0 0 0 1px var(--m-ov); }
+
+/* FAB: 둥근 사각형, 예식장 추가 */
+#addBtn { position: fixed; right: 16px; bottom: calc(80px + 16px + env(safe-area-inset-bottom)); z-index: 9; width: 56px; height: 56px; border-radius: var(--r-fab); background: var(--m-pc); color: var(--m-on-pc); box-shadow: var(--e3); }
+#addBtn .i { width: 24px; height: 24px; }
+#addBtn:active { background: var(--m-p80); box-shadow: var(--e2); transform: none; }
+.wrap { padding-bottom: 96px; }
+
+/* 하단 내비게이션 바 (M3 navigation bar: 알약 모양 활성 표시) */
+body { padding-bottom: calc(80px + env(safe-area-inset-bottom)); }
+.wtab { background: var(--m-s2); border-top: 0; box-shadow: var(--e2); -webkit-backdrop-filter: none; backdrop-filter: none; }
+.wt { min-height: 80px; padding: 12px 0 16px; gap: 4px; font-size: 11px; font-weight: 500; color: var(--m-on-sv); }
+.wt .ind { display: grid; place-items: center; width: 64px; height: 32px; border-radius: var(--pill); transition: background-color .2s; }
+.wt .gl { width: 24px; height: 24px; }
+.wt.on { color: var(--m-on-surface); }
+.wt.on .ind { background: var(--m-sc); color: var(--m-on-sc); }
+.wt.on::before { display: none; }
+.wt:focus-visible { border-radius: var(--r-card); }
+
+/* 다이얼로그·시트: 큰 모서리, 엘리베이션 3 */
+dialog { background: var(--m-s2); color: var(--m-on-surface); border-radius: var(--r-xl); box-shadow: var(--e3); }
+dialog::backdrop { background: rgba(29, 27, 32, .32); }
+#wsheet, .psheet { border-radius: var(--r-xl) var(--r-xl) 0 0; background: var(--m-s2); }
+.edit h2, .ws h2 { font-weight: 500; }
+.manual, .ws section { background: var(--m-s3); box-shadow: none; border-radius: var(--radius); }
+.manual > summary, .qask summary { font-weight: 500; }
+.pbtn { background: var(--m-s3); border-radius: var(--pill); }
+.pbtn.cancel { background: transparent; box-shadow: inset 0 0 0 1px var(--m-outline); }
+
+/* 입력칸: 외곽선(outlined) 텍스트 필드 */
+.edit input, .edit textarea, .edit select, .ws input[type=date], .ws input[type=number], .ws input[type=text], .ws .oform input,
+input[type=text], input[type=number], input[type=date], textarea { background: transparent; border: 1px solid var(--m-outline); box-shadow: none; border-radius: 12px; }
+.edit input:focus, .edit textarea:focus, .edit select:focus, .ws input:focus, textarea:focus, input[type=text]:focus, input[type=number]:focus, input[type=date]:focus { outline: 0; border-color: var(--m-primary); box-shadow: 0 0 0 1px var(--m-primary); }
+.enterbtn { border-radius: var(--pill); background: var(--m-sc); color: var(--m-on-sc); }
+.hint.ok .i { color: var(--m-primary); }
+.askrow .x, .exrow .x { border-radius: var(--pill); }
+
+/* 로드맵 */
+.hero, .stage { border-radius: var(--r-card); }
+.tile { border-radius: 16px; }
+.dots i { border-radius: var(--pill); }
+.nav h1 { font-size: 28px; }
+.iconbtn { box-shadow: none; }
+.stat, .now, .hallinfo, .lockbox, .donebox { border-radius: var(--radius); }
+.toast { border-radius: 12px; bottom: calc(96px + env(safe-area-inset-bottom)); }
+.ws .btn { background: transparent; border: 1px solid var(--m-outline); box-shadow: none; color: var(--m-primary); border-radius: var(--pill); }
+.ws .btn.primary { background: var(--m-primary); color: var(--m-on-primary); border-color: transparent; }
+.ws .foot .btn { justify-content: center; }
