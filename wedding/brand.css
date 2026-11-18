@@ -1,36 +1,18 @@
-/* 웨딩 앱 공통 토큰 — Material Design 3 (기준색 보라 #6750A4 하나에서 뽑은 톤 팔레트).
-   색: 진한 보라(primary) · 연보라 컨테이너(primary container) · 같은 보라의 회색 톤(secondary/neutral). 상관없는 색은 쓰지 않는다. */
+/* 웨딩 앱 공통 토큰 — 미니멀: 따뜻한 흰색 바탕 + 검정·회색만. 모서리는 직각, 선은 1px, 그림자 없음. */
 :root {
   color-scheme: light;
-  /* 글꼴: Roboto(영문·숫자, 앱에 포함) + 한글은 나눔바른고딕 부분 추출본 */
+  /* 글꼴: 보통 굵기 산세리프 — Roboto(영문·숫자, 앱에 포함) + 한글은 나눔바른고딕 부분 추출본 */
   --font: Roboto, "Wedding Sans", "Noto Sans KR", "Malgun Gothic", system-ui, sans-serif;
 
-  /* 톤 팔레트 */
-  --m-primary: #6750A4;  --m-on-primary: #FFFFFF;
-  --m-pc: #EADDFF;       --m-on-pc: #21005D;          /* primary container */
-  --m-p30: #4F378B;      --m-p80: #D0BCFF;
-  --m-secondary: #625B71; --m-sc: #E8DEF8; --m-on-sc: #1D192B;
-  --m-surface: #FEF7FF;                                /* 바탕: 아주 연한 보라빛 흰색 */
-  --m-s1: #F7F2FA; --m-s2: #F3EDF7; --m-s3: #ECE6F0; --m-s4: #E6E0E9;   /* surface container 단계 */
-  --m-on-surface: #1D1B20; --m-on-sv: #49454F;
-  --m-outline: #79747E;  --m-ov: #CAC4D0;
-
-  /* 모양 */
-  --radius: 16px;      /* 입력창·작은 카드 */
-  --r-card: 20px;      /* 카드 */
-  --r-xl: 28px;        /* 다이얼로그·시트 */
-  --r-fab: 16px;       /* FAB(둥근 사각형) */
-  --pill: 999px;       /* 버튼·칩·막대 */
-
-  /* 엘리베이션: 단계별로 은은하게 */
-  --e1: 0 1px 2px rgba(29, 27, 32, .14), 0 1px 3px 1px rgba(29, 27, 32, .08);
-  --e2: 0 1px 2px rgba(29, 27, 32, .14), 0 2px 6px 2px rgba(29, 27, 32, .09);
-  --e3: 0 1px 3px rgba(29, 27, 32, .16), 0 4px 8px 3px rgba(29, 27, 32, .10);
-
-  /* 기존 화면이 쓰는 이름 → M3 톤에 연결 */
-  --surface: var(--m-s1); --card: var(--m-s1);
-  --text: var(--m-on-surface); --muted: var(--m-on-sv); --line: #E0D9E6; --bg: var(--m-surface); --soft: var(--m-s2);
-  --accent: var(--m-primary); --accent-hi: var(--m-p30); --accent-soft: var(--m-pc); --accent-fill: var(--m-p80);
-  --dist: var(--m-secondary); --dist-soft: #E7E0EC; --dist-fill: #CCC2DC;
+  /* 색: 검정과 회색 */
+  --bg: #FAFAF8; --surface: #FAFAF8; --card: #FAFAF8;
+  --text: #111111; --muted: #6B6B6B; --line: #D9D9D5; --soft: #F0F0EC;
+  --accent: #111111; --accent-hi: #000000; --accent-soft: #EDEDE9; --accent-fill: #D9D9D5;
+  --dist: #555555;   --dist-soft: #F0F0EC;   --dist-fill: #E4E4E0;
   --ok: var(--dist); --ok-soft: var(--dist-soft); --warn: var(--accent);
+
+  /* 모양: 직각 */
+  --radius: 0; --r-card: 0; --r-xl: 0; --r-fab: 0; --pill: 0;
+  /* 그림자 없음 */
+  --e1: none; --e2: none; --e3: none;
 }

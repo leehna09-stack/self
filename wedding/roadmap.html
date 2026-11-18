@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#FEF7FF">
+<meta name="theme-color" content="#FAFAF8">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <link rel="stylesheet" href="fonts.css">
@@ -20,16 +20,16 @@
 <style>
 /* 로드맵 — 색·모서리는 brand.css(웨딩홀 비교와 공통). 여기서는 로드맵 고유의 배치 값만 정한다 */
 :root {
-  --field: transparent; --sheet: var(--m-s2);
+  --field: transparent; --sheet: var(--bg);
   --r: var(--r-card); --r-sm: var(--radius); --gap: 10px;
   --shadow-card: var(--e1);
-  --ctl: var(--m-s3); --ctl-shadow: none;
-  --ring-track: var(--m-s3); --ring1: var(--m-p80); --ring2: var(--m-primary); --dot-cur: var(--m-p80); --ring-glow: none;
+  --ctl: transparent; --ctl-shadow: none;
+  --ring-track: var(--line); --ring1: var(--text); --ring2: var(--text); --ring-w: 3; --dot-cur: #8A8A86; --ring-glow: none;
   --now-bg: var(--accent-soft);
-  --task-bg: transparent; --tasks-bg: var(--m-s2); --task-line: 1px solid var(--line);
-  --chk-bg: transparent; --chk-border: 2px solid var(--m-outline); --chk-r: 4px; --chk-on: var(--m-primary); --chk-on-shadow: none;
+  --task-bg: transparent; --tasks-bg: transparent; --task-line: 1px solid var(--line);
+  --chk-bg: transparent; --chk-border: 1px solid #8A8A86; --chk-r: 0; --chk-on: var(--text); --chk-on-shadow: none;
   --btn-bg: transparent; --btn-shadow: none;
-  --toast-bg: #322F35; --toast-fg: #F5EFF7;
+  --toast-bg: var(--text); --toast-fg: var(--bg);
 }
 .btn.primary:hover { background: var(--accent-hi); }
 .hero { padding: 18px; }
@@ -37,7 +37,7 @@
 .stage.open .shead { padding-bottom: 8px; }
 .stage.cur { box-shadow: var(--shadow-card), 0 0 0 2px var(--accent); }
 </style>
-<link rel="stylesheet" href="m3.css">
+<link rel="stylesheet" href="minimal.css">
 </head>
 <body>
 <script src="roadmap.js"></script>
