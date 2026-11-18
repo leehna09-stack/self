@@ -16,9 +16,9 @@
 
   document.body.insertAdjacentHTML('beforeend', `
 <nav class="wtab" aria-label="주 메뉴"><div class="in">
-  <a class="wt${here === 'hall' ? ' on' : ''}" href="index.html"${here === 'hall' ? ' aria-current="page"' : ''}>${gl(IC.hall)}<span>웨딩홀 비교</span></a>
-  <a class="wt${here === 'road' ? ' on' : ''}" href="roadmap.html"${here === 'road' ? ' aria-current="page"' : ''}>${gl(IC.road)}<span>로드맵</span></a>
-  <button type="button" class="wt" id="wtSet" aria-haspopup="dialog">${gl(IC.gear)}<span>설정</span></button>
+  <a class="wt${here === 'hall' ? ' on' : ''}" href="index.html"${here === 'hall' ? ' aria-current="page"' : ''}><span class="ind">${gl(IC.hall)}</span><span>웨딩홀 비교</span></a>
+  <a class="wt${here === 'road' ? ' on' : ''}" href="roadmap.html"${here === 'road' ? ' aria-current="page"' : ''}><span class="ind">${gl(IC.road)}</span><span>로드맵</span></a>
+  <button type="button" class="wt" id="wtSet" aria-haspopup="dialog"><span class="ind">${gl(IC.gear)}</span><span>설정</span></button>
 </div></nav>
 <dialog id="wsheet" aria-labelledby="wsTitle">
   <form class="ws" id="wsForm" method="dialog">

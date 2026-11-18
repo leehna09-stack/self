@@ -1,0 +1,130 @@
+/* 미니멀 스킨 — 두 화면(웨딩홀 비교·로드맵)이 마지막에 불러와 다른 스타일을 덮는다.
+   바탕 #FAFAF8 · 검정과 회색만 · 직각 · 1px 선 · 그림자 없음 · 보통 굵기 글씨 · 넓은 여백 */
+body { background: var(--bg); color: var(--text); letter-spacing: 0; }
+body, body * { font-weight: 400 !important; border-radius: 0; box-shadow: none; text-shadow: none; }
+h1, .qname, .stitle, .now .t, .dday, .ringtxt b, .stat b, th { font-weight: 500 !important; }
+h1 { font-size: 18px; letter-spacing: 0; }
+h1 .i { color: var(--text); }
+.i, .gl { stroke-width: 1.5; }
+
+/* 여백은 넉넉하게 */
+.wrap { padding: 20px 20px 96px; }
+header { margin-bottom: 20px; }
+.toolbar { gap: 12px; padding: 4px 0 16px; }
+.grid { gap: 12px; }
+#form.edit, #odlg .edit { padding: 20px; gap: 10px; }
+.manualbody { padding: 0 16px 16px; }
+
+/* 버튼: 얇은 선, 굵지 않게. 기본=1px 선, primary=검정 면 */
+.btn { border: 1px solid #BDBDB8; background: transparent; color: var(--text); padding: 0 18px; min-height: 36px; }
+.btn.primary { background: var(--text); color: var(--bg); border-color: var(--text); }
+.btn.danger { color: var(--text); }
+.btn:disabled { opacity: .35; }
+@media (hover: hover) {
+  .btn:hover:not(:disabled) { background: var(--soft); border-color: #8A8A86; filter: none; }
+  .btn.primary:hover:not(:disabled) { background: #000; }
+}
+.btn:active:not(:disabled) { transform: none; background: var(--accent-soft); }
+.btn.primary:active:not(:disabled) { background: #000; }
+.qphoto, .oact .btn { border: 1px solid var(--line); background: transparent; color: var(--text); }
+
+/* 검색 · 정렬 칩 */
+.searchrow input { background: transparent; border: 1px solid var(--line); padding: 0 14px; min-height: 40px; }
+.searchrow .btn { min-height: 40px; }
+input::placeholder, textarea::placeholder { color: var(--muted); opacity: .8; }
+.chip { border: 1px solid var(--line); background: transparent; color: var(--muted); }
+.chip.on { background: var(--text); border-color: var(--text); color: var(--bg); }
+
+/* 카드: 1px 선, 그림자 없음. 펼치면 선만 검게 */
+.qrow { background: transparent; border: 1px solid var(--line); padding: 14px 16px; gap: 8px; box-shadow: none; }
+.qrow.liked, .qrow.open.liked { box-shadow: none; }
+.qrow.open { background: transparent; border-color: var(--text); box-shadow: none; }
+.qmore { border-top: 1px solid var(--line); padding-top: 10px; gap: 6px; }
+.qmemo { background: var(--soft); border: 0; padding: 8px 10px; }
+.qrow.drop { opacity: .5; }
+
+/* 총액·거리 막대: 흑백. 총액=짙은 회색 면, 거리=옅은 회색 면, 줄마다 위치로 구분 */
+.cell { border: 1px solid var(--line); }
+.cell i { border-radius: 0; }
+.cell.cp { background: transparent; color: var(--text); } .cell.cp i { background: #DCDCD8; }
+.cell.cd { background: transparent; color: var(--text); } .cell.cd i { background: #EDEDE9; }
+.cell.cp.best { background: var(--text); color: var(--bg); border-color: var(--text); }
+.cell.cd.best { background: #555; color: var(--bg); border-color: #555; }
+.cell.pend { background: transparent; border: 1px dashed #BDBDB8; color: var(--muted); }
+.legend span::before, .legend .lgd::before { border-radius: 0; }
+.legend .lgp::before { background: var(--text); }
+.legend .lgd::before { background: transparent; border: 1px solid #555; width: 8px; height: 8px; }
+
+/* 칩 · 배지: 글자 + 1px 선 */
+.vchip, .badge { border: 1px solid var(--line); background: transparent; color: var(--muted); }
+.vchip.plan, .badge { border-color: var(--text); color: var(--text); background: transparent; }
+.vchip.ask, .vchip.st-done { background: var(--text); color: var(--bg); border-color: var(--text); }
+.vchip.st-hold { background: transparent; border-color: var(--text); color: var(--text); }
+.vchip.done, .vchip.st-drop { background: transparent; color: var(--muted); box-shadow: none; }
+
+/* 추가 버튼: 떠 있는 버튼 대신 헤더의 얇은 아이콘 */
+#addBtn { position: static; width: 40px; height: 40px; background: none; color: var(--text); box-shadow: none; }
+#addBtn:active { background: var(--soft); }
+.hico, .backbtn, .thumb button { border-radius: 0; }
+.hico.star, .tool.navi, .starbtn.on { color: var(--text); }
+.starbtn.on .i { fill: var(--text); }
+
+/* 하단 바: 1px 선만 */
+body { padding-bottom: calc(64px + env(safe-area-inset-bottom)); }
+.wtab { background: var(--bg); border-top: 1px solid var(--line); box-shadow: none; -webkit-backdrop-filter: none; backdrop-filter: none; }
+.wt { min-height: 64px; padding: 10px 0 8px; gap: 4px; font-size: 10px; color: var(--muted); }
+.wt .ind { display: grid; place-items: center; width: auto; height: auto; background: none; }
+.wt .gl { width: 22px; height: 22px; }
+.wt.on { color: var(--text); }
+.wt.on .ind { background: none; }
+.wt.on::before { display: block; content: ""; position: absolute; top: -1px; left: 0; right: 0; height: 1px; background: var(--text); border-radius: 0; }
+
+/* 다이얼로그 · 시트: 1px 선, 그림자·번짐 없음 */
+dialog { background: var(--bg); color: var(--text); border: 1px solid var(--text); box-shadow: none; }
+dialog::backdrop { background: rgba(17, 17, 17, .35); -webkit-backdrop-filter: none; backdrop-filter: none; }
+#wsheet, .psheet { background: var(--bg); border: 0; border-top: 1px solid var(--text); }
+.ws .grab { display: none; }
+.edit h2, .ws h2 { font-weight: 500 !important; font-size: 14px; }
+.manual, .ws section { background: transparent; border: 1px solid var(--line); }
+.ws { gap: 14px; padding: 16px 20px calc(20px + env(safe-area-inset-bottom)); }
+.ws section { padding: 14px 16px; gap: 8px; }
+.pbtn { background: transparent; border: 1px solid var(--line); }
+.pbtn.cancel { background: transparent; box-shadow: none; }
+
+/* 입력칸: 1px 선, 포커스 때 검게 */
+.edit input, .edit textarea, .edit select, .ws input[type=date], .ws input[type=number], .ws input[type=text], .ws .oform input,
+input[type=text], input[type=number], input[type=date], textarea { background: transparent; border: 1px solid var(--line); box-shadow: none; }
+.edit input:focus, .edit textarea:focus, .edit select:focus, .ws input:focus, textarea:focus, input[type=text]:focus, input[type=number]:focus, input[type=date]:focus { outline: 0; border-color: var(--text); box-shadow: none; }
+.enterbtn { background: transparent; border: 1px solid var(--line); color: var(--text); }
+.hint.ok .i { color: var(--text); }
+.hint.err { color: var(--text); }
+.ws .btn { background: transparent; border: 1px solid #BDBDB8; color: var(--text); }
+.ws .btn.primary { background: var(--text); color: var(--bg); border-color: var(--text); }
+:focus-visible { outline: 1px solid var(--text); outline-offset: 2px; }
+.thumb button { background: var(--text); color: var(--bg); }
+td.best { background: var(--soft); color: var(--text); }
+th, td { border-color: var(--line); }
+
+/* 로드맵 */
+.nav h1 { font-size: 20px; }
+.dday { font-size: 22px; color: var(--text); }
+.ringtxt b { font-size: 22px; }
+.stat b { font-size: 14px; }
+.hero, .stage { border: 1px solid var(--line); box-shadow: none; background: transparent; }
+.stage.cur { border-color: var(--text); box-shadow: none; }
+.hero { padding: 20px; }
+.tile { background: transparent; border: 1px solid var(--line); color: var(--text); }
+.tile.cur { background: var(--text); color: var(--bg); border-color: var(--text); }
+.tile.done { color: var(--text); border-color: var(--text); background: transparent; }
+.tile.lock { color: #9A9A96; background: transparent; }
+.tile .bdg { background: var(--text); border: 0; color: var(--bg); }
+.tile.lock .bdg { background: #9A9A96; }
+.stat, .now, .hallinfo, .lockbox, .donebox { background: transparent; border: 1px solid var(--line); }
+.dots i { height: 2px; background: var(--line); }
+.dots i.d { background: var(--text); }
+.dots i.c { background: #8A8A86; }
+.rp { stroke-linecap: butt; }
+.iconbtn { background: transparent; border: 1px solid var(--line); }
+.toast { background: var(--text); color: var(--bg); bottom: calc(80px + env(safe-area-inset-bottom)); }
+.chk span { border-radius: 0; }
+.task.on .chk span { animation: none; }
